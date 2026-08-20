@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lab-platform-backend
+
+  datasource:
+    url: jdbc:h2:mem:labplatform;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+app:
+  security:
+    # true en dev pour tester le flux "mot de passe oublié" sans serveur d'e-mail.
+    # Mettre à false (ou définir APP_EXPOSE_RESET_TOKEN=false) en production.
+    expose-reset-token-in-response: ${APP_EXPOSE_RESET_TOKEN:true}
+  jwt:
+    # Uniquement pour le développement local. À remplacer par une variable
+    # d'environnement (APP_JWT_SECRET) en production.
+    secret: ${APP_JWT_SECRET:dev-only-secret-key-change-me-please-32bytes-min}
+    expiration-ms: 86400000
+  cors:
+    allowed-origins:
+     - http://localhost:5173
+logging:
+  level:
+    com.labplatform: INFO
