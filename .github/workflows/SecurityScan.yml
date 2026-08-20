@@ -30,5 +30,8 @@ jobs:
       uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
       with:
         scan-type: 'fs'
-        scan-ref: 'HIGH,CRITICAL'
+        scan-ref: '.'
+        scanners: 'vuln'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
         trivy-config: trivy.yaml
