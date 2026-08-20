@@ -59,7 +59,7 @@ jobs:
 
   generate-sbom:
     runs-on: ubuntu-24.04
-    needs: sca
+    needs: [secrets-scan, sast, sca]
     timeout-minutes: 10
     permissions:
       contents: write   # nécessaire pour soumettre au Dependency Graph
