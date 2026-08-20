@@ -1,9 +1,7 @@
 name: Security Pipeline
 
-
 permissions:
-  contents: read #read the repository contents for scanning
-
+  contents: read   # minimal au niveau global
 
 on:
   push:
@@ -11,10 +9,16 @@ on:
   pull_request:
     branches: [master]
 
-    
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   secrets-scan:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -24,6 +28,9 @@ jobs:
 
   sast:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Semgrep
@@ -33,16 +40,37 @@ jobs:
 
   sca:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
-    - name: Checkout code
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Run Trivy vulnerability scanner in fs mode
-      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        scanners: 'vuln'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '1'
-        trivy-config: trivy.yaml
+      - name: Run Trivy vulnerability scanner in fs mode
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          trivy-config: trivy.yaml
+
+  generate-sbom:
+    runs-on: ubuntu-24.04
+    needs: sca
+    timeout-minutes: 10
+    permissions:
+      contents: write   # nécessaire pour soumettre au Dependency Graph
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.0
+
+      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'fs'
+          format: 'github'
+          output: 'dependency-results.sbom.json'
+          scan-ref: '.'
