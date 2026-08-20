@@ -1,6 +1,17 @@
 name: Security Pipeline
-on: [push, pull_request]
 
+
+permissions:
+  contents: read #read the repository contents for scanning
+
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+    
 jobs:
   secrets-scan:
     runs-on: ubuntu-24.04
