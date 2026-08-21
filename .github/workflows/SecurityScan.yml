@@ -14,18 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  secrets-scan:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+  gitleaks:
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read   # requis par gitleaks-action pour lister les commits de la PR
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+          fetch-depth: 0  # Important : récupérer tout l'historique
+          persist-credentials: false
+
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Uniquement pour les dépôts appartenant à une organisation
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
       
   sast:
     runs-on: ubuntu-24.04
