@@ -29,7 +29,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Uniquement pour les dépôts appartenant à une organisation
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          #GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
       
   sast:
     runs-on: ubuntu-24.04
