@@ -29,7 +29,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Only required for Organizations, not personal accounts.
 
-
   sast:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
