@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    # Optionally uncomment the following lines to automatically merge low-risk updates
+    #automerged_updates:
+    #  - match:
+    #      update_type: "security"
+
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+# See https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically for configuration options
