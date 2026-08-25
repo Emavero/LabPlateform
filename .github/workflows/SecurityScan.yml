@@ -7,6 +7,7 @@ permissions:
 on:
   push:
     branches: [master,features]
+    tags: ['v*.*.*']
   pull_request:
     branches: [master]
 
@@ -14,7 +15,21 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: true
 
+
 jobs:
+  pr-info:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Informations sur la PR
+        run: |
+          echo "Numéro PR : #${{ github.event.pull_request.number }}"
+          echo "Titre : ${{ github.event.pull_request.title }}"
+          echo "Branche source : ${{ github.head_ref }}"
+          echo "Branche cible : ${{ github.base_ref }}"
+          echo "Auteur PR : ${{ github.event.pull_request.user.login }}"
+          echo "Est un brouillon : ${{ github.event.pull_request.draft }}"
+
   afficher-infos:
     runs-on: ubuntu-24.04
     steps:
