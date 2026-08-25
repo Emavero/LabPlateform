@@ -19,7 +19,7 @@ concurrency:
 jobs:
   pr-info:
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Informations sur la PR
         run: |
@@ -46,12 +46,12 @@ jobs:
       - name: Quel événement ?
         run: |
           echo "Événement : ${{ github.event_name }}"
-          # Affiche : "Événement : push"
+     
 
       - name: Quel commit ?
         run: |
           echo "Commit SHA : ${{ github.sha }}"
-          # Affiche : "Événement : push"
+   
       
 
   gitleaks:
