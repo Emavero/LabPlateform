@@ -6,9 +6,9 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     # Optionally uncomment the following lines to automatically merge low-risk updates
-    #automerged_updates:
-    #  - match:
-    #      update_type: "security"
+    automerged_updates:
+      - match:
+          update_type: "security"
 
   - package-ecosystem: "maven"
     directory: "/backend"

@@ -6,29 +6,35 @@ on:
   pull_request:
     branches: ["master"]
   schedule:
-    - cron: '0 3 * * 0' # weekly on Sundays at 03:00 UTC
+    - cron: '0 3 * * 0'
 
 permissions:
   actions: read
   contents: read
-  security-events: write
 
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@b8d3b6e8af63cde30bdc382c0bc28114f4346c88
         with:
-          # Languages detected in the repo; adjust if necessary
           languages: javascript, java
 
-      - name: Perform autobuild (if applicable)
+      - name: Perform autobuild
         uses: github/codeql-action/autobuild@b8d3b6e8af63cde30bdc382c0bc28114f4346c88
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@b8d3b6e8af63cde30bdc382c0bc28114f4346c88
+
+      - name: Upload SARIF Results
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        with:
+          name: codeql-results
+          path: |
+            ${{ github.workspace }}/results/*.sarif
