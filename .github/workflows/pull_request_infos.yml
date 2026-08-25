@@ -1,0 +1,21 @@
+name: Pull Request Info 
+
+permissions:
+  contents: read   # minimal au niveau global
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  pr-info:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Informations sur la PR
+        run: |
+          echo "Numéro PR : #${{ github.event.pull_request.number }}"
+          echo "Titre : ${{ github.event.pull_request.title }}"
+          echo "Branche source : ${{ github.head_ref }}"
+          echo "Branche cible : ${{ github.base_ref }}"
+          echo "Auteur PR : ${{ github.event.pull_request.user.login }}"
+          echo "Est un brouillon : ${{ github.event.pull_request.draft }}"
