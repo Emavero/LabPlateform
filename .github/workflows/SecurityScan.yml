@@ -1,21 +1,20 @@
 name: Security Pipeline
 
-permissions:
-  contents: read
-  security-events: write
-
 on:
   push:
     branches:
       - master
       - features
-
     tags:
       - 'v*.*.*'
 
   pull_request:
     branches:
       - master
+
+permissions:
+  contents: read
+  security-events: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,7 +43,7 @@ jobs:
         run: echo "Déclenché par ${{ github.actor }}"
 
       - name: Sur quelle branche ?
-        run: 'echo "Branche :  ${{ github.ref_name }}"'
+        run: 'echo "Branche : ${{ github.ref_name }}"'
 
       - name: Quel événement ?
         run: 'echo "Événement : ${{ github.event_name }}"'
