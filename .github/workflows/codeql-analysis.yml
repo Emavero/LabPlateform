@@ -2,11 +2,14 @@ name: "CodeQL Analysis"
 
 on:
   push:
-    branches: ["master"]
+    branches:
+      - master
+      - features
   pull_request:
-    branches: ["master"]
+    branches:
+      - master
   schedule:
-    - cron: '0 3 * * 0'
+    - cron: '0 3 * * *'
 
 permissions:
   actions: read
@@ -26,8 +29,13 @@ jobs:
         with:
           languages: javascript, java
 
-      - name: Perform autobuild
-        uses: github/codeql-action/autobuild@b8d3b6e8af63cde30bdc382c0bc28114f4346c88
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-     
-   
+      - name: Build backend
+        working-directory: backend
+        run: mvn -B clean compile
+

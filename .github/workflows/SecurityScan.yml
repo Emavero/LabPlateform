@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [master]
+    branches: [master,features]
   pull_request:
     branches: [master]
 
@@ -15,6 +15,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  afficher-infos:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Qui a déclenché ce workflow ?
+        run: |
+          echo "Déclenché par ${{ github.actor }}"
+        
+
+      - name: Sur quelle branche ?
+        run: |
+          echo "Branche : ${{ github.ref_name }}"
+        
+
+      - name: Quel événement ?
+        run: |
+          echo "Événement : ${{ github.event_name }}"
+          # Affiche : "Événement : push"
+
   gitleaks:
     runs-on: ubuntu-24.04
     permissions:
