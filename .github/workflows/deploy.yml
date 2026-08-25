@@ -1,0 +1,35 @@
+name: Déploiement manuel
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: 'Environnement cible'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version à déployer (tag)'
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Déployer
+        env:
+          ENVIRONNEMENT: ${{ inputs.environnement }}
+          VERSION: ${{ inputs.version }}
+        run: ./deploy.sh "$ENVIRONNEMENT" "$VERSION"

@@ -1,25 +1,30 @@
 name: Security Pipeline
 
-permissions:
-  contents: read   # minimal au niveau global
-  security-events: write
-
 on:
   push:
-    branches: [master,features]
-    tags: ['v*.*.*']
+    branches:
+      - master
+      - features
+    tags:
+      - 'v*.*.*'
+
   pull_request:
-    branches: [master]
+    branches:
+      - master
+
+permissions:
+  contents: read
+  security-events: write
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.ref }}'
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
   pr-info:
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
+
     steps:
       - name: Informations sur la PR
         run: |
@@ -32,93 +37,91 @@ jobs:
 
   afficher-infos:
     runs-on: ubuntu-24.04
+
     steps:
       - name: Qui a déclenché ce workflow ?
-        run: |
-          echo "Déclenché par ${{ github.actor }}"
-        
+        run: echo "Déclenché par ${{ github.actor }}"
 
       - name: Sur quelle branche ?
-        run: |
-          echo "Branche : ${{ github.ref_name }}"
-        
+        run: 'echo "Branche : ${{ github.ref_name }}"'
 
       - name: Quel événement ?
-        run: |
-          echo "Événement : ${{ github.event_name }}"
-          # Affiche : "Événement : push"
+        run: 'echo "Événement : ${{ github.event_name }}"'
 
       - name: Quel commit ?
-        run: |
-          echo "Commit SHA : ${{ github.sha }}"
-          # Affiche : "Événement : push"
-      
+        run: 'echo "Commit SHA : ${{ github.sha }}"'
 
   gitleaks:
+    needs: afficher-infos
     runs-on: ubuntu-24.04
-    needs: [afficher-infos]
+
     permissions:
       contents: read
       pull-requests: write
+
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0  # Important : récupérer tout l'historique
+          fetch-depth: 0
           persist-credentials: false
 
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Uniquement pour les dépôts appartenant à une organisation
-          #GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-      
+
   sast:
+    needs: afficher-infos
     runs-on: ubuntu-24.04
-    needs: [afficher-infos]
-    timeout-minutes: 10
+
     permissions:
       contents: read
+
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
       - name: Semgrep
-        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
+        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d
         with:
           config: p/security-audit
 
   sca:
+    needs: afficher-infos
     runs-on: ubuntu-24.04
-    needs: [afficher-infos]
-    timeout-minutes: 10
+
     permissions:
       contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Run Trivy vulnerability scanner in fs mode
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH'
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: CRITICAL,HIGH
           exit-code: '1'
           trivy-config: trivy.yaml
 
   generate-sbom:
-    runs-on: ubuntu-24.04
-    needs: [gitleaks, sast, sca]
-    timeout-minutes: 10
-    permissions:
-      contents: write   # nécessaire pour soumettre au Dependency Graph
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    needs:
+      - gitleaks
+      - sast
+      - sca
 
-      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Generate and submit SBOM
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
-          scan-type: 'fs'
-          format: 'github'
-          output: 'dependency-results.sbom.json'
-          scan-ref: '.'
+          scan-type: fs
+          format: github
+          output: dependency-results.sbom.json
+          scan-ref: .
