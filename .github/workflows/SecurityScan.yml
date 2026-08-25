@@ -15,18 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pr-info:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Informations sur la PR
-        run: |
-          echo "Numéro PR : #${{ github.event.pull_request.number }}"
-          echo "Titre : ${{ github.event.pull_request.title }}"
-          echo "Branche source : ${{ github.head_ref }}"
-          echo "Branche cible : ${{ github.base_ref }}"
-          echo "Auteur PR : ${{ github.event.pull_request.user.login }}"
-          echo "Est un brouillon : ${{ github.event.pull_request.draft }}"
-
   afficher-infos:
     runs-on: ubuntu-24.04
     steps:
@@ -45,8 +33,15 @@ jobs:
           echo "Événement : ${{ github.event_name }}"
           # Affiche : "Événement : push"
 
+      - name: Quel commit ?
+        run: |
+          echo "Commit SHA : ${{ github.sha }}"
+          # Affiche : "Événement : push"
+      
+
   gitleaks:
     runs-on: ubuntu-24.04
+    needs: [afficher-infos]
     permissions:
       contents: read
       pull-requests: write
@@ -64,6 +59,7 @@ jobs:
       
   sast:
     runs-on: ubuntu-24.04
+    needs: [afficher-infos]
     timeout-minutes: 10
     permissions:
       contents: read
@@ -76,6 +72,7 @@ jobs:
 
   sca:
     runs-on: ubuntu-24.04
+    needs: [afficher-infos]
     timeout-minutes: 10
     permissions:
       contents: read
