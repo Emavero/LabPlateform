@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   automerge:
-    if: github.actor == 'dependabot[bot]'
+    if: ${{ github.actor == 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
 
     steps:
@@ -22,7 +22,7 @@ jobs:
         uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
 
       - name: Enable auto-merge for security and patch updates
-        if: |
+        if: >
           steps.metadata.outputs.update-type == 'security-update' ||
           steps.metadata.outputs.update-type == 'version-update:semver-patch'
         env:
