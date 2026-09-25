@@ -299,7 +299,6 @@ frontend (`npm test`, puis `npm run build`, qui vérifie aussi les types).
 
 ## Pistes
 
-- Monter Spring Boot de 3.3.4 vers la dernière version 3.x corrective.
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
