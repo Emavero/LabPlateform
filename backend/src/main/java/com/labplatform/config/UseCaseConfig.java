@@ -1,6 +1,9 @@
 package com.labplatform.config;
 
+import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
+import com.labplatform.application.port.out.BoxRepositoryPort;
+import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.DomainEventPublisherPort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
@@ -10,6 +13,8 @@ import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AccountService;
+import com.labplatform.application.service.BoxService;
+import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.AuthenticationService;
 import com.labplatform.application.service.LabService;
 import com.labplatform.application.service.PasswordResetService;
@@ -69,6 +74,17 @@ public class UseCaseConfig {
     public LabService labService(VirtualMachineRepositoryPort machines, HypervisorPort hypervisor,
                                  TransactionPort transactions, Clock clock) {
         return new LabService(machines, hypervisor, transactions, clock);
+    }
+
+    @Bean
+    public ScoreboardService scoreboardService(BoxRepositoryPort boxes, OwnRepositoryPort owns) {
+        return new ScoreboardService(boxes, owns);
+    }
+
+    @Bean
+    public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns,
+                                 GetPlayerProgressUseCase progress, TransactionPort transactions, Clock clock) {
+        return new BoxService(boxes, owns, progress, transactions, clock);
     }
 
     @Bean

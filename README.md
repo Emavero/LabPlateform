@@ -1,8 +1,10 @@
 # cyberMans — Lab Platform
 
-Plateforme web où chaque utilisateur dispose de deux machines de lab, une
-Windows (accès RDP) et une Linux (accès SSH), qu'il peut démarrer, arrêter et
-rejoindre avec des identifiants temporaires générés à chaque démarrage.
+Plateforme d'entraînement à la cybersécurité, dans l'esprit de Hack The Box :
+un catalogue de machines à compromettre, deux flags par machine, des points,
+un rang et un classement. Chaque utilisateur dispose en plus de ses deux
+machines d'attaque personnelles, une Windows (RDP) et une Linux (SSH), et d'un
+profil VPN pour joindre le réseau du lab.
 
 ```
 LabPlateform/
@@ -36,6 +38,58 @@ en bonne santé :
 
 Les données survivent aux redémarrages (volume `db-data`). Pour repartir d'une
 base vide : `docker compose down -v`.
+
+## Machines à compromettre, flags et classement
+
+Le menu **Machines** liste le catalogue : chaque machine affiche son système,
+sa difficulté, ce qu'elle rapporte et son adresse dans le réseau du lab.
+On la rejoint par le VPN, on la compromet, puis on soumet ses deux flags
+depuis sa fiche.
+
+| Difficulté  | Flag utilisateur | Flag root | Total |
+|-------------|------------------|-----------|-------|
+| Très facile | 4                | 6         | 10    |
+| Facile      | 8                | 12        | 20    |
+| Moyenne     | 12               | 18        | 30    |
+| Difficile   | 16               | 24        | 40    |
+| Insane      | 20               | 30        | 50    |
+
+Le flag root vaut 60 % des points : l'élévation de privilèges est la partie
+qui rapporte le plus. Une machine dont les deux flags sont validés est
+« possédée ».
+
+- **Flags.** Une suite de 32 caractères hexadécimaux. La saisie tolère les
+  espaces, les majuscules et un habillage `CYBM{…}`. Un flag n'est jamais
+  stocké en clair : seule son empreinte SHA-256 est conservée, et la
+  comparaison est faite en temps constant. Un flag déjà validé répond 409,
+  un flag faux répond 400, sans jamais dire lequel des deux était attendu.
+- **First blood.** Le premier joueur à valider un flag est distingué sur la
+  machine et dans le classement. C'est une distinction, pas un bonus de
+  points : les suivants touchent la même chose.
+- **Rang.** Il se mesure en part du catalogue possédée, et non en total
+  absolu : Noob, Script Kiddie (5 %), Hacker (15 %), Pro Hacker (35 %),
+  Elite Hacker (55 %), Guru (75 %), Omniscient (100 %). Publier de nouvelles
+  machines ne dégrade donc le rang de personne.
+- **Classement.** Les joueurs sont triés aux points ; à égalité, le premier
+  arrivé passe devant. Il n'y figure qu'un pseudonyme dérivé du compte,
+  jamais l'adresse e-mail.
+
+### Essayer le parcours
+
+Les machines du catalogue sont des cibles simulées : il n'y a pas de système
+réel où aller lire un flag. Pour pouvoir essayer le parcours de bout en bout,
+le mode démonstration écrit les flags tirés au premier démarrage dans les
+journaux du backend — il est actif dans `docker-compose.yml` et dans le profil
+`local`, et désactivé par défaut ailleurs.
+
+```bash
+docker compose logs backend | grep '\[démo\]'
+```
+
+Sur une infrastructure réelle, les flags sont déposés sur la machine cible à
+sa construction et cette option reste à `false` (`APP_BOXES_LOG_SEEDED_FLAGS`).
+Le catalogue est semé une seule fois, au premier démarrage : la table `box`
+déjà peuplée n'est plus touchée.
 
 ## Machines Linux réelles (mode Docker)
 
@@ -170,16 +224,21 @@ com.labplatform
 │   ├── user/          User, Email, PasswordPolicy, PasswordResetToken, Role
 │   ├── lab/           VirtualMachine (machine à états), ConnectionInfo,
 │   │                  OperatingSystem, AccessProtocol, VmAccessPolicy
+│   ├── box/           Box (machine à compromettre), Flag, Difficulty,
+│   │                  FlagKind, Own
+│   ├── scoring/       Rank, PlayerProgress, PlayerScore, Handle
 │   └── shared/        Exceptions métier (validation, conflit, introuvable…)
 ├── application/
 │   ├── port/in/       Cas d'usage : RegisterUser, AuthenticateUser, StartVm,
-│   │                  StopVm, GetVmInfo, ListVms, ChangePassword…
+│   │                  StopVm, ListBoxes, SubmitFlag, GetPlayerProgress,
+│   │                  GetLeaderboard, ChangePassword…
 │   ├── port/out/      Besoins du métier : UserRepositoryPort, HypervisorPort,
-│   │                  PasswordHasherPort, AccessTokenIssuerPort…
+│   │                  BoxRepositoryPort, OwnRepositoryPort…
 │   └── service/       Implémentations des cas d'usage
 ├── adapter/
 │   ├── in/web/        Contrôleurs REST, filtre de session, gestion d'erreurs
 │   ├── in/event/      Provisionnement des machines à l'inscription
+│   ├── in/startup/    Semis du catalogue au premier démarrage
 │   └── out/           JPA/PostgreSQL, JWT, BCrypt, hyperviseur simulé…
 └── config/            Racine de composition (câblage des cas d'usage)
 ```
@@ -191,6 +250,11 @@ Principes appliqués :
   si elle tourne. La même contrainte est doublée en base (`ck_vm_state`).
 - Un utilisateur ne voit que ses machines. Une machine d'un autre compte
   répond 404, pas 403, pour ne pas révéler son existence.
+- Un flag n'est comparé que par l'agrégat `Box`, seul détenteur des
+  empreintes, et le barème découle de la seule difficulté : aucun nombre de
+  points n'est écrit dans un service ou un contrôleur. Les points sont figés
+  dans la possession, donc rééquilibrer une machine ne réécrit pas le passé
+  des joueurs.
 - Les appels à l'hyperviseur, potentiellement lents, sont faits hors
   transaction de base de données.
 - Changer d'infrastructure revient à écrire un adaptateur. Deux existent :
@@ -220,6 +284,11 @@ Principes appliqués :
 | GET     | `/api/labs/vms/{id}/logs`      | Journal de console |
 | POST    | `/api/labs/vms/{id}/start`     | Démarrage (409 si déjà démarrée) |
 | POST    | `/api/labs/vms/{id}/stop`      | Arrêt (409 si déjà arrêtée) |
+| GET     | `/api/boxes`                   | Catalogue, enrichi de ce que l'appelant a validé |
+| GET     | `/api/boxes/{slug}`            | Fiche d'une machine |
+| POST    | `/api/boxes/{slug}/flags`      | Soumission d'un flag (400 incorrect, 409 déjà validé) |
+| GET     | `/api/scoreboard/me`           | Progression : points, rang, machines possédées |
+| GET     | `/api/scoreboard?limit=20`     | Classement public |
 
 Toutes les erreurs suivent le même format :
 `{ timestamp, status, error, message, path, details }`.
@@ -229,9 +298,10 @@ Toutes les erreurs suivent le même format :
 ```
 src/
 ├── domain/          Aucune dépendance à React ni à HTTP
-│   ├── models/      User, VirtualMachine
-│   ├── repositories/ Interfaces (AuthRepository, LabRepository…)
-│   ├── usecases/    Login, Register, StartVm, StopVm, RunVmAction…
+│   ├── models/      User, VirtualMachine, Box, Progress
+│   ├── repositories/ Interfaces (AuthRepository, LabRepository, BoxRepository…)
+│   ├── usecases/    Login, Register, StartVm, StopVm, SubmitFlag,
+│   │                GetProgress, GetLeaderboard…
 │   └── validation/  Règles de saisie (miroir des règles serveur)
 ├── data/            Implémentations HTTP des repositories (axios)
 ├── di/container.ts  Racine de composition : seul fichier qui connaît les implémentations
@@ -240,6 +310,7 @@ src/
 │   ├── layouts/        AppShell, Sidebar, UserMenu, AuthLayout
 │   ├── navigation/     Menu déclaratif
 │   ├── features/lab/   VmCard, ConnectionDetails, guides d'accès par protocole
+│   ├── features/box/   BoxCard, FlagForm, DifficultyMeter, ProgressPanel
 │   ├── hooks/ state/   État de session, état du lab, actions asynchrones
 │   ├── pages/          Une page par route
 │   └── styles/         Jetons de design et feuilles de style
@@ -278,6 +349,14 @@ prête à être remplacée module par module.
 - **Mode démonstration.** Sans serveur d'e-mail, `APP_EXPOSE_RESET_TOKEN=true`
   affiche directement le lien de réinitialisation. Il est activé dans
   `docker-compose.yml` pour la démo et désactivé par défaut dans le backend.
+- **Flags.** Ils ne sont stockés que sous forme d'empreinte SHA-256 et
+  comparés en temps constant. Une réponse du catalogue ne contient ni le flag,
+  ni son empreinte. Une soumission mal formée est rejetée avant toute requête
+  en base, et l'unicité `(joueur, machine, flag)` est tenue en base, ce qui
+  interdit de compter deux fois les mêmes points même en cas de double
+  soumission simultanée.
+- **Classement.** Il n'expose qu'un pseudonyme dérivé de la partie locale de
+  l'e-mail, jamais l'adresse complète.
 - **En-têtes.** Nginx ajoute les en-têtes de sécurité (CSP,
   `X-Frame-Options`, `nosniff`…).
 
@@ -291,6 +370,8 @@ prête à être remplacée module par module.
 | `APP_JWT_VALIDITY`         | `8h`               | Durée de session |
 | `APP_COOKIE_SECURE`        | `false`            | Cookie réservé à HTTPS |
 | `APP_EXPOSE_RESET_TOKEN`   | `true`             | Lien de réinitialisation affiché à l'écran |
+| `APP_BOXES_LOG_SEEDED_FLAGS` | `true`           | Flags du catalogue écrits dans les journaux au premier démarrage (démo) |
+| `APP_BOXES_LEADERBOARD_SIZE` | `20`             | Nombre de joueurs affichés dans le classement |
 
 ## Intégration continue
 
@@ -302,3 +383,8 @@ frontend (`npm test`, puis `npm run build`, qui vérifie aussi les types).
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
+- Provisionner une vraie cible par machine du catalogue (instance à la
+  demande) plutôt que des adresses fixes : le point d'extension est le même
+  `HypervisorPort`.
+- Notation de la difficulté par les joueurs et écriture de rapports, une fois
+  la machine possédée.

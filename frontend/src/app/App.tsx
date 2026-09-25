@@ -1,14 +1,17 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Dependencies } from '@/di/container';
 import { AppShell } from '@/presentation/layouts/AppShell';
+import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
 import { DashboardPage } from '@/presentation/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
 import { LabsPage } from '@/presentation/pages/LabsPage';
 import { LoginPage } from '@/presentation/pages/LoginPage';
+import { MachinesPage } from '@/presentation/pages/MachinesPage';
 import { ModulePlaceholderPage } from '@/presentation/pages/ModulePlaceholderPage';
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
 import { RegisterPage } from '@/presentation/pages/RegisterPage';
 import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
+import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
 import { VmDetailPage } from '@/presentation/pages/VmDetailPage';
 import { VpnPage } from '@/presentation/pages/VpnPage';
@@ -34,6 +37,9 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
               <Route element={<AppShell />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                <Route path="/machines" element={<MachinesPage />} />
+                <Route path="/machines/:slug" element={<BoxDetailPage />} />
+                <Route path="/scoreboard" element={<ScoreboardPage />} />
                 <Route path="/labs" element={<LabsPage />} />
                 <Route path="/labs/:id" element={<VmDetailPage />} />
                 <Route path="/vpn" element={<VpnPage />} />

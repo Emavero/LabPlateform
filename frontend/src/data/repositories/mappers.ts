@@ -1,3 +1,5 @@
+import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
+import type { LeaderboardEntry, PlayerProgress, Rank } from '@/domain/models/Progress';
 import type { Role, User, UserProfile } from '@/domain/models/User';
 import type {
   AccessProtocol,
@@ -32,6 +34,67 @@ export interface VmDto {
   } | null;
 }
 
+export interface BoxDto {
+  slug: string;
+  name: string;
+  os: OperatingSystem;
+  osName: string;
+  difficulty: Difficulty;
+  difficultyName: string;
+  userFlagPoints: number;
+  rootFlagPoints: number;
+  totalPoints: number;
+  synopsis: string;
+  ipAddress: string;
+  maker: string;
+  releasedAt: string;
+  retired: boolean;
+  userOwned: boolean;
+  rootOwned: boolean;
+  pwned: boolean;
+  firstBlood: boolean;
+  pointsEarned: number;
+  lastOwnedAt: string | null;
+}
+
+export interface ProgressDto {
+  points: number;
+  availablePoints: number;
+  ownedFlags: number;
+  totalFlags: number;
+  boxesPwned: number;
+  firstBloods: number;
+  rank: Rank;
+  rankName: string;
+  nextRank: Rank | null;
+  nextRankName: string | null;
+  pointsToNextRank: number;
+  completion: number;
+}
+
+export interface FlagSubmissionDto {
+  slug: string;
+  name: string;
+  kind: FlagKind;
+  pointsAwarded: number;
+  firstBlood: boolean;
+  pwned: boolean;
+  progress: ProgressDto;
+}
+
+export interface LeaderboardDto {
+  entries: {
+    position: number;
+    handle: string;
+    points: number;
+    ownedFlags: number;
+    firstBloods: number;
+    rank: Rank;
+    rankName: string;
+    self: boolean;
+  }[];
+}
+
 export function toUser(dto: UserDto): User {
   return { id: dto.id, email: dto.email, role: dto.role };
 }
@@ -49,4 +112,20 @@ export function toVirtualMachine(dto: VmDto): VirtualMachine {
     startedAt: dto.startedAt ? new Date(dto.startedAt) : null,
     connection: dto.connection ? { ...dto.connection } : null,
   };
+}
+
+export function toBox(dto: BoxDto): Box {
+  return {
+    ...dto,
+    releasedAt: new Date(dto.releasedAt),
+    lastOwnedAt: dto.lastOwnedAt ? new Date(dto.lastOwnedAt) : null,
+  };
+}
+
+export function toProgress(dto: ProgressDto): PlayerProgress {
+  return { ...dto };
+}
+
+export function toLeaderboard(dto: LeaderboardDto): LeaderboardEntry[] {
+  return dto.entries.map((entry) => ({ ...entry }));
 }

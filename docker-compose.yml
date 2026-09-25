@@ -35,6 +35,9 @@ services:
       # Démo sans serveur d'e-mail : le lien de réinitialisation est affiché à l'écran.
       APP_EXPOSE_RESET_TOKEN: ${APP_EXPOSE_RESET_TOKEN:-true}
       APP_HYPERVISOR_MODE: simulated
+      # Démo : les machines étant simulées, les flags du catalogue sont
+      # écrits dans les journaux du backend au premier démarrage.
+      APP_BOXES_LOG_SEEDED_FLAGS: ${APP_BOXES_LOG_SEEDED_FLAGS:-true}
       # Accès VPN (page « VPN Access ») : adresse publique de la passerelle OpenVPN.
       APP_VPN_ENABLED: ${APP_VPN_ENABLED:-false}
       APP_VPN_UDP_HOST: ${APP_VPN_UDP_HOST:-}

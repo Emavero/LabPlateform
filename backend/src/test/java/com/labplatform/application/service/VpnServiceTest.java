@@ -49,7 +49,7 @@ class VpnServiceTest {
     }
 
     private VpnService service(VpnSettings settings) {
-        return new VpnService(profiles, authority, () -> "Tok_en-" + (++tokenCounter) + "abcdefghijkl",
+        return new VpnService(profiles, authority, Fakes.secretGenerator(() -> "Tok_en-" + (++tokenCounter) + "abcdefghijkl"),
                 Fakes.NO_TRANSACTION, Clock.fixed(Instant.parse("2026-09-25T10:00:00Z"), ZoneOffset.UTC), settings);
     }
 

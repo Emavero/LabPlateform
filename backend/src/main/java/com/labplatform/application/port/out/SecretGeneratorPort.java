@@ -4,4 +4,7 @@ package com.labplatform.application.port.out;
 public interface SecretGeneratorPort {
 
     String urlSafeToken();
+
+    /** 16 octets aléatoires en hexadécimal : le format attendu d'un flag de machine. */
+    String hexToken();
 }

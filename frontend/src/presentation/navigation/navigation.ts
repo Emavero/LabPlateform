@@ -19,6 +19,8 @@ export interface ModuleInfo {
  */
 export const PRIMARY_NAV: readonly NavItem[] = [
   { label: 'Dashboard', to: '/', icon: 'dashboard', end: true },
+  { label: 'Machines', to: '/machines', icon: 'target' },
+  { label: 'Classement', to: '/scoreboard', icon: 'trophy' },
   { label: 'Lab Infrastructure', to: '/labs', icon: 'server' },
   { label: 'VPN Access', to: '/vpn', icon: 'vpn' },
   { label: 'Exposure Analysis', to: '/modules/exposure-analysis', icon: 'radar' },

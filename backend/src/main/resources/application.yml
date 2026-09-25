@@ -50,6 +50,13 @@ app:
     # réinitialisation est alors renvoyé dans la réponse HTTP.
     expose-reset-token-in-response: ${APP_EXPOSE_RESET_TOKEN:false}
     reset-token-validity: 15m
+  # Catalogue de machines à compromettre (flags, points, classement).
+  boxes:
+    # true uniquement pour les démonstrations : les machines étant simulées,
+    # les flags tirés au premier démarrage sont écrits dans les journaux,
+    # faute de pouvoir aller les chercher sur la cible.
+    log-seeded-flags: ${APP_BOXES_LOG_SEEDED_FLAGS:false}
+    leaderboard-size: ${APP_BOXES_LEADERBOARD_SIZE:20}
   # Accès VPN façon Hack The Box : chaque utilisateur télécharge son profil .ovpn.
   vpn:
     enabled: ${APP_VPN_ENABLED:false}
