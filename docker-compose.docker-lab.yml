@@ -1,0 +1,36 @@
+# Machines Linux réelles : la VM Linux de chaque utilisateur devient un vrai
+# conteneur Ubuntu accessible en SSH. La machine Windows reste simulée.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.docker-lab.yml up --build
+#
+# Sur Linux, donnez au backend l'accès au socket Docker :
+#   DOCKER_GID=$(stat -c %g /var/run/docker.sock)   (à mettre dans .env)
+#
+# Sécurité : l'accès au socket Docker équivaut à un accès administrateur sur
+# l'hôte. Réservez ce mode à un serveur dédié aux labs.
+
+services:
+  # Construit l'image des machines Linux puis s'arrête aussitôt.
+  lab-linux-image:
+    build: ./lab-images/linux
+    image: labplatform/lab-linux:latest
+    entrypoint: ["true"]
+    restart: "no"
+
+  backend:
+    environment:
+      APP_HYPERVISOR_MODE: docker
+      APP_DOCKER_IMAGE: labplatform/lab-linux:latest
+      # Adresse que les utilisateurs tapent dans leur commande ssh.
+      APP_DOCKER_PUBLIC_HOST: ${LAB_PUBLIC_HOST:-localhost}
+      # 127.0.0.1 : SSH accessible depuis ce poste uniquement ; 0.0.0.0 : depuis le réseau.
+      APP_DOCKER_BIND_ADDRESS: ${LAB_BIND_ADDRESS:-127.0.0.1}
+      APP_DOCKER_MEMORY: ${LAB_MEMORY:-512m}
+      APP_DOCKER_CPUS: ${LAB_CPUS:-1.0}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-0}"
+    depends_on:
+      lab-linux-image:
+        condition: service_completed_successfully

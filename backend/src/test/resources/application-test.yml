@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:labplatform-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+
+app:
+  security:
+    expose-reset-token-in-response: true
+  hypervisor:
+    simulated-boot-delay: 0ms
+    simulated-shutdown-delay: 0ms

@@ -1,0 +1,70 @@
+# Lancement complet : docker compose up --build
+# Application : http://localhost:3000 (port modifiable via FRONTEND_PORT)
+name: labplatform
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-labplatform}
+      POSTGRES_USER: ${DB_USERNAME:-labplatform}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-labplatform}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Création automatique des tables au premier démarrage du volume.
+      - ./backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-labplatform}
+      DB_USERNAME: ${DB_USERNAME:-labplatform}
+      DB_PASSWORD: ${DB_PASSWORD:-labplatform}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-change-me-in-env-file-with-at-least-32-bytes!!}
+      APP_JWT_VALIDITY: ${APP_JWT_VALIDITY:-8h}
+      # false tant que l'application est servie en HTTP (localhost).
+      APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-false}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # Démo sans serveur d'e-mail : le lien de réinitialisation est affiché à l'écran.
+      APP_EXPOSE_RESET_TOKEN: ${APP_EXPOSE_RESET_TOKEN:-true}
+      APP_HYPERVISOR_MODE: simulated
+      # Accès VPN (page « VPN Access ») : adresse publique de la passerelle OpenVPN.
+      APP_VPN_ENABLED: ${APP_VPN_ENABLED:-false}
+      APP_VPN_UDP_HOST: ${APP_VPN_UDP_HOST:-}
+      APP_VPN_UDP_PORT: ${APP_VPN_UDP_PORT:-1194}
+      APP_VPN_TCP_HOST: ${APP_VPN_TCP_HOST:-}
+      APP_VPN_TCP_PORT: ${APP_VPN_TCP_PORT:-1194}
+      APP_VPN_LAB_NETWORK: ${APP_VPN_LAB_NETWORK:-10.10.10.0/24}
+    volumes:
+      # Autorité de certification VPN : à sauvegarder, sa perte invalide tous les profils.
+      - vpn-data:/var/lib/labplatform/vpn
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      start_period: 40s
+      retries: 10
+    # Pas de port publié : le backend n'est joignable que via le proxy Nginx.
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  vpn-data:

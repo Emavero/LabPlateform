@@ -1,0 +1,17 @@
+.vscode/
+.idea/
+.DS_Store
+
+# Frontend
+node_modules/
+dist/
+coverage/
+
+# Backend
+target/
+
+# Secrets locaux
+.env
+
+# Autorité de certification VPN créée en développement local
+backend/data/

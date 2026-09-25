@@ -1,0 +1,27 @@
+name: 'Setup Project'
+description: 'Installe Node.js et les dépendances du frontend'
+
+inputs:
+  working-directory:
+    description: 'Dossier contenant package.json'
+    required: false
+    default: 'frontend'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci
+
+    - name: Verify installation
+      shell: bash
+      run: npm --version && node --version

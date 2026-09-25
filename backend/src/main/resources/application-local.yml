@@ -1,0 +1,17 @@
+# Profil "local" : lancement sans Docker ni PostgreSQL (mvn spring-boot:run -Dspring-boot.run.profiles=local).
+# Base H2 en mémoire en mode compatibilité PostgreSQL ; les données sont perdues à l'arrêt.
+spring:
+  datasource:
+    url: jdbc:h2:mem:labplatform;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+
+app:
+  vpn:
+    # En développement, la PKI est créée dans le dossier du projet (ignoré par git).
+    directory: ${APP_VPN_DIRECTORY:./data/vpn}
+  security:
+    expose-reset-token-in-response: true

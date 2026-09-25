@@ -1,0 +1,339 @@
+/* ---------- Coque applicative ---------- */
+.shell {
+  min-height: 100vh;
+}
+
+.shell__main {
+  margin-left: var(--sidebar-width);
+  padding: 2.5rem clamp(1.25rem, 4vw, 3rem) 4rem;
+  outline: none;
+}
+
+.topbar {
+  display: none;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  padding: 1.5rem 1rem 1rem;
+  background: linear-gradient(180deg, rgba(13, 14, 21, 0.96), rgba(11, 12, 16, 0.96));
+  border-right: 1px solid var(--line);
+  backdrop-filter: var(--blur);
+}
+
+.sidebar__brand {
+  padding: 0 0.75rem 1.75rem;
+}
+
+.sidebar__nav {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.sidebar__divider {
+  height: 1px;
+  margin: 1rem 0.75rem;
+  background: var(--line);
+}
+
+.nav-list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease);
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+/* Élément actif : pilule arrondie rétroéclairée */
+.nav-link--active,
+.nav-link--active:hover {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(139, 124, 255, 0.22), rgba(76, 141, 255, 0.1));
+  border-color: rgba(139, 124, 255, 0.5);
+  box-shadow:
+    0 0 20px -6px rgba(139, 124, 255, 0.7),
+    inset 0 0 14px -8px rgba(139, 124, 255, 0.9);
+}
+
+.nav-link--active svg {
+  color: var(--violet);
+  filter: drop-shadow(0 0 6px rgba(139, 124, 255, 0.8));
+}
+
+.sidebar__footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Menu utilisateur ---------- */
+.user-menu {
+  position: relative;
+}
+
+.user-menu__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--fast) var(--ease);
+}
+
+.user-menu__trigger:hover,
+.user-menu__trigger[aria-expanded='true'] {
+  background: var(--surface-hover);
+  border-color: var(--line);
+}
+
+.user-menu__identity {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-menu__name {
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu__role {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.user-menu__chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.user-menu__popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  padding: 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
+  animation: pop-in var(--fast) var(--ease);
+}
+
+.user-menu__email {
+  overflow: hidden;
+  padding: 0.5rem 0.65rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.3rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.user-menu__item:hover,
+.user-menu__item:focus-visible {
+  background: var(--surface-hover);
+}
+
+.user-menu__item--danger {
+  color: var(--danger);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* ---------- Mobile : sidebar en tiroir ---------- */
+@media (max-width: 960px) {
+  /* La barre reste au-dessus du tiroir : son bouton sert aussi à le refermer. */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: 60px;
+    padding: 0 1rem;
+    background: rgba(11, 12, 16, 0.88);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: var(--blur);
+  }
+
+  .sidebar {
+    top: 60px;
+    padding-top: 1rem;
+    transform: translateX(-100%);
+    transition: transform var(--medium) var(--ease);
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar--open {
+    transform: none;
+  }
+
+  .sidebar__brand {
+    display: none;
+  }
+
+  .shell__scrim {
+    position: fixed;
+    inset: 60px 0 0;
+    z-index: 25;
+    background: rgba(5, 6, 10, 0.6);
+  }
+
+  .shell__main {
+    margin-left: 0;
+    padding-top: 1.5rem;
+  }
+}
+
+/* ---------- Écran d'authentification ---------- */
+.auth {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  overflow: hidden;
+}
+
+/* Trame discrète : rappelle un plan réseau sans distraire du formulaire */
+.auth__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(139, 124, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 124, 255, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+
+.auth__card {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 2.25rem 2rem 2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  box-shadow:
+    var(--shadow),
+    0 0 80px -40px rgba(139, 124, 255, 0.6);
+}
+
+.auth__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.auth__tag {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.auth__title {
+  font-size: var(--step-2);
+}
+
+.auth__subtitle {
+  margin-top: 0.4rem;
+  color: var(--text-muted);
+}
+
+.auth__card > .alert,
+.auth__card > .form {
+  margin-top: 1.5rem;
+}
+
+.auth__card > .alert + .alert,
+.auth__card > .alert + .form {
+  margin-top: 0.75rem;
+}
+
+.auth__footer {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.auth__footer a {
+  color: var(--violet);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth__footer a:hover {
+  text-decoration: underline;
+}
+
+.splash {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1.25rem;
+  min-height: 100vh;
+}
