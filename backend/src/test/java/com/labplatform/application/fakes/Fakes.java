@@ -4,6 +4,7 @@ import com.labplatform.application.port.in.auth.UserSummary;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
+import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.VirtualMachine;
@@ -38,6 +39,25 @@ public final class Fakes {
     };
 
     public static final AccessTokenIssuerPort TOKEN_ISSUER = (UserSummary user) -> "token-for-" + user.id();
+
+    /** Générateur déterministe : c'est le test qui décide de la valeur des secrets tirés. */
+    public static SecretGeneratorPort secretGenerator(Supplier<String> urlSafeToken) {
+        return secretGenerator(urlSafeToken, () -> "0123456789abcdef0123456789abcdef");
+    }
+
+    public static SecretGeneratorPort secretGenerator(Supplier<String> urlSafeToken, Supplier<String> hexToken) {
+        return new SecretGeneratorPort() {
+            @Override
+            public String urlSafeToken() {
+                return urlSafeToken.get();
+            }
+
+            @Override
+            public String hexToken() {
+                return hexToken.get();
+            }
+        };
+    }
 
     public static class RecordingHypervisor implements HypervisorPort {
         public final List<String> calls = new ArrayList<>();

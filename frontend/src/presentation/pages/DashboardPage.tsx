@@ -2,8 +2,12 @@ import { Link } from 'react-router-dom';
 import { displayNameOf } from '@/domain/models/User';
 import { isRunning } from '@/domain/models/VirtualMachine';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { BoxCard } from '../features/box/BoxCard';
+import { ProgressPanel } from '../features/box/ProgressPanel';
 import { VmCard } from '../features/lab/VmCard';
+import { useBoxes } from '../hooks/useBoxes';
 import { useLab } from '../hooks/useLab';
+import { useProgress } from '../hooks/useProgress';
 import { useAuth } from '../state/AuthContext';
 
 function greeting(now = new Date()): string {
@@ -22,7 +26,11 @@ function summary(loading: boolean, total: number, running: number): string {
 export function DashboardPage() {
   const { user } = useAuth();
   const lab = useLab();
+  const { progress } = useProgress();
+  const catalogue = useBoxes();
   const running = lab.vms.filter(isRunning).length;
+  // Trois cibles mises en avant : le catalogue complet a sa propre page.
+  const featured = catalogue.boxes.filter((box) => !box.pwned).slice(0, 3);
 
   return (
     <div className="page">
@@ -34,6 +42,48 @@ export function DashboardPage() {
           <p className="page__lead">{summary(lab.loading, lab.vms.length, running)}</p>
         </div>
       </header>
+
+      <Panel
+        title="Progression"
+        description="Votre rang, vos points et les machines qu'il vous reste à posséder."
+        actions={
+          <Link className="btn btn--ghost btn--sm" to="/scoreboard">
+            <Icon name="trophy" size={16} />
+            <span>Classement</span>
+          </Link>
+        }
+      >
+        <ProgressPanel progress={progress} />
+      </Panel>
+
+      <Panel
+        title="Machines à compromettre"
+        description="Les cibles du moment. Trouvez leurs deux flags pour marquer leurs points."
+        actions={
+          <Link className="btn btn--ghost btn--sm" to="/machines">
+            <Icon name="target" size={16} />
+            <span>Tout le catalogue</span>
+          </Link>
+        }
+      >
+        {catalogue.loading && catalogue.boxes.length === 0 ? (
+          <div className="empty">
+            <Spinner size={22} label="Chargement des machines" />
+          </div>
+        ) : featured.length === 0 ? (
+          <p className="empty">
+            {catalogue.boxes.length === 0
+              ? "Aucune machine n'est publiée pour le moment."
+              : 'Toutes les machines du catalogue sont possédées. Chapeau.'}
+          </p>
+        ) : (
+          <div className="box-grid">
+            {featured.map((box) => (
+              <BoxCard key={box.slug} box={box} />
+            ))}
+          </div>
+        )}
+      </Panel>
 
       <Panel
         title="Lab / Infrastructure"

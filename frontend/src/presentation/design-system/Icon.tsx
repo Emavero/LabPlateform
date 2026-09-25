@@ -184,6 +184,32 @@ const PATHS = {
       <path d="m3.5 6.5 8.5 6.5 8.5-6.5" />
     </>
   ),
+  flag: (
+    <>
+      <path d="M6 21V4.5" />
+      <path d="M6 5h9.5l-1.5 3.5L15.5 12H6" />
+    </>
+  ),
+  trophy: (
+    <>
+      <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
+      <path d="M8 5.5H5.5v1.5a3 3 0 0 0 3 3M16 5.5h2.5V7a3 3 0 0 1-3 3" />
+      <path d="M12 13v3.5M9 20.5h6M9.5 20.5c0-2 1-4 2.5-4s2.5 2 2.5 4" />
+    </>
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.9" fill="currentColor" />
+      <path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" />
+    </>
+  ),
+  crown: (
+    <>
+      <path d="M4 17.5h16M4.5 7l3.5 3.5L12 5l4 5.5L19.5 7l-1.5 8.5H6L4.5 7Z" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -25,7 +25,7 @@ class PasswordResetServiceTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-09-24T10:00:00Z"), ZoneOffset.UTC);
 
     private PasswordResetService service(InMemoryUsers users, List<String> sentTokens, boolean demo) {
-        return new PasswordResetService(users, Fakes.REVERSING_HASHER, () -> "generated-token",
+        return new PasswordResetService(users, Fakes.REVERSING_HASHER, Fakes.secretGenerator(() -> "generated-token"),
                 (email, token, expiresAt) -> sentTokens.add(token), Fakes.NO_TRANSACTION, clock,
                 Duration.ofMinutes(15), demo);
     }

@@ -16,6 +16,7 @@ public class AppProperties {
     private final Security security = new Security();
     private final Hypervisor hypervisor = new Hypervisor();
     private final Vpn vpn = new Vpn();
+    private final Boxes boxes = new Boxes();
 
     public Jwt getJwt() {
         return jwt;
@@ -39,6 +40,10 @@ public class AppProperties {
 
     public Hypervisor getHypervisor() {
         return hypervisor;
+    }
+
+    public Boxes getBoxes() {
+        return boxes;
     }
 
     public static class Jwt {
@@ -131,6 +136,33 @@ public class AppProperties {
 
         public void setResetTokenValidity(Duration resetTokenValidity) {
             this.resetTokenValidity = resetTokenValidity;
+        }
+    }
+
+    /** Catalogue de machines à compromettre. */
+    public static class Boxes {
+        /**
+         * true uniquement pour les démonstrations : les flags tirés au
+         * premier démarrage sont alors écrits dans les journaux, faute de
+         * machines réelles où aller les chercher.
+         */
+        private boolean logSeededFlags = false;
+        private int leaderboardSize = 20;
+
+        public boolean isLogSeededFlags() {
+            return logSeededFlags;
+        }
+
+        public void setLogSeededFlags(boolean logSeededFlags) {
+            this.logSeededFlags = logSeededFlags;
+        }
+
+        public int getLeaderboardSize() {
+            return leaderboardSize;
+        }
+
+        public void setLeaderboardSize(int leaderboardSize) {
+            this.leaderboardSize = leaderboardSize;
         }
     }
 

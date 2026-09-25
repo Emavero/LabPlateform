@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HexFormat;
 
 @Component
 public class SecureRandomSecretGenerator implements SecretGeneratorPort {
@@ -16,5 +17,12 @@ public class SecureRandomSecretGenerator implements SecretGeneratorPort {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    @Override
+    public String hexToken() {
+        byte[] bytes = new byte[16];
+        random.nextBytes(bytes);
+        return HexFormat.of().formatHex(bytes);
     }
 }

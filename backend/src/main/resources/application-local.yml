@@ -15,3 +15,6 @@ app:
     directory: ${APP_VPN_DIRECTORY:./data/vpn}
   security:
     expose-reset-token-in-response: true
+  boxes:
+    # Développement : les flags du catalogue sont affichés au démarrage.
+    log-seeded-flags: true
