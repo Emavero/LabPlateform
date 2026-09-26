@@ -63,6 +63,13 @@ qui rapporte le plus. Une machine dont les deux flags sont validés est
   stocké en clair : seule son empreinte SHA-256 est conservée, et la
   comparaison est faite en temps constant. Un flag déjà validé répond 409,
   un flag faux répond 400, sans jamais dire lequel des deux était attendu.
+- **Cible à la demande.** Une machine ne tourne pas en permanence : le joueur
+  la lance depuis sa fiche, obtient son adresse, et elle s'éteint d'elle-même
+  passé son délai de vie (`APP_BOXES_INSTANCE_LIFETIME`, deux heures par
+  défaut). Une seule cible par joueur à la fois. En mode `docker`, chaque
+  joueur obtient son propre conteneur, lancé depuis l'image de la machine
+  (`labplatform/box-<slug>:latest`) ; en mode simulé, l'adresse déclarée est
+  renvoyée après le même délai d'allumage.
 - **First blood.** Le premier joueur à valider un flag est distingué sur la
   machine et dans le classement. C'est une distinction, pas un bonus de
   points : les suivants touchent la même chose.
@@ -148,8 +155,11 @@ vidéo. Le cours est visible par les apprenants dès l'enregistrement.
 APP_ADMIN_EMAILS=vous@exemple.fr docker compose up --build
 ```
 
-Les machines du catalogue et leurs flags restent semés au démarrage : elles
-ne se gèrent pas encore depuis cette page.
+Le tableau de bord gère aussi **les machines du catalogue** : nom, système,
+difficulté, adresse et flags. À la publication, les flags laissés vides sont
+tirés au hasard et **affichés une seule fois** — le temps de les déposer sur
+la cible, car seule leur empreinte est conservée. À la modification, un champ
+de flag vide veut dire « ne change rien ».
 
 ## Profil, hauts faits et activité
 
@@ -370,6 +380,8 @@ Principes appliqués :
 | GET     | `/api/boxes`                   | Catalogue, enrichi de ce que l'appelant a validé |
 | GET     | `/api/boxes/{slug}`            | Fiche d'une machine |
 | POST    | `/api/boxes/{slug}/flags`      | Soumission d'un flag (400 incorrect, 409 déjà validé) |
+| POST    | `/api/boxes/{slug}/instance`   | Lance la cible (409 si une autre tourne déjà) |
+| DELETE  | `/api/boxes/{slug}/instance`   | Arrête la cible |
 | GET     | `/api/scoreboard/me`           | Progression : points, rang, machines possédées |
 | GET     | `/api/scoreboard?limit=20`     | Classement public |
 | PUT     | `/api/boxes/{slug}/rating`     | Note de difficulté (409 si la machine n'est pas possédée) |
@@ -385,6 +397,10 @@ Principes appliqués :
 | POST    | `/api/admin/courses`           | Publication d'un cours (201) |
 | PUT     | `/api/admin/courses/{slug}`    | Refonte d'un cours, avancement préservé |
 | DELETE  | `/api/admin/courses/{slug}`    | Suppression d'un cours (204) |
+| GET     | `/api/admin/boxes`             | Catalogue complet, machines retirées comprises |
+| POST    | `/api/admin/boxes`             | Publication d'une machine (201, flags affichés une fois) |
+| PUT     | `/api/admin/boxes/{slug}`      | Modification d'une machine |
+| DELETE  | `/api/admin/boxes/{slug}`      | Suppression d'une machine (204) |
 
 Toutes les erreurs suivent le même format :
 `{ timestamp, status, error, message, path, details }`.
@@ -478,6 +494,7 @@ prête à être remplacée module par module.
 | `APP_ADMIN_EMAILS`         | vide               | Comptes administrateurs, séparés par des virgules |
 | `APP_BOXES_LOG_SEEDED_FLAGS` | `true`           | Flags du catalogue écrits dans les journaux au premier démarrage (démo) |
 | `APP_BOXES_LEADERBOARD_SIZE` | `20`             | Nombre de joueurs affichés dans le classement |
+| `APP_BOXES_INSTANCE_LIFETIME` | `2h`            | Durée de vie d'une cible lancée à la demande |
 
 ## Intégration continue
 
@@ -497,10 +514,6 @@ sur PostgreSQL.
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
-- Provisionner une vraie cible par machine du catalogue (instance à la
-  demande) plutôt que des adresses fixes : le point d'extension est le même
-  `HypervisorPort`.
-- Gestion des machines du catalogue depuis le tableau de bord, comme les cours.
 - Téléversement des vidéos sur la plateforme, plutôt qu'une adresse externe.
 - Écriture et partage de rapports (« writeups ») une fois la machine possédée.
 - Quiz corrigés automatiquement dans les cours, plutôt que des questions

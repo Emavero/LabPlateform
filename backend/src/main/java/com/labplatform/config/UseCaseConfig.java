@@ -1,6 +1,8 @@
 package com.labplatform.config;
 
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
+import com.labplatform.application.port.in.box.GetBoxUseCase;
+import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.CourseRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
@@ -18,6 +20,8 @@ import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AcademyService;
 import com.labplatform.application.service.AccountService;
 import com.labplatform.application.service.CourseAdminService;
+import com.labplatform.application.service.BoxAdminService;
+import com.labplatform.application.service.BoxInstanceService;
 import com.labplatform.application.service.BoxService;
 import com.labplatform.application.service.ProfileService;
 import com.labplatform.application.service.ScoreboardService;
@@ -92,14 +96,30 @@ public class UseCaseConfig {
 
     @Bean
     public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
-                                 GetPlayerProgressUseCase progress, TransactionPort transactions, Clock clock) {
-        return new BoxService(boxes, owns, ratings, progress, transactions, clock);
+                                 BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
+                                 TransactionPort transactions, Clock clock) {
+        return new BoxService(boxes, owns, ratings, instances, progress, transactions, clock);
+    }
+
+    @Bean
+    public BoxInstanceService boxInstanceService(BoxRepositoryPort boxes, BoxInstanceRepositoryPort instances,
+                                                 HypervisorPort hypervisor, GetBoxUseCase boxView,
+                                                 TransactionPort transactions, Clock clock,
+                                                 AppProperties properties) {
+        return new BoxInstanceService(boxes, instances, hypervisor, boxView, transactions, clock,
+                properties.getBoxes().getInstanceLifetime());
     }
 
     @Bean
     public AcademyService academyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
                                          TransactionPort transactions, Clock clock) {
         return new AcademyService(courses, completions, transactions, clock);
+    }
+
+    @Bean
+    public BoxAdminService boxAdminService(BoxRepositoryPort boxes, SecretGeneratorPort secrets,
+                                           TransactionPort transactions, Clock clock) {
+        return new BoxAdminService(boxes, secrets, transactions, clock);
     }
 
     @Bean

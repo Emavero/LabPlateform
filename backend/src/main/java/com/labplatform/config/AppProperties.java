@@ -162,6 +162,12 @@ public class AppProperties {
          */
         private boolean logSeededFlags = false;
         private int leaderboardSize = 20;
+        /**
+         * Durée de vie d'une cible lancée à la demande. Passée l'échéance,
+         * elle est éteinte : une machine oubliée ne monopolise pas
+         * l'infrastructure.
+         */
+        private Duration instanceLifetime = Duration.ofHours(2);
 
         public boolean isLogSeededFlags() {
             return logSeededFlags;
@@ -173,6 +179,14 @@ public class AppProperties {
 
         public int getLeaderboardSize() {
             return leaderboardSize;
+        }
+
+        public Duration getInstanceLifetime() {
+            return instanceLifetime;
+        }
+
+        public void setInstanceLifetime(Duration instanceLifetime) {
+            this.instanceLifetime = instanceLifetime;
         }
 
         public void setLeaderboardSize(int leaderboardSize) {
@@ -244,6 +258,8 @@ public class AppProperties {
         private String cpus = "1.0";
         private int pidsLimit = 256;
         private String containerPrefix = "labplatform-vm-";
+        /** Image d'une cible du catalogue ; {slug} est remplacé par celui de la machine. */
+        private String boxImagePattern = "labplatform/box-{slug}:latest";
         private Duration commandTimeout = Duration.ofSeconds(60);
         private Duration readyTimeout = Duration.ofSeconds(20);
         private Duration pollInterval = Duration.ofMillis(250);
@@ -318,6 +334,14 @@ public class AppProperties {
 
         public void setContainerPrefix(String containerPrefix) {
             this.containerPrefix = containerPrefix;
+        }
+
+        public String getBoxImagePattern() {
+            return boxImagePattern;
+        }
+
+        public void setBoxImagePattern(String boxImagePattern) {
+            this.boxImagePattern = boxImagePattern;
         }
 
         public Duration getCommandTimeout() {

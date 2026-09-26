@@ -8,9 +8,11 @@ import com.labplatform.adapter.in.web.security.AuthenticatedUser;
 import com.labplatform.application.port.in.box.GetBoxUseCase;
 import com.labplatform.application.port.in.box.ListBoxesUseCase;
 import com.labplatform.application.port.in.box.RateBoxUseCase;
+import com.labplatform.application.port.in.box.SpawnBoxUseCase;
 import com.labplatform.application.port.in.box.SubmitFlagUseCase;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,13 +31,15 @@ public class BoxController {
     private final GetBoxUseCase getBox;
     private final SubmitFlagUseCase submitFlag;
     private final RateBoxUseCase rateBox;
+    private final SpawnBoxUseCase spawnBox;
 
     public BoxController(ListBoxesUseCase listBoxes, GetBoxUseCase getBox, SubmitFlagUseCase submitFlag,
-                         RateBoxUseCase rateBox) {
+                         RateBoxUseCase rateBox, SpawnBoxUseCase spawnBox) {
         this.listBoxes = listBoxes;
         this.getBox = getBox;
         this.submitFlag = submitFlag;
         this.rateBox = rateBox;
+        this.spawnBox = spawnBox;
     }
 
     @GetMapping
@@ -46,6 +50,17 @@ public class BoxController {
     @GetMapping("/{slug}")
     public BoxResponse get(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
         return BoxResponse.from(getBox.getBox(user.toActor(), slug));
+    }
+
+    /** Lance la cible de cette machine pour l'appelant. */
+    @PostMapping("/{slug}/instance")
+    public BoxResponse spawn(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
+        return BoxResponse.from(spawnBox.spawn(user.toActor(), slug));
+    }
+
+    @DeleteMapping("/{slug}/instance")
+    public BoxResponse stopInstance(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
+        return BoxResponse.from(spawnBox.stop(user.toActor(), slug));
     }
 
     /** Note de difficulté ressentie, réservée aux machines possédées. */

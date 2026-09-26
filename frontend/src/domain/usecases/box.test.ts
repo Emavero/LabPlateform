@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AppError } from '../errors/AppError';
 import type { Box, Difficulty, FlagKind } from '../models/Box';
 import type { BoxRepository, FlagSubmission } from '../repositories/BoxRepository';
-import { SubmitFlagUseCase } from './box';
+import { SubmitFlagUseCase, ToggleInstanceUseCase } from './box';
 
 const FLAG = '0123456789abcdef0123456789abcdef';
 
@@ -16,6 +16,14 @@ function repository(calls: string[]): BoxRepository {
     },
     rate: async (slug: string, difficulty: Difficulty) => {
       calls.push(`rate:${slug}:${difficulty}`);
+      return {} as Box;
+    },
+    spawn: async (slug: string) => {
+      calls.push(`spawn:${slug}`);
+      return {} as Box;
+    },
+    stopInstance: async (slug: string) => {
+      calls.push(`stop:${slug}`);
       return {} as Box;
     },
   };
@@ -40,5 +48,17 @@ describe('SubmitFlagUseCase', () => {
     expect(error?.kind).toBe('validation');
     expect(error?.fieldErrors.flag).toContain('32 caractères');
     expect(calls).toEqual([]);
+  });
+});
+
+describe('ToggleInstanceUseCase', () => {
+  it('lance une cible arrêtée et arrête une cible qui tourne', async () => {
+    const calls: string[] = [];
+    const useCase = new ToggleInstanceUseCase(repository(calls));
+
+    await useCase.execute('sentinel', false);
+    await useCase.execute('sentinel', true);
+
+    expect(calls).toEqual(['spawn:sentinel', 'stop:sentinel']);
   });
 });

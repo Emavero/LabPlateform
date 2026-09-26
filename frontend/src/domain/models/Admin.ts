@@ -1,4 +1,6 @@
+import type { Difficulty } from './Box';
 import type { CourseLevel, SectionKind, TrackCode } from './Course';
+import type { OperatingSystem } from './VirtualMachine';
 
 /** Chiffres du tableau de bord d'administration. */
 export interface AdminOverview {
@@ -60,4 +62,66 @@ export const KIND_LABELS: Record<SectionKind, string> = {
   THEORY: 'Cours',
   LAB: 'Atelier',
   QUIZ: 'Quiz',
+};
+
+/** Machine du catalogue en cours de saisie. */
+export interface BoxDraft {
+  readonly name: string;
+  readonly operatingSystem: OperatingSystem;
+  readonly difficulty: Difficulty;
+  readonly synopsis: string;
+  readonly ipAddress: string;
+  readonly maker: string;
+  readonly retired: boolean;
+  /** Laissé vide : tiré au hasard à la création, inchangé à la modification. */
+  readonly userFlag: string;
+  readonly rootFlag: string;
+}
+
+/**
+ * Machine publiée. Les flags en clair n'arrivent qu'avec la réponse qui suit
+ * leur tirage : ils ne sont plus jamais lisibles ensuite.
+ */
+export interface PublishedBox {
+  readonly slug: string;
+  readonly name: string;
+  readonly os: OperatingSystem;
+  readonly osName: string;
+  readonly difficulty: Difficulty;
+  readonly difficultyName: string;
+  readonly userFlagPoints: number;
+  readonly rootFlagPoints: number;
+  readonly totalPoints: number;
+  readonly synopsis: string;
+  readonly ipAddress: string;
+  readonly maker: string;
+  readonly releasedAt: Date;
+  readonly retired: boolean;
+  readonly userFlagOnce: string | null;
+  readonly rootFlagOnce: string | null;
+}
+
+export const EMPTY_BOX_DRAFT: BoxDraft = {
+  name: '',
+  operatingSystem: 'LINUX',
+  difficulty: 'EASY',
+  synopsis: '',
+  ipAddress: '10.10.10.',
+  maker: 'cyberMans',
+  retired: false,
+  userFlag: '',
+  rootFlag: '',
+};
+
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  VERY_EASY: 'Très facile',
+  EASY: 'Facile',
+  MEDIUM: 'Moyenne',
+  HARD: 'Difficile',
+  INSANE: 'Insane',
+};
+
+export const OS_LABELS: Record<OperatingSystem, string> = {
+  LINUX: 'Linux',
+  WINDOWS: 'Windows',
 };

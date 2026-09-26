@@ -51,7 +51,10 @@ public final class BoxDtos {
             double ratingAverage,
             String perceivedDifficulty,
             String perceivedDifficultyName,
-            String myRating) {
+            String myRating,
+            String instanceStatus,
+            String instanceAddress,
+            Instant instanceExpiresAt) {
 
         public static BoxResponse from(BoxView view) {
             Box box = view.box();
@@ -80,7 +83,10 @@ public final class BoxDtos {
                     view.rating().averageLevel(),
                     perceived(view.rating()),
                     perceivedName(view.rating()),
-                    view.myVote() == null ? null : view.myVote().name());
+                    view.myVote() == null ? null : view.myVote().name(),
+                    view.instance() == null ? "STOPPED" : view.instance().getStatus().name(),
+                    view.instance() == null ? null : view.instance().getAddress().orElse(null),
+                    view.instance() == null ? null : view.instance().getExpiresAt().orElse(null));
         }
     }
 

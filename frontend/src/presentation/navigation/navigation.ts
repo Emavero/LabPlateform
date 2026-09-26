@@ -76,6 +76,7 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
     children: [
       { label: 'Tableau de bord', to: '/admin', icon: 'dashboard', end: true },
       { label: 'Gérer les cours', to: '/admin/cours', icon: 'book' },
+      { label: 'Gérer les machines', to: '/admin/machines', icon: 'target' },
     ],
   },
   { label: 'Report Center', to: '/modules/report-center', icon: 'report' },

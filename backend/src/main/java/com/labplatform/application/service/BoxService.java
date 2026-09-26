@@ -7,11 +7,13 @@ import com.labplatform.application.port.in.box.ListBoxesUseCase;
 import com.labplatform.application.port.in.box.RateBoxUseCase;
 import com.labplatform.application.port.in.box.SubmitFlagUseCase;
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
+import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.BoxInstance;
 import com.labplatform.domain.box.BoxRating;
 import com.labplatform.domain.box.CommunityRating;
 import com.labplatform.domain.box.Difficulty;
@@ -47,15 +49,18 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
     private final BoxRepositoryPort boxes;
     private final OwnRepositoryPort owns;
     private final BoxRatingRepositoryPort ratings;
+    private final BoxInstanceRepositoryPort instances;
     private final GetPlayerProgressUseCase progress;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public BoxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
-                      GetPlayerProgressUseCase progress, TransactionPort transactions, Clock clock) {
+                      BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
+                      TransactionPort transactions, Clock clock) {
         this.boxes = boxes;
         this.owns = owns;
         this.ratings = ratings;
+        this.instances = instances;
         this.progress = progress;
         this.transactions = transactions;
         this.clock = clock;
@@ -113,7 +118,20 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
 
     private BoxView view(Actor actor, Box box, List<Own> mine, Map<Long, CommunityRating> perceived) {
         Difficulty myVote = ratings.find(actor.userId(), box.getId()).map(BoxRating::difficulty).orElse(null);
-        return BoxView.of(box, mine, perceived.getOrDefault(box.getId(), CommunityRating.NONE), myVote);
+        return BoxView.of(box, mine, perceived.getOrDefault(box.getId(), CommunityRating.NONE), myVote,
+                instanceOf(actor, box));
+    }
+
+    /**
+     * Une cible échue est présentée comme arrêtée sans attendre : l'extinction
+     * réelle a lieu au prochain lancement (voir BoxInstanceService).
+     */
+    private BoxInstance instanceOf(Actor actor, Box box) {
+        return instances.find(actor.userId(), box.getId())
+                .map(instance -> instance.isExpiredAt(clock.instant())
+                        ? BoxInstance.idle(actor.userId(), box.getId())
+                        : instance)
+                .orElse(null);
     }
 
     /** Dépouillement en une requête, puis une moyenne par machine. */

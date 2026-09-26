@@ -1,5 +1,6 @@
 package com.labplatform.application.port.out;
 
+import com.labplatform.domain.box.Box;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.VirtualMachine;
 
@@ -18,4 +19,15 @@ public interface HypervisorPort {
     void powerOff(VirtualMachine vm);
 
     List<String> consoleLog(VirtualMachine vm);
+
+    /**
+     * Démarre une cible du catalogue pour un joueur et renvoie son adresse
+     * dans le réseau du lab.
+     * <p>
+     * Une cible n'a pas d'identifiants à renvoyer, contrairement à une
+     * machine d'attaque : les obtenir est précisément l'exercice.
+     */
+    String powerOnTarget(Box box, Long userId);
+
+    void powerOffTarget(Box box, Long userId);
 }

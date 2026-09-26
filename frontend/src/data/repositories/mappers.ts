@@ -70,6 +70,9 @@ export interface BoxDto {
   perceivedDifficulty: Difficulty | null;
   perceivedDifficultyName: string | null;
   myRating: Difficulty | null;
+  instanceStatus: 'STOPPED' | 'RUNNING';
+  instanceAddress: string | null;
+  instanceExpiresAt: string | null;
 }
 
 export interface CourseSummaryDto {
@@ -213,6 +216,7 @@ export function toBox(dto: BoxDto): Box {
     ...dto,
     releasedAt: new Date(dto.releasedAt),
     lastOwnedAt: dto.lastOwnedAt ? new Date(dto.lastOwnedAt) : null,
+    instanceExpiresAt: dto.instanceExpiresAt ? new Date(dto.instanceExpiresAt) : null,
   };
 }
 

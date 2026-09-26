@@ -12,10 +12,10 @@ import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseSection;
-import com.labplatform.domain.academy.Slug;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.NotFoundException;
+import com.labplatform.domain.shared.Slug;
 import com.labplatform.domain.user.Actor;
 import com.labplatform.domain.user.AdminPolicy;
 

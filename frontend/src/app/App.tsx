@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Dependencies } from '@/di/container';
 import { AppShell } from '@/presentation/layouts/AppShell';
+import { AdminBoxesPage } from '@/presentation/pages/AdminBoxesPage';
 import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPage';
 import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
 import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
@@ -52,6 +53,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                 <Route element={<AdminRoute />}>
                   <Route path="/admin" element={<AdminDashboardPage />} />
                   <Route path="/admin/cours" element={<AdminCoursesPage />} />
+                  <Route path="/admin/machines" element={<AdminBoxesPage />} />
                   <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
                 </Route>
                 <Route path="/labs" element={<LabsPage />} />

@@ -26,8 +26,21 @@ import {
   StartVmUseCase,
   StopVmUseCase,
 } from '@/domain/usecases/lab';
-import { DeleteCourseUseCase, GetAdminOverviewUseCase, SaveCourseUseCase } from '@/domain/usecases/admin';
-import { GetBoxUseCase, ListBoxesUseCase, RateBoxUseCase, SubmitFlagUseCase } from '@/domain/usecases/box';
+import {
+  DeleteBoxUseCase,
+  DeleteCourseUseCase,
+  GetAdminOverviewUseCase,
+  ListBoxesUseCase as ListAdminBoxesUseCase,
+  SaveBoxUseCase,
+  SaveCourseUseCase,
+} from '@/domain/usecases/admin';
+import {
+  GetBoxUseCase,
+  ListBoxesUseCase,
+  RateBoxUseCase,
+  SubmitFlagUseCase,
+  ToggleInstanceUseCase,
+} from '@/domain/usecases/box';
 import {
   GetCourseUseCase,
   GetLearningProgressUseCase,
@@ -65,6 +78,7 @@ export interface Dependencies {
     readonly get: GetBoxUseCase;
     readonly submitFlag: SubmitFlagUseCase;
     readonly rate: RateBoxUseCase;
+    readonly toggleInstance: ToggleInstanceUseCase;
   };
   readonly courses: {
     readonly tracks: ListTracksUseCase;
@@ -82,6 +96,9 @@ export interface Dependencies {
     readonly overview: GetAdminOverviewUseCase;
     readonly saveCourse: SaveCourseUseCase;
     readonly deleteCourse: DeleteCourseUseCase;
+    readonly listBoxes: ListAdminBoxesUseCase;
+    readonly saveBox: SaveBoxUseCase;
+    readonly deleteBox: DeleteBoxUseCase;
   };
   readonly scoreboard: {
     readonly progress: GetProgressUseCase;
@@ -137,6 +154,7 @@ export function createContainer(): Dependencies {
       get: new GetBoxUseCase(boxRepository),
       submitFlag: new SubmitFlagUseCase(boxRepository),
       rate: new RateBoxUseCase(boxRepository),
+      toggleInstance: new ToggleInstanceUseCase(boxRepository),
     },
     courses: {
       tracks: new ListTracksUseCase(courseRepository),
@@ -153,6 +171,9 @@ export function createContainer(): Dependencies {
       overview: new GetAdminOverviewUseCase(adminRepository),
       saveCourse: new SaveCourseUseCase(adminRepository),
       deleteCourse: new DeleteCourseUseCase(adminRepository),
+      listBoxes: new ListAdminBoxesUseCase(adminRepository),
+      saveBox: new SaveBoxUseCase(adminRepository),
+      deleteBox: new DeleteBoxUseCase(adminRepository),
     },
     scoreboard: {
       progress: new GetProgressUseCase(scoreboardRepository),

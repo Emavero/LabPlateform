@@ -29,6 +29,11 @@ public class InMemoryBoxes implements BoxRepositoryPort {
     }
 
     @Override
+    public void delete(Box box) {
+        store.remove(box.getId());
+    }
+
+    @Override
     public Box save(Box box) {
         Long id = box.getId() != null ? box.getId() : ++sequence;
         Box stored = Box.restore(id, box.getSlug(), box.getName(), box.getOperatingSystem(), box.getDifficulty(),

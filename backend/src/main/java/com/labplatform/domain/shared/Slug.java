@@ -1,6 +1,4 @@
-package com.labplatform.domain.academy;
-
-import com.labplatform.domain.shared.InvalidInputException;
+package com.labplatform.domain.shared;
 
 import java.text.Normalizer;
 import java.util.Locale;

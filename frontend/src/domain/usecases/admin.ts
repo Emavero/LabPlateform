@@ -1,7 +1,8 @@
 import { AppError } from '../errors/AppError';
-import type { AdminOverview, CourseDraft } from '../models/Admin';
+import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox } from '../models/Admin';
 import type { Course } from '../models/Course';
 import type { AdminRepository } from '../repositories/AdminRepository';
+import { boxDraftHasErrors, validateBoxDraft } from '../validation/boxDraft';
 import { draftHasErrors, validateDraft } from '../validation/courseDraft';
 
 export class GetAdminOverviewUseCase {
@@ -42,5 +43,38 @@ export class DeleteCourseUseCase {
 
   execute(slug: string): Promise<void> {
     return this.admin.deleteCourse(slug);
+  }
+}
+
+export class ListBoxesUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(): Promise<PublishedBox[]> {
+    return this.admin.listBoxes();
+  }
+}
+
+/** Publie ou met à jour une machine, après vérification de la saisie. */
+export class SaveBoxUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(draft: BoxDraft, slug?: string): Promise<PublishedBox> {
+    const errors = validateBoxDraft(draft);
+    if (boxDraftHasErrors(errors)) {
+      return Promise.reject(
+        AppError.validation(
+          Object.fromEntries(Object.entries(errors).filter((entry): entry is [string, string] => Boolean(entry[1]))),
+        ),
+      );
+    }
+    return slug ? this.admin.updateBox(slug, draft) : this.admin.createBox(draft);
+  }
+}
+
+export class DeleteBoxUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(slug: string): Promise<void> {
+    return this.admin.deleteBox(slug);
   }
 }

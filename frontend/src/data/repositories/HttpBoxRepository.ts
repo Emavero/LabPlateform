@@ -24,6 +24,16 @@ export class HttpBoxRepository implements BoxRepository {
     return { ...data, progress: toProgress(data.progress) };
   }
 
+  async spawn(slug: string): Promise<Box> {
+    const { data } = await this.http.post<BoxDto>(`/boxes/${encodeURIComponent(slug)}/instance`);
+    return toBox(data);
+  }
+
+  async stopInstance(slug: string): Promise<Box> {
+    const { data } = await this.http.delete<BoxDto>(`/boxes/${encodeURIComponent(slug)}/instance`);
+    return toBox(data);
+  }
+
   async rate(slug: string, difficulty: Difficulty): Promise<Box> {
     const { data } = await this.http.put<BoxDto>(`/boxes/${encodeURIComponent(slug)}/rating`, { difficulty });
     return toBox(data);

@@ -4,6 +4,7 @@ import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
+import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
 import com.labplatform.application.fakes.InMemoryRatings;
 import com.labplatform.application.port.in.profile.ActivityEntry;
@@ -62,7 +63,7 @@ class ProfileServiceTest {
         courses.save(course("durcir", Track.DEFENSE));
 
         ScoreboardService scoreboard = new ScoreboardService(boxes, owns);
-        catalogue = new BoxService(boxes, owns, new InMemoryRatings(), scoreboard, Fakes.NO_TRANSACTION, clock);
+        catalogue = new BoxService(boxes, owns, new InMemoryRatings(), new InMemoryInstances(), scoreboard, Fakes.NO_TRANSACTION, clock);
         academy = new AcademyService(courses, completions, Fakes.NO_TRANSACTION, clock);
         profile = new ProfileService(boxes, owns, courses, completions);
     }

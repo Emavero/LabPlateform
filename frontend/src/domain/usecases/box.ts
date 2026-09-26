@@ -42,3 +42,12 @@ export class RateBoxUseCase {
     return this.boxes.rate(slug, difficulty);
   }
 }
+
+/** Lance ou arrête la cible d'une machine : un seul point d'entrée pour le bouton. */
+export class ToggleInstanceUseCase {
+  constructor(private readonly boxes: BoxRepository) {}
+
+  execute(slug: string, running: boolean): Promise<Box> {
+    return running ? this.boxes.stopInstance(slug) : this.boxes.spawn(slug);
+  }
+}

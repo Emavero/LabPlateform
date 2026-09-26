@@ -2,6 +2,7 @@ package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryBoxes;
+import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
 import com.labplatform.application.fakes.InMemoryRatings;
 import com.labplatform.application.port.in.box.BoxView;
@@ -58,7 +59,7 @@ class BoxServiceTest {
         boxes.save(newBox("sentinel", "Sentinel", Difficulty.VERY_EASY, SENTINEL_USER, SENTINEL_ROOT, 2));
         boxes.save(newBox("northwind", "Northwind", Difficulty.EASY, NORTHWIND_USER, NORTHWIND_ROOT, 1));
         scoreboard = new ScoreboardService(boxes, owns);
-        service = new BoxService(boxes, owns, ratings, scoreboard, Fakes.NO_TRANSACTION,
+        service = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.NO_TRANSACTION,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 

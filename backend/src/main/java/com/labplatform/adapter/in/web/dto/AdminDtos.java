@@ -1,10 +1,16 @@
 package com.labplatform.adapter.in.web.dto;
 
 import com.labplatform.application.port.in.admin.AdminOverview;
+import com.labplatform.application.port.in.admin.BoxDraft;
 import com.labplatform.application.port.in.admin.CourseDraft;
+import com.labplatform.application.port.in.admin.PublishedBox;
 import com.labplatform.domain.academy.CourseLevel;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
+import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.Difficulty;
+import com.labplatform.domain.box.FlagKind;
+import com.labplatform.domain.lab.OperatingSystem;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -13,6 +19,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
 import java.util.List;
 
 /** Représentations HTTP du tableau de bord d'administration. */
@@ -53,6 +60,53 @@ public final class AdminDtos {
 
         CourseDraft.SectionDraft toDraft() {
             return new CourseDraft.SectionDraft(id, title, kind, minutes, content, videoUrl);
+        }
+    }
+
+    /** Machine du catalogue saisie dans l'éditeur. */
+    public record BoxDraftRequest(
+            @NotBlank(message = "Le nom est obligatoire")
+            @Size(max = 64, message = "Le nom est limité à 64 caractères") String name,
+            @NotNull(message = "Le système est obligatoire") OperatingSystem operatingSystem,
+            @NotNull(message = "La difficulté est obligatoire") Difficulty difficulty,
+            @Size(max = 512, message = "Le synopsis est limité à 512 caractères") String synopsis,
+            @NotBlank(message = "L'adresse est obligatoire")
+            @Size(max = 45, message = "Adresse trop longue") String ipAddress,
+            @Size(max = 64, message = "Nom d'auteur trop long") String maker,
+            boolean retired,
+            String userFlag,
+            String rootFlag) {
+
+        public BoxDraft toDraft() {
+            return new BoxDraft(name, operatingSystem, difficulty, synopsis, ipAddress, maker, retired, userFlag,
+                    rootFlag);
+        }
+    }
+
+    /**
+     * Machine publiée. Les flags en clair n'apparaissent que dans la réponse
+     * qui suit leur tirage, pour être déposés sur la cible ; ils ne sont
+     * conservés nulle part et ne seront plus jamais lisibles.
+     */
+    public record AdminBoxResponse(String slug, String name, String os, String osName, String difficulty,
+                                   String difficultyName, int userFlagPoints, int rootFlagPoints, int totalPoints,
+                                   String synopsis, String ipAddress, String maker, Instant releasedAt,
+                                   boolean retired, String userFlagOnce, String rootFlagOnce) {
+
+        public static AdminBoxResponse from(PublishedBox published) {
+            return from(published.box(), published.userFlagOnce(), published.rootFlagOnce());
+        }
+
+        public static AdminBoxResponse from(Box box) {
+            return from(box, null, null);
+        }
+
+        private static AdminBoxResponse from(Box box, String userFlagOnce, String rootFlagOnce) {
+            return new AdminBoxResponse(box.getSlug(), box.getName(), box.getOperatingSystem().name(),
+                    box.getOperatingSystem().displayName(), box.getDifficulty().name(),
+                    box.getDifficulty().displayName(), box.pointsFor(FlagKind.USER), box.pointsFor(FlagKind.ROOT),
+                    box.totalPoints(), box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(),
+                    box.isRetired(), userFlagOnce, rootFlagOnce);
         }
     }
 

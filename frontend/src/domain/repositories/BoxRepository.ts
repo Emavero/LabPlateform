@@ -18,4 +18,7 @@ export interface BoxRepository {
   submitFlag(slug: string, kind: FlagKind, flag: string): Promise<FlagSubmission>;
   /** Note de difficulté ressentie : réservée aux machines possédées. */
   rate(slug: string, difficulty: Difficulty): Promise<Box>;
+  /** Lance la cible de la machine pour le joueur connecté. */
+  spawn(slug: string): Promise<Box>;
+  stopInstance(slug: string): Promise<Box>;
 }

@@ -61,6 +61,14 @@ public class Box {
                 false, userFlag, rootFlag);
     }
 
+    /** Nouvelle machine, avec son état de retrait décidé par l'administration. */
+    public static Box create(String slug, String name, OperatingSystem operatingSystem, Difficulty difficulty,
+                             String synopsis, String ipAddress, String maker, Instant releasedAt, boolean retired,
+                             Flag userFlag, Flag rootFlag) {
+        return new Box(null, slug, name, operatingSystem, difficulty, synopsis, ipAddress, maker, releasedAt,
+                retired, userFlag, rootFlag);
+    }
+
     /** Reconstitution depuis la persistance. */
     public static Box restore(Long id, String slug, String name, OperatingSystem operatingSystem,
                               Difficulty difficulty, String synopsis, String ipAddress, String maker,

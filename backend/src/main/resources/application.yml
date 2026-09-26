@@ -60,6 +60,8 @@ app:
     # faute de pouvoir aller les chercher sur la cible.
     log-seeded-flags: ${APP_BOXES_LOG_SEEDED_FLAGS:false}
     leaderboard-size: ${APP_BOXES_LEADERBOARD_SIZE:20}
+    # Durée de vie d'une cible lancée à la demande, avant extinction.
+    instance-lifetime: ${APP_BOXES_INSTANCE_LIFETIME:2h}
   # Accès VPN façon Hack The Box : chaque utilisateur télécharge son profil .ovpn.
   vpn:
     enabled: ${APP_VPN_ENABLED:false}

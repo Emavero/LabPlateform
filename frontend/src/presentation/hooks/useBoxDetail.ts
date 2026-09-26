@@ -16,6 +16,9 @@ export interface BoxDetailState {
   /** Note de difficulté : refusée par le serveur tant que la machine n'est pas possédée. */
   rate: (difficulty: Difficulty) => Promise<void>;
   rating: boolean;
+  /** Lance la cible si elle est arrêtée, l'arrête sinon. */
+  toggleInstance: () => Promise<void>;
+  instancePending: boolean;
   reload: () => Promise<void>;
 }
 
@@ -28,6 +31,7 @@ export function useBoxDetail(slug: string): BoxDetailState {
   const [submitting, setSubmitting] = useState<FlagKind | null>(null);
   const [submitError, setSubmitError] = useState<AppError | null>(null);
   const [rating, setRating] = useState(false);
+  const [instancePending, setInstancePending] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -79,5 +83,31 @@ export function useBoxDetail(slug: string): BoxDetailState {
     [boxes.rate, slug],
   );
 
-  return { box, loading, error, lastSubmission, submitting, submitError, submit, rate, rating, reload };
+  const toggleInstance = useCallback(async () => {
+    if (!box) return;
+    setInstancePending(true);
+    setSubmitError(null);
+    try {
+      setBox(await boxes.toggleInstance.execute(slug, box.instanceStatus === 'RUNNING'));
+    } catch (e) {
+      setSubmitError(toAppError(e));
+    } finally {
+      setInstancePending(false);
+    }
+  }, [boxes.toggleInstance, box, slug]);
+
+  return {
+    box,
+    loading,
+    error,
+    lastSubmission,
+    submitting,
+    submitError,
+    submit,
+    rate,
+    rating,
+    toggleInstance,
+    instancePending,
+    reload,
+  };
 }

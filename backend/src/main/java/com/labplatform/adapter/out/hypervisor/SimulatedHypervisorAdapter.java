@@ -2,6 +2,7 @@ package com.labplatform.adapter.out.hypervisor;
 
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.config.AppProperties;
+import com.labplatform.domain.box.Box;
 import com.labplatform.domain.lab.AccessProtocol;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.OperatingSystem;
@@ -85,5 +86,23 @@ public class SimulatedHypervisorAdapter implements HypervisorPort {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * Cible simulée : l'adresse déclarée sur la machine, après le même délai
+     * d'allumage que pour une machine d'attaque. Rien ne tourne derrière.
+     */
+    @Override
+    public String powerOnTarget(Box box, Long userId) {
+        simulateLatency(settings.getSimulatedBootDelay());
+        log.info("[simulation] cible {} lancée pour l'utilisateur {} : {}", box.getSlug(), userId,
+                box.getIpAddress());
+        return box.getIpAddress();
+    }
+
+    @Override
+    public void powerOffTarget(Box box, Long userId) {
+        simulateLatency(settings.getSimulatedShutdownDelay());
+        log.info("[simulation] cible {} arrêtée pour l'utilisateur {}", box.getSlug(), userId);
     }
 }

@@ -1,6 +1,7 @@
 import type { OperatingSystem } from './VirtualMachine';
 
 export type Difficulty = 'VERY_EASY' | 'EASY' | 'MEDIUM' | 'HARD' | 'INSANE';
+export type InstanceStatus = 'STOPPED' | 'RUNNING';
 export type FlagKind = 'USER' | 'ROOT';
 
 /**
@@ -35,6 +36,20 @@ export interface Box {
   readonly perceivedDifficultyName: string | null;
   /** Note donnée par le joueur connecté, nulle s'il n'a pas voté. */
   readonly myRating: Difficulty | null;
+  /** Cible lancée par le joueur : arrêtée tant qu'il ne l'a pas demandée. */
+  readonly instanceStatus: InstanceStatus;
+  readonly instanceAddress: string | null;
+  readonly instanceExpiresAt: Date | null;
+}
+
+export function isInstanceRunning(box: Box): boolean {
+  return box.instanceStatus === 'RUNNING';
+}
+
+/** Minutes restantes avant l'extinction automatique, jamais négatif. */
+export function minutesLeft(box: Box, now: Date = new Date()): number {
+  if (!box.instanceExpiresAt) return 0;
+  return Math.max(0, Math.ceil((box.instanceExpiresAt.getTime() - now.getTime()) / 60_000));
 }
 
 /** Ordre d'affichage des difficultés, du plus abordable au plus exigeant. */

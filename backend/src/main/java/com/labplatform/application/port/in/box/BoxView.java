@@ -1,6 +1,7 @@
 package com.labplatform.application.port.in.box;
 
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.BoxInstance;
 import com.labplatform.domain.box.CommunityRating;
 import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.FlagKind;
@@ -17,20 +18,23 @@ import java.util.Map;
  * a déjà validé, et la difficulté ressentie par ceux qui l'ont faite. Les
  * flags ne quittent jamais l'agrégat.
  *
- * @param myVote note donnée par ce joueur, nulle s'il n'a pas voté
+ * @param myVote   note donnée par ce joueur, nulle s'il n'a pas voté
+ * @param instance cible lancée par ce joueur, nulle s'il n'en a jamais lancé
  */
-public record BoxView(Box box, Map<FlagKind, Own> owns, CommunityRating rating, Difficulty myVote) {
+public record BoxView(Box box, Map<FlagKind, Own> owns, CommunityRating rating, Difficulty myVote,
+                      BoxInstance instance) {
 
     public static BoxView of(Box box, List<Own> ownsOfPlayer) {
-        return of(box, ownsOfPlayer, CommunityRating.NONE, null);
+        return of(box, ownsOfPlayer, CommunityRating.NONE, null, null);
     }
 
-    public static BoxView of(Box box, List<Own> ownsOfPlayer, CommunityRating rating, Difficulty myVote) {
+    public static BoxView of(Box box, List<Own> ownsOfPlayer, CommunityRating rating, Difficulty myVote,
+                             BoxInstance instance) {
         Map<FlagKind, Own> byKind = new EnumMap<>(FlagKind.class);
         ownsOfPlayer.stream()
                 .filter(own -> own.boxId().equals(box.getId()))
                 .forEach(own -> byKind.put(own.kind(), own));
-        return new BoxView(box, byKind, rating, myVote);
+        return new BoxView(box, byKind, rating, myVote, instance);
     }
 
     public boolean isOwned(FlagKind kind) {
@@ -48,6 +52,11 @@ public record BoxView(Box box, Map<FlagKind, Own> owns, CommunityRating rating, 
 
     public int pointsEarned() {
         return owns.values().stream().mapToInt(Own::points).sum();
+    }
+
+    /** La cible du joueur tourne-t-elle ? */
+    public boolean isInstanceRunning() {
+        return instance != null && instance.isRunning();
     }
 
     public Instant lastOwnedAt() {

@@ -60,10 +60,16 @@ export function AdminDashboardPage() {
       <Panel
         title="Contenu publié"
         actions={
-          <Link className="btn btn--primary btn--sm" to="/admin/cours">
-            <Icon name="book" size={16} />
-            <span>Gérer les cours</span>
-          </Link>
+          <>
+            <Link className="btn btn--ghost btn--sm" to="/admin/machines">
+              <Icon name="target" size={16} />
+              <span>Gérer les machines</span>
+            </Link>
+            <Link className="btn btn--primary btn--sm" to="/admin/cours">
+              <Icon name="book" size={16} />
+              <span>Gérer les cours</span>
+            </Link>
+          </>
         }
       >
         {loading && !overview ? (
@@ -93,8 +99,12 @@ export function AdminDashboardPage() {
             retirer du cours, en revanche, supprime l'avancement qui s'y rapportait.
           </li>
           <li>
-            Les machines du catalogue et leurs flags restent semés au premier démarrage du serveur : ils ne se
-            gèrent pas encore depuis cette page.
+            Publier une machine tire ses flags au hasard et les affiche une seule fois : notez-les avant de
+            quitter la page, ils ne sont conservés que sous forme d'empreinte.
+          </li>
+          <li>
+            Les joueurs lancent la cible d'une machine à la demande. Une seule tourne à la fois par joueur, et
+            elle s'éteint d'elle-même passé son délai de vie.
           </li>
         </ul>
       </Panel>

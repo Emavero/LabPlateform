@@ -27,6 +27,9 @@ const box: Box = {
   perceivedDifficulty: null,
   perceivedDifficultyName: null,
   myRating: null,
+  instanceStatus: 'STOPPED',
+  instanceAddress: null,
+  instanceExpiresAt: null,
 };
 
 describe('ratingGap', () => {

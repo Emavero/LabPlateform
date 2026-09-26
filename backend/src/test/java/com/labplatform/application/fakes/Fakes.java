@@ -6,6 +6,7 @@ import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
+import com.labplatform.domain.box.Box;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.VirtualMachine;
 
@@ -77,6 +78,18 @@ public final class Fakes {
         @Override
         public List<String> consoleLog(VirtualMachine vm) {
             return List.of("log:" + vm.getId());
+        }
+
+        /** Adresse déterministe, pour que les tests puissent l'attendre. */
+        @Override
+        public String powerOnTarget(Box box, Long userId) {
+            calls.add("target-on:" + box.getSlug() + ":" + userId);
+            return box.getIpAddress();
+        }
+
+        @Override
+        public void powerOffTarget(Box box, Long userId) {
+            calls.add("target-off:" + box.getSlug() + ":" + userId);
         }
     }
 }

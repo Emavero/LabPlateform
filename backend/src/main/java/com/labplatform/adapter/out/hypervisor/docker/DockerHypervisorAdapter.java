@@ -6,6 +6,7 @@ import com.labplatform.adapter.out.hypervisor.SimulatedHypervisorAdapter;
 import com.labplatform.adapter.out.hypervisor.TemporaryPasswordGenerator;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.config.AppProperties;
+import com.labplatform.domain.box.Box;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.OperatingSystem;
 import com.labplatform.domain.lab.VirtualMachine;
@@ -25,6 +26,7 @@ import java.util.List;
 public class DockerHypervisorAdapter implements HypervisorPort {
 
     private final DockerLinuxMachines linux;
+    private final DockerBoxTargets targets;
     private final HypervisorPort windows;
     private final TemporaryPasswordGenerator passwords = new TemporaryPasswordGenerator();
 
@@ -45,7 +47,9 @@ public class DockerHypervisorAdapter implements HypervisorPort {
                 docker.getCommandTimeout(),
                 docker.getReadyTimeout(),
                 docker.getPollInterval());
-        this.linux = new DockerLinuxMachines(settings, new ProcessCommandRunner());
+        CommandRunner commands = new ProcessCommandRunner();
+        this.linux = new DockerLinuxMachines(settings, commands);
+        this.targets = new DockerBoxTargets(settings, docker.getBoxImagePattern(), commands);
         this.windows = new SimulatedHypervisorAdapter(properties);
     }
 
@@ -72,6 +76,16 @@ public class DockerHypervisorAdapter implements HypervisorPort {
         lines.add("[simulation] Machine Windows simulée : aucune VM réelle n'y est encore associée.");
         lines.addAll(windows.consoleLog(vm));
         return lines;
+    }
+
+    @Override
+    public String powerOnTarget(Box box, Long userId) {
+        return targets.powerOn(box, userId);
+    }
+
+    @Override
+    public void powerOffTarget(Box box, Long userId) {
+        targets.powerOff(box, userId);
     }
 
     private static boolean isLinux(VirtualMachine vm) {

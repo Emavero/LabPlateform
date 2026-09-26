@@ -1,10 +1,11 @@
 import { Link, useParams } from 'react-router-dom';
 import { remainingFlags, type FlagKind } from '@/domain/models/Box';
 import { OS_FAMILY_LABELS } from '@/domain/models/VirtualMachine';
-import { Alert, Button, CopyField, Icon, Panel, Spinner } from '../design-system';
+import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { DifficultyMeter } from '../features/box/DifficultyMeter';
 import { FlagForm, FlagSuccess } from '../features/box/FlagForm';
 import { FlagChip } from '../features/box/FlagChip';
+import { InstancePanel } from '../features/box/InstancePanel';
 import { RatingPicker } from '../features/box/RatingPicker';
 import { useBoxDetail } from '../hooks/useBoxDetail';
 import { NotFoundPage } from './NotFoundPage';
@@ -75,8 +76,8 @@ export function BoxDetailPage() {
       </header>
 
       <div className="detail-grid">
-        <Panel title="Cible" description="Joignable une fois le VPN du lab monté.">
-          <CopyField label="Adresse" value={box.ipAddress} />
+        <Panel title="Cible" description="Lancée à la demande, joignable une fois le VPN du lab monté.">
+          <InstancePanel box={box} pending={detail.instancePending} onToggle={() => void detail.toggleInstance()} />
           <dl className="box-detail__facts">
             <div>
               <dt>Difficulté</dt>

@@ -39,6 +39,11 @@ public class BoxPersistenceAdapter implements BoxRepositoryPort {
         return toDomain(repository.save(toEntity(box)));
     }
 
+    @Override
+    public void delete(Box box) {
+        repository.deleteById(box.getId());
+    }
+
     private static BoxJpaEntity toEntity(Box box) {
         return new BoxJpaEntity(box.getId(), box.getSlug(), box.getName(), box.getOperatingSystem(),
                 box.getDifficulty(), box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(),

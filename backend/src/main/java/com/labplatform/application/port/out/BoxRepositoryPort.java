@@ -14,4 +14,6 @@ public interface BoxRepositoryPort {
     long count();
 
     Box save(Box box);
+
+    void delete(Box box);
 }
