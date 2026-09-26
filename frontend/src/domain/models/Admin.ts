@@ -125,3 +125,27 @@ export const OS_LABELS: Record<OperatingSystem, string> = {
   LINUX: 'Linux',
   WINDOWS: 'Windows',
 };
+
+/** Fichier téléversé sur la plateforme. */
+export interface UploadedMedia {
+  readonly id: string;
+  /** Adresse à référencer dans une section de cours. */
+  readonly url: string;
+  readonly filename: string;
+  readonly contentType: string;
+  readonly sizeBytes: number;
+}
+
+export const MEDIA_MAX_BYTES = 256 * 1024 * 1024;
+export const MEDIA_TYPES = ['video/mp4', 'video/webm', 'video/ogg'] as const;
+
+/** Refuse tout de suite ce que le serveur refuserait de toute façon. */
+export function mediaError(file: { type: string; size: number }): string | undefined {
+  if (!MEDIA_TYPES.includes(file.type as (typeof MEDIA_TYPES)[number])) {
+    return 'Format non pris en charge. Attendu : MP4, WebM ou Ogg.';
+  }
+  if (file.size > MEDIA_MAX_BYTES) {
+    return `Fichier trop lourd : ${Math.round(MEDIA_MAX_BYTES / (1024 * 1024))} Mo au plus.`;
+  }
+  return undefined;
+}

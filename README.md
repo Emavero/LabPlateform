@@ -135,9 +135,12 @@ niveau, un résumé, puis les sections dans l'ordre de lecture. Chaque section
 porte un titre, un type, une durée, un texte et, si besoin, l'adresse d'une
 vidéo. Le cours est visible par les apprenants dès l'enregistrement.
 
-- **Vidéos.** YouTube et Vimeo s'affichent dans la page, par leur adresse
-  d'intégration ; un fichier `.mp4`, `.webm` ou `.ogg` est lu directement.
-  Toute autre adresse devient un lien, jamais un cadre : la liste des
+- **Vidéos.** Deux possibilités. **Téléverser** le fichier sur la plateforme
+  (MP4, WebM ou Ogg, 256 Mo au plus) : il est rangé dans le volume
+  `media-data`, servi par `/api/media/{id}` aux seuls utilisateurs connectés,
+  avec les requêtes par plage pour pouvoir s'y déplacer. Ou **coller une
+  adresse** : YouTube et Vimeo s'affichent dans la page par leur adresse
+  d'intégration, toute autre devient un lien, jamais un cadre. La liste des
   plateformes intégrées est la même côté application et dans la politique de
   sécurité de contenu servie par Nginx.
 - **Renommer sans casser.** L'identifiant d'URL d'un cours est dérivé de son
@@ -401,6 +404,8 @@ Principes appliqués :
 | POST    | `/api/admin/boxes`             | Publication d'une machine (201, flags affichés une fois) |
 | PUT     | `/api/admin/boxes/{slug}`      | Modification d'une machine |
 | DELETE  | `/api/admin/boxes/{slug}`      | Suppression d'une machine (204) |
+| POST    | `/api/admin/media`             | Téléversement d'une vidéo (multipart, 201) |
+| GET     | `/api/media/{id}`              | Lecture d'une vidéo téléversée (requêtes par plage) |
 
 Toutes les erreurs suivent le même format :
 `{ timestamp, status, error, message, path, details }`.
@@ -495,6 +500,7 @@ prête à être remplacée module par module.
 | `APP_BOXES_LOG_SEEDED_FLAGS` | `true`           | Flags du catalogue écrits dans les journaux au premier démarrage (démo) |
 | `APP_BOXES_LEADERBOARD_SIZE` | `20`             | Nombre de joueurs affichés dans le classement |
 | `APP_BOXES_INSTANCE_LIFETIME` | `2h`            | Durée de vie d'une cible lancée à la demande |
+| `APP_MEDIA_MAX_FILE_SIZE`  | `256MB`            | Taille maximale d'une vidéo téléversée |
 
 ## Intégration continue
 
@@ -514,7 +520,6 @@ sur PostgreSQL.
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
-- Téléversement des vidéos sur la plateforme, plutôt qu'une adresse externe.
 - Écriture et partage de rapports (« writeups ») une fois la machine possédée.
 - Quiz corrigés automatiquement dans les cours, plutôt que des questions
   ouvertes à traiter de son côté.

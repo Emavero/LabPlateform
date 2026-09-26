@@ -1,4 +1,4 @@
-import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox } from '../models/Admin';
+import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox, UploadedMedia } from '../models/Admin';
 import type { Course } from '../models/Course';
 
 export interface AdminRepository {
@@ -10,4 +10,5 @@ export interface AdminRepository {
   createCourse(draft: CourseDraft): Promise<Course>;
   updateCourse(slug: string, draft: CourseDraft): Promise<Course>;
   deleteCourse(slug: string): Promise<void>;
+  uploadMedia(file: File): Promise<UploadedMedia>;
 }

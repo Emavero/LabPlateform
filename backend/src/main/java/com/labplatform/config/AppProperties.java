@@ -1,6 +1,7 @@
 package com.labplatform.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.unit.DataSize;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class AppProperties {
     private final Hypervisor hypervisor = new Hypervisor();
     private final Vpn vpn = new Vpn();
     private final Boxes boxes = new Boxes();
+    private final Media media = new Media();
 
     public Jwt getJwt() {
         return jwt;
@@ -44,6 +46,10 @@ public class AppProperties {
 
     public Boxes getBoxes() {
         return boxes;
+    }
+
+    public Media getMedia() {
+        return media;
     }
 
     public static class Jwt {
@@ -150,6 +156,29 @@ public class AppProperties {
 
         public void setResetTokenValidity(Duration resetTokenValidity) {
             this.resetTokenValidity = resetTokenValidity;
+        }
+    }
+
+    /** Fichiers téléversés (vidéos de cours). */
+    public static class Media {
+        /** Dossier persistant : à sauvegarder, comme le volume du VPN. */
+        private String directory = "/var/lib/labplatform/media";
+        private DataSize maxFileSize = DataSize.ofMegabytes(256);
+
+        public String getDirectory() {
+            return directory;
+        }
+
+        public void setDirectory(String directory) {
+            this.directory = directory;
+        }
+
+        public DataSize getMaxFileSize() {
+            return maxFileSize;
+        }
+
+        public void setMaxFileSize(DataSize maxFileSize) {
+            this.maxFileSize = maxFileSize;
         }
     }
 

@@ -16,6 +16,10 @@ app:
     expose-reset-token-in-response: true
     admin-emails:
       - admin@example.com
+  media:
+    # Dossier jetable : les tests n'écrivent pas dans le stockage de production.
+    directory: ${java.io.tmpdir}/labplatform-test-media
+    max-file-size: 1MB
   hypervisor:
     simulated-boot-delay: 0ms
     simulated-shutdown-delay: 0ms

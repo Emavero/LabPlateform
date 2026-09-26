@@ -17,8 +17,13 @@ const YOUTUBE_EMBED = /^https?:\/\/(?:www\.)?youtube(?:-nocookie)?\.com\/embed\/
 const VIMEO = /^https?:\/\/(?:www\.)?vimeo\.com\/(\d{6,12})/i;
 const VIMEO_PLAYER = /^https?:\/\/player\.vimeo\.com\/video\/(\d{6,12})/i;
 const FILE = /\.(mp4|webm|ogg|ogv)(\?.*)?$/i;
+/** Vidéo téléversée sur la plateforme : servie par notre propre API. */
+const HOSTED = /^\/api\/media\/[0-9a-f]{32}$/;
 
 export function toVideoEmbed(url: string): VideoEmbed {
+  if (HOSTED.test(url)) {
+    return { kind: 'file', src: url };
+  }
   const youtubeId =
     url.match(YOUTUBE_WATCH)?.[1] ?? url.match(YOUTUBE_SHORT)?.[1] ?? url.match(YOUTUBE_EMBED)?.[1];
   if (youtubeId) {

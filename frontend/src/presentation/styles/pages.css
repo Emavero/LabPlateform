@@ -1488,3 +1488,43 @@ button.back-link {
   height: 16px;
   accent-color: var(--violet);
 }
+
+/* ---------- Téléversement d'une vidéo ---------- */
+.upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -0.35rem 0 1rem;
+}
+
+/* Le champ natif est masqué : c'est le libellé qui sert de bouton. */
+.upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.upload__button {
+  cursor: pointer;
+}
+
+.upload__input:focus-visible + .upload__button {
+  box-shadow: var(--glow-focus);
+}
+
+.upload__input:disabled + .upload__button {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.upload__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--running);
+  font-size: var(--step--1);
+}

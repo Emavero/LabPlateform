@@ -13,5 +13,5 @@ target/
 # Secrets locaux
 .env
 
-# Autorité de certification VPN créée en développement local
+# Autorité de certification VPN et vidéos téléversées en développement local
 backend/data/

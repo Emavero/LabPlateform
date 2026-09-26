@@ -11,6 +11,7 @@ import {
 import type { Course, CourseLevel, SectionKind, TrackCode } from '@/domain/models/Course';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Alert, Button, Icon, Panel, Spinner, TextField } from '../design-system';
+import { VideoUpload } from '../features/course/VideoUpload';
 import { useDependencies } from '../state/DependenciesContext';
 
 const TRACKS: readonly { code: TrackCode; label: string }[] = [
@@ -239,11 +240,12 @@ export function AdminCourseEditorPage() {
               label="Vidéo (facultatif)"
               value={section.videoUrl}
               onChange={(e) => patchSection(index, { videoUrl: e.target.value })}
-              placeholder="https://www.youtube.com/watch?v=..."
-              hint="YouTube et Vimeo s'affichent dans la page ; un fichier .mp4 est lu directement."
+              placeholder="https://www.youtube.com/watch?v=… ou une vidéo téléversée"
+              hint="YouTube et Vimeo s'affichent dans la page ; une vidéo déposée ici est hébergée par la plateforme."
               autoComplete="off"
               spellCheck={false}
             />
+            <VideoUpload onUploaded={(url) => patchSection(index, { videoUrl: url })} />
             <label className="field">
               <span className="field__label">Contenu</span>
               <textarea

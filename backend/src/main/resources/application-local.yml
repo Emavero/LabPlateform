@@ -10,6 +10,9 @@ spring:
       mode: always
 
 app:
+  media:
+    # Développement : les vidéos restent dans le dossier du projet (ignoré par git).
+    directory: ${APP_MEDIA_DIRECTORY:./data/media}
   vpn:
     # En développement, la PKI est créée dans le dossier du projet (ignoré par git).
     directory: ${APP_VPN_DIRECTORY:./data/vpn}

@@ -24,6 +24,13 @@ spring:
       ddl-auto: none
     open-in-view: false
 
+  # Téléversement des vidéos de cours : la borne du serveur doit rester au
+  # moins égale à app.media.max-file-size, sinon Tomcat refuse avant nous.
+  servlet:
+    multipart:
+      max-file-size: ${APP_MEDIA_MAX_FILE_SIZE:256MB}
+      max-request-size: ${APP_MEDIA_MAX_FILE_SIZE:256MB}
+
 management:
   endpoints:
     web:
@@ -53,6 +60,10 @@ app:
     # Comptes administrateurs, séparés par des virgules. Ils accèdent au
     # tableau de bord d'administration ; le rôle ne s'obtient pas autrement.
     admin-emails: ${APP_ADMIN_EMAILS:}
+  # Fichiers téléversés (vidéos de cours).
+  media:
+    directory: ${APP_MEDIA_DIRECTORY:/var/lib/labplatform/media}
+    max-file-size: ${APP_MEDIA_MAX_FILE_SIZE:256MB}
   # Catalogue de machines à compromettre (flags, points, classement).
   boxes:
     # true uniquement pour les démonstrations : les machines étant simulées,

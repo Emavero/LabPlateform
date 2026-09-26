@@ -33,6 +33,7 @@ import {
   ListBoxesUseCase as ListAdminBoxesUseCase,
   SaveBoxUseCase,
   SaveCourseUseCase,
+  UploadMediaUseCase,
 } from '@/domain/usecases/admin';
 import {
   GetBoxUseCase,
@@ -99,6 +100,7 @@ export interface Dependencies {
     readonly listBoxes: ListAdminBoxesUseCase;
     readonly saveBox: SaveBoxUseCase;
     readonly deleteBox: DeleteBoxUseCase;
+    readonly uploadMedia: UploadMediaUseCase;
   };
   readonly scoreboard: {
     readonly progress: GetProgressUseCase;
@@ -174,6 +176,7 @@ export function createContainer(): Dependencies {
       listBoxes: new ListAdminBoxesUseCase(adminRepository),
       saveBox: new SaveBoxUseCase(adminRepository),
       deleteBox: new DeleteBoxUseCase(adminRepository),
+      uploadMedia: new UploadMediaUseCase(adminRepository),
     },
     scoreboard: {
       progress: new GetProgressUseCase(scoreboardRepository),

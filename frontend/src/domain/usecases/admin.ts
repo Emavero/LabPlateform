@@ -1,5 +1,5 @@
 import { AppError } from '../errors/AppError';
-import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox } from '../models/Admin';
+import { mediaError, type AdminOverview, type BoxDraft, type CourseDraft, type PublishedBox, type UploadedMedia } from '../models/Admin';
 import type { Course } from '../models/Course';
 import type { AdminRepository } from '../repositories/AdminRepository';
 import { boxDraftHasErrors, validateBoxDraft } from '../validation/boxDraft';
@@ -76,5 +76,16 @@ export class DeleteBoxUseCase {
 
   execute(slug: string): Promise<void> {
     return this.admin.deleteBox(slug);
+  }
+}
+
+/** Téléverse une vidéo et renvoie l'adresse à référencer dans la section. */
+export class UploadMediaUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(file: File): Promise<UploadedMedia> {
+    const error = mediaError(file);
+    if (error) return Promise.reject(AppError.validation({ file: error }));
+    return this.admin.uploadMedia(file);
   }
 }

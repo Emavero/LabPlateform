@@ -176,3 +176,17 @@ CREATE TABLE IF NOT EXISTS box_instance (
         (status = 'STOPPED' AND address IS NULL AND started_at IS NULL AND expires_at IS NULL)
     )
 );
+
+-- Fichiers téléversés (vidéos de cours). Le contenu vit sur le stockage,
+-- seule sa fiche est en base.
+CREATE TABLE IF NOT EXISTS media_asset (
+    id            VARCHAR(32)  PRIMARY KEY,
+    filename      VARCHAR(128) NOT NULL,
+    content_type  VARCHAR(64)  NOT NULL,
+    size_bytes    BIGINT       NOT NULL,
+    uploaded_at   TIMESTAMP WITH TIME ZONE NOT NULL,
+    uploaded_by   BIGINT,
+    CONSTRAINT fk_media_user  FOREIGN KEY (uploaded_by) REFERENCES app_user (id) ON DELETE SET NULL,
+    CONSTRAINT ck_media_size  CHECK (size_bytes > 0),
+    CONSTRAINT ck_media_type  CHECK (content_type IN ('video/mp4', 'video/webm', 'video/ogg'))
+);

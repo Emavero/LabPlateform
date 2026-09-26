@@ -33,6 +33,11 @@ describe('toVideoEmbed', () => {
     expect(toVideoEmbed('https://exemple.fr/intro.webm?t=2')).toMatchObject({ kind: 'file' });
   });
 
+  it('lit une vidéo hébergée par la plateforme comme un fichier', () => {
+    const hosted = '/api/media/' + '0123456789abcdef'.repeat(2);
+    expect(toVideoEmbed(hosted)).toEqual({ kind: 'file', src: hosted });
+  });
+
   it("n'intègre jamais une plateforme inconnue : elle reste un lien", () => {
     expect(toVideoEmbed('https://exemple.fr/une/page')).toEqual({
       kind: 'link',

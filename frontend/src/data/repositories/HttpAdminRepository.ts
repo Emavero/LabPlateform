@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox } from '@/domain/models/Admin';
+import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox, UploadedMedia } from '@/domain/models/Admin';
 import type { Course } from '@/domain/models/Course';
 import type { AdminRepository } from '@/domain/repositories/AdminRepository';
 import { toCourse, type CourseDto } from './mappers';
@@ -54,6 +54,17 @@ export class HttpAdminRepository implements AdminRepository {
 
   async deleteCourse(slug: string): Promise<void> {
     await this.http.delete(`/admin/courses/${encodeURIComponent(slug)}`);
+  }
+
+  /** Multipart : le navigateur pose lui-même la frontière du corps. */
+  async uploadMedia(file: File): Promise<UploadedMedia> {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await this.http.post<UploadedMedia>('/admin/media', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 600_000,
+    });
+    return { ...data };
   }
 }
 

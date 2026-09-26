@@ -37,6 +37,7 @@ services:
       APP_HYPERVISOR_MODE: simulated
       # Comptes promus administrateurs (séparés par des virgules).
       APP_ADMIN_EMAILS: ${APP_ADMIN_EMAILS:-}
+      APP_MEDIA_DIRECTORY: /var/lib/labplatform/media
       # Démo : les machines étant simulées, les flags du catalogue sont
       # écrits dans les journaux du backend au premier démarrage.
       APP_BOXES_LOG_SEEDED_FLAGS: ${APP_BOXES_LOG_SEEDED_FLAGS:-true}
@@ -50,6 +51,8 @@ services:
     volumes:
       # Autorité de certification VPN : à sauvegarder, sa perte invalide tous les profils.
       - vpn-data:/var/lib/labplatform/vpn
+      # Vidéos de cours téléversées : à sauvegarder également.
+      - media-data:/var/lib/labplatform/media
     depends_on:
       db:
         condition: service_healthy
@@ -73,3 +76,4 @@ services:
 volumes:
   db-data:
   vpn-data:
+  media-data:

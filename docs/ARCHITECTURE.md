@@ -262,6 +262,8 @@ Seize interfaces, que les adaptateurs réalisent.
 | `BoxRepositoryPort`, `OwnRepositoryPort`, `BoxRatingRepositoryPort` | Catalogue, possessions, votes | JPA |
 | `CourseRepositoryPort`, `SectionCompletionRepositoryPort` | Cours, suivi de lecture | JPA |
 | `VpnProfileRepositoryPort` | Certificats clients | JPA |
+| `BoxInstanceRepositoryPort` | Cibles lancées à la demande | JPA |
+| `MediaAssetRepositoryPort` / `MediaStoragePort` | Fiches et contenus des fichiers téléversés | JPA / système de fichiers |
 | `PasswordHasherPort` | Hachage | BCrypt (coût 12) |
 | `AccessTokenIssuerPort` | Émission de jeton de session | JJWT (HMAC) |
 | `SecretGeneratorPort` | Aléa sûr (jetons, flags) | `SecureRandom` |
@@ -426,6 +428,8 @@ Neuf tables, décrites dans `backend/src/main/resources/db/schema.sql`.
 | `box` | Catalogue des machines à compromettre (empreintes des flags) |
 | `box_own` | Flags validés, points figés, first blood |
 | `box_rating` | Difficulté ressentie, un vote par joueur et par machine |
+| `box_instance` | Cibles lancées à la demande, avec leur échéance |
+| `media_asset` | Fiches des vidéos téléversées (le contenu vit sur le disque) |
 | `course` / `course_section` | Cours et leurs sections (texte, vidéo) |
 | `course_section_completion` | Suivi de lecture |
 
