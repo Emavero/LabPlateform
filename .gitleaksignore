@@ -1,0 +1,15 @@
+# Empreintes de découvertes gitleaks écartées, une par ligne.
+#
+# Ces entrées ne désactivent aucune règle : elles visent un couple
+# (commit, fichier, ligne, règle) précis, déjà figé dans l'historique.
+# Toute nouvelle occurrence, elle, est signalée normalement.
+
+# Flags factices d'un test du domaine, nommés USER_SECRET / ROOT_SECRET dans
+# ce commit. Le nom faisait croire à une clé d'API ; il a été corrigé depuis
+# en USER_FLAG / ROOT_FLAG, le nom des mêmes valeurs dans les autres tests.
+f9e59e5058a53395b6c46d06f2a3bbd04fe8fcb0:backend/src/test/java/com/labplatform/domain/box/BoxTest.java:generic-api-key:16
+f9e59e5058a53395b6c46d06f2a3bbd04fe8fcb0:backend/src/test/java/com/labplatform/domain/box/BoxTest.java:generic-api-key:17
+
+# Mot de passe temporaire d'un test de l'adaptateur Docker : une valeur
+# attendue par les assertions, jamais un accès à quoi que ce soit.
+f3e4f75529fb7c93d11914d516ce0064c281381a:backend/src/test/java/com/labplatform/adapter/out/hypervisor/docker/DockerLinuxMachinesTest.java:generic-api-key:26
