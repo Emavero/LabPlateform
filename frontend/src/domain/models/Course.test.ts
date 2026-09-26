@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { courseRatio, formatDuration, nextSection, type Course, type CourseSection } from './Course';
+import {
+  courseRatio,
+  formatDuration,
+  hasQuiz,
+  isQuizComplete,
+  nextSection,
+  type Course,
+  type CourseSection,
+} from './Course';
 
 function section(position: number, completed: boolean): CourseSection {
   return {
@@ -13,6 +21,7 @@ function section(position: number, completed: boolean): CourseSection {
     content: 'Contenu',
     videoUrl: null,
     completed,
+    questions: [],
   };
 }
 
@@ -62,5 +71,31 @@ describe('formatDuration', () => {
     expect(formatDuration(60)).toBe('1 h');
     expect(formatDuration(80)).toBe('1 h 20');
     expect(formatDuration(125)).toBe('2 h 05');
+  });
+});
+
+describe('quiz', () => {
+  const question = (id: number) => ({
+    id,
+    statement: `Question ${id}`,
+    position: id,
+    choices: [
+      { id: id * 10, label: 'A', correct: null },
+      { id: id * 10 + 1, label: 'B', correct: null },
+    ],
+  });
+  const quizSection = { ...section(1, false), questions: [question(1), question(2)] };
+
+  it('reconnaît une section à quiz', () => {
+    expect(hasQuiz(quizSection)).toBe(true);
+    expect(hasQuiz(section(1, false))).toBe(false);
+  });
+
+  it('exige une réponse à chaque question avant de rendre la copie', () => {
+    expect(isQuizComplete(quizSection, {})).toBe(false);
+    expect(isQuizComplete(quizSection, { 1: [10] })).toBe(false);
+    expect(isQuizComplete(quizSection, { 1: [10], 2: [21] })).toBe(true);
+    // Une question décochée ne compte pas comme répondue.
+    expect(isQuizComplete(quizSection, { 1: [10], 2: [] })).toBe(false);
   });
 });

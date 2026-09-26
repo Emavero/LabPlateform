@@ -17,6 +17,8 @@ public record CourseSection(Long id, String slug, String title, SectionKind kind
                             String content, String videoUrl) {
 
     private static final Pattern SLUG_FORMAT = Pattern.compile("^[a-z0-9]+(-[a-z0-9]+)*$");
+    /** Vidéo hébergée par la plateforme : chemin interne servi par MediaController. */
+    private static final Pattern HOSTED_VIDEO = Pattern.compile("^/api/media/[0-9a-f]{32}$");
     private static final int MAX_VIDEO_URL_LENGTH = 512;
 
     /** Section sans vidéo. */
@@ -46,8 +48,10 @@ public record CourseSection(Long id, String slug, String title, SectionKind kind
     }
 
     /**
-     * Une vidéo est une adresse http(s), rien d'autre : ni « javascript: »,
-     * ni « data: », qui s'exécuteraient dans la page de l'apprenant.
+     * Une vidéo est soit une adresse http(s) externe, soit un fichier
+     * téléversé sur la plateforme. Rien d'autre : ni « javascript: », ni
+     * « data: », qui s'exécuteraient dans la page de l'apprenant, ni un
+     * chemin interne arbitraire, qui ferait servir n'importe quelle route.
      */
     private static String normalizeVideoUrl(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -57,9 +61,13 @@ public record CourseSection(Long id, String slug, String title, SectionKind kind
         if (url.length() > MAX_VIDEO_URL_LENGTH) {
             throw new InvalidInputException("L'adresse de la vidéo est trop longue");
         }
+        if (HOSTED_VIDEO.matcher(url).matches()) {
+            return url;
+        }
         String lowered = url.toLowerCase(Locale.ROOT);
         if (!lowered.startsWith("https://") && !lowered.startsWith("http://")) {
-            throw new InvalidInputException("L'adresse de la vidéo doit commencer par https://");
+            throw new InvalidInputException(
+                    "La vidéo doit être une adresse https:// ou un fichier téléversé sur la plateforme");
         }
         return url;
     }

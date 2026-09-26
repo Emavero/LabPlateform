@@ -11,4 +11,6 @@ export interface AdminRepository {
   updateCourse(slug: string, draft: CourseDraft): Promise<Course>;
   deleteCourse(slug: string): Promise<void>;
   uploadMedia(file: File): Promise<UploadedMedia>;
+  /** Fiche complète d'un cours, bonnes réponses comprises. */
+  getCourse(slug: string): Promise<Course>;
 }

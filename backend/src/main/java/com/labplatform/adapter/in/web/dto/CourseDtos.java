@@ -4,6 +4,9 @@ import com.labplatform.application.port.in.academy.CourseView;
 import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseSection;
+import com.labplatform.domain.academy.Quiz;
+import com.labplatform.domain.academy.QuizQuestion;
+import com.labplatform.domain.academy.QuizResult;
 import com.labplatform.domain.academy.Track;
 
 import java.time.Instant;
@@ -75,19 +78,74 @@ public final class CourseDtos {
                     view.progress().isCompleted(),
                     course.getPublishedAt(),
                     course.getSections().stream()
-                            .map(section -> SectionResponse.from(section, view.isCompleted(section)))
+                            .map(section -> SectionResponse.from(section, view.isCompleted(section),
+                                    view.quizOf(section), false))
                             .toList());
         }
     }
 
     /** L'identifiant sert à l'éditeur d'administration, qui le renvoie tel quel. */
     public record SectionResponse(Long id, String slug, String title, String kind, String kindName, int position,
-                                  int minutes, String content, String videoUrl, boolean completed) {
+                                  int minutes, String content, String videoUrl, boolean completed,
+                                  List<QuestionResponse> questions) {
 
-        static SectionResponse from(CourseSection section, boolean completed) {
+        static SectionResponse from(CourseSection section, boolean completed, Quiz quiz, boolean revealAnswers) {
             return new SectionResponse(section.id(), section.slug(), section.title(), section.kind().name(),
                     section.kind().displayName(), section.position(), section.minutes(), section.content(),
-                    section.videoUrl(), completed);
+                    section.videoUrl(), completed,
+                    quiz.questions().stream().map(question -> QuestionResponse.from(question, revealAnswers))
+                            .toList());
+        }
+    }
+
+    /**
+     * Question servie à l'apprenant. Les bonnes réponses n'y figurent pas :
+     * elles ne sortent qu'avec la correction, ou pour un administrateur.
+     */
+    public record QuestionResponse(Long id, String statement, int position, List<ChoiceResponse> choices) {
+
+        static QuestionResponse from(QuizQuestion question, boolean revealAnswers) {
+            return new QuestionResponse(question.id(), question.statement(), question.position(),
+                    question.choices().stream()
+                            .map(choice -> new ChoiceResponse(choice.id(), choice.label(),
+                                    revealAnswers ? choice.correct() : null))
+                            .toList());
+        }
+    }
+
+    /** {@code correct} vaut null tant que la copie n'est pas rendue. */
+    public record ChoiceResponse(Long id, String label, Boolean correct) {
+    }
+
+    /** Copie corrigée : score, réussite, et les bonnes réponses révélées. */
+    public record QuizResultResponse(int correct, int questions, double ratio, boolean passed,
+                                     List<AnswerResponse> answers) {
+
+        public static QuizResultResponse from(QuizResult result) {
+            return new QuizResultResponse(result.correct(), result.questions(), result.ratio(), result.isPassed(),
+                    result.answers().stream()
+                            .map(answer -> new AnswerResponse(answer.questionId(), answer.correct(),
+                                    List.copyOf(answer.correctChoiceIds())))
+                            .toList());
+        }
+    }
+
+    public record AnswerResponse(Long questionId, boolean correct, List<Long> correctChoiceIds) {
+    }
+
+    /** Même fiche, mais les bonnes réponses visibles : réservée à l'administration. */
+    public record AdminCourseResponse(CourseResponse course) {
+
+        public static CourseResponse from(CourseView view) {
+            Course course = view.course();
+            CourseResponse base = CourseResponse.from(view);
+            return new CourseResponse(base.slug(), base.title(), base.track(), base.trackName(), base.trackSlug(),
+                    base.level(), base.levelName(), base.summary(), base.minutes(), base.sectionsCompleted(),
+                    base.completed(), base.publishedAt(),
+                    course.getSections().stream()
+                            .map(section -> SectionResponse.from(section, view.isCompleted(section),
+                                    view.quizOf(section), true))
+                            .toList());
         }
     }
 

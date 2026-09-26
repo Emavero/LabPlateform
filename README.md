@@ -119,8 +119,15 @@ Le menu **Cours** ouvre deux filières, chacune avec sa propre page :
 
 Chaque cours est découpé en sections — du cours, des ateliers à jouer sur les
 machines du lab, et un quiz — que l'on coche au fur et à mesure. Une section
-porte un texte, une vidéo, ou les deux. L'avancement se calcule par cours et
+porte un texte, une vidéo, un quiz, ou plusieurs de ces trois. L'avancement se calcule par cours et
 par filière, et il est réversible : rouvrir une section la décompte.
+
+**Quiz corrigés automatiquement.** Une section peut porter des questions à
+choix multiples. La copie est corrigée par le serveur : les bonnes réponses ne
+sortent jamais avant, et n'apparaissent qu'avec la correction. Une question
+n'est acquise que si l'apprenant coche exactement les bonnes propositions —
+cocher tout ne rapporte rien. À 70 % de bonnes réponses, la section est
+validée sans avoir à la cocher.
 
 Les six cours livrés sont un point de départ, semé au premier démarrage. La
 suite se publie depuis le tableau de bord d'administration, sans redémarrage.
@@ -401,6 +408,7 @@ Principes appliqués :
 | GET     | `/api/courses?track=forensique` | Cours d'une filière, avec l'avancement |
 | GET     | `/api/courses/{slug}`          | Cours complet : sections et contenu |
 | GET     | `/api/courses/progress`        | Avancement par filière |
+| POST    | `/api/courses/{slug}/sections/{section}/quiz` | Rend une copie : correction et bonnes réponses |
 | POST    | `/api/courses/{slug}/sections/{section}/completion` | Marque une section comme terminée |
 | DELETE  | `/api/courses/{slug}/sections/{section}/completion` | Rouvre une section |
 | GET     | `/api/profile/achievements`    | Hauts faits, obtenus ou non |
@@ -413,6 +421,7 @@ Principes appliqués :
 | POST    | `/api/admin/boxes`             | Publication d'une machine (201, flags affichés une fois) |
 | PUT     | `/api/admin/boxes/{slug}`      | Modification d'une machine |
 | DELETE  | `/api/admin/boxes/{slug}`      | Suppression d'une machine (204) |
+| GET     | `/api/admin/courses/{slug}`    | Fiche d'un cours, bonnes réponses comprises |
 | POST    | `/api/admin/media`             | Téléversement d'une vidéo (multipart, 201) |
 | GET     | `/api/media/{id}`              | Lecture d'une vidéo téléversée (requêtes par plage) |
 
@@ -486,6 +495,10 @@ prête à être remplacée module par module.
   soumission simultanée.
 - **Classement.** Il n'expose qu'un pseudonyme dérivé de la partie locale de
   l'e-mail, jamais l'adresse complète.
+- **Quiz.** Les bonnes réponses ne sortent du serveur qu'avec la correction,
+  ou pour un administrateur : la fiche du cours servie à l'apprenant porte
+  `correct: null`. La correction est faite côté serveur, jamais dans le
+  navigateur.
 - **Administration.** `/api/admin/**` exige le rôle ADMIN dans la chaîne de
   sécurité, et chaque cas d'usage le revérifie : une règle métier ne dépend
   pas de la configuration d'un framework. Le menu masque ces entrées aux
@@ -529,5 +542,3 @@ sur PostgreSQL.
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
-- Quiz corrigés automatiquement dans les cours, plutôt que des questions
-  ouvertes à traiter de son côté.

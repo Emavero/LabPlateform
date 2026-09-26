@@ -1,5 +1,12 @@
 import type { AxiosInstance } from 'axios';
-import type { Course, CourseSummary, LearningProgress, Track } from '@/domain/models/Course';
+import type {
+  Course,
+  CourseSummary,
+  LearningProgress,
+  QuizAnswers,
+  QuizResult,
+  Track,
+} from '@/domain/models/Course';
 import type { CourseRepository } from '@/domain/repositories/CourseRepository';
 import {
   toCourse,
@@ -45,6 +52,14 @@ export class HttpCourseRepository implements CourseRepository {
   async reopenSection(courseSlug: string, sectionSlug: string): Promise<Course> {
     const { data } = await this.http.delete<CourseDto>(this.completionPath(courseSlug, sectionSlug));
     return toCourse(data);
+  }
+
+  async gradeQuiz(courseSlug: string, sectionSlug: string, answers: QuizAnswers): Promise<QuizResult> {
+    const { data } = await this.http.post<QuizResult>(
+      `/courses/${encodeURIComponent(courseSlug)}/sections/${encodeURIComponent(sectionSlug)}/quiz`,
+      answers,
+    );
+    return data;
   }
 
   private completionPath(courseSlug: string, sectionSlug: string): string {

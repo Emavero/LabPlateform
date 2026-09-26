@@ -2,15 +2,19 @@ package com.labplatform.application.service;
 
 import com.labplatform.application.port.in.academy.CourseView;
 import com.labplatform.application.port.in.academy.GetCourseUseCase;
+import com.labplatform.application.port.in.academy.GradeQuizUseCase;
 import com.labplatform.application.port.in.academy.GetLearningProgressUseCase;
 import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.application.port.in.academy.ListCoursesUseCase;
 import com.labplatform.application.port.in.academy.TrackSectionProgressUseCase;
 import com.labplatform.application.port.out.CourseRepositoryPort;
+import com.labplatform.application.port.out.QuizRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseSection;
+import com.labplatform.domain.academy.Quiz;
+import com.labplatform.domain.academy.QuizResult;
 import com.labplatform.domain.academy.SectionCompletion;
 import com.labplatform.domain.academy.Track;
 import com.labplatform.domain.shared.NotFoundException;
@@ -21,6 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +36,7 @@ import java.util.stream.Collectors;
  * sections cochées et laisse l'agrégat {@link Course} en tirer l'avancement.
  */
 public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, TrackSectionProgressUseCase,
-        GetLearningProgressUseCase {
+        GetLearningProgressUseCase, GradeQuizUseCase {
 
     /** Les plus accessibles d'abord : on entre dans une filière par son premier palier. */
     private static final Comparator<Course> DISPLAY_ORDER =
@@ -39,13 +44,15 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
 
     private final CourseRepositoryPort courses;
     private final SectionCompletionRepositoryPort completions;
+    private final QuizRepositoryPort quizzes;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public AcademyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
-                          TransactionPort transactions, Clock clock) {
+                          QuizRepositoryPort quizzes, TransactionPort transactions, Clock clock) {
         this.courses = courses;
         this.completions = completions;
+        this.quizzes = quizzes;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -112,8 +119,23 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
         return new LearningProgress(track, ofTrack.size(), coursesDone, sections, sectionsDone, minutesDone);
     }
 
+    @Override
+    public QuizResult grade(Actor actor, String courseSlug, String sectionSlug, Map<Long, Set<Long>> answers) {
+        Course course = require(courseSlug);
+        CourseSection section = course.requireSection(sectionSlug);
+
+        QuizResult result = quizzes.findBySection(section.id()).grade(answers);
+        // Réussir le quiz vaut validation de la section : la cocher en plus n'aurait pas de sens.
+        if (result.isPassed()) {
+            completeSection(actor, courseSlug, sectionSlug);
+        }
+        return result;
+    }
+
     private CourseView view(Course course, Set<Long> completedSectionIds) {
-        return new CourseView(course, course.progressOf(completedSectionIds), completedSectionIds);
+        List<Long> sectionIds = course.getSections().stream().map(CourseSection::id).toList();
+        return new CourseView(course, course.progressOf(completedSectionIds), completedSectionIds,
+                quizzes.findBySections(sectionIds));
     }
 
     private Set<Long> completedSectionIds(Actor actor) {

@@ -20,6 +20,22 @@ public record CourseDraft(String title, Track track, CourseLevel level, String s
      * l'avancement de ceux qui l'avaient terminée.
      */
     public record SectionDraft(Long id, String title, SectionKind kind, int minutes, String content,
-                               String videoUrl) {
+                               String videoUrl, List<QuestionDraft> questions) {
+
+        /** Sans quiz. */
+        public SectionDraft(Long id, String title, SectionKind kind, int minutes, String content, String videoUrl) {
+            this(id, title, kind, minutes, content, videoUrl, List.of());
+        }
+
+        public List<QuestionDraft> questions() {
+            return questions == null ? List.of() : questions;
+        }
+    }
+
+    /** Question saisie : un énoncé et ses propositions, dont au moins une correcte. */
+    public record QuestionDraft(String statement, List<ChoiceDraft> choices) {
+    }
+
+    public record ChoiceDraft(String label, boolean correct) {
     }
 }

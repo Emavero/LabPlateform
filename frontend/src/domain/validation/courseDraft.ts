@@ -1,4 +1,7 @@
-import type { CourseDraft } from '../models/Admin';
+import type { CourseDraft, QuestionDraft } from '../models/Admin';
+
+/** Vidéo hébergée par la plateforme : l'adresse que renvoie le téléversement. */
+const HOSTED_VIDEO = /^\/api\/media\/[0-9a-f]{32}$/;
 
 /**
  * Règles de saisie de l'éditeur de cours. Miroir de celles du serveur, qui
@@ -26,10 +29,13 @@ export function validateDraft(draft: CourseDraft): DraftErrors {
       bySection[index] = `Le titre est limité à ${TITLE_MAX_LENGTH} caractères.`;
     } else if (section.minutes < 0 || section.minutes > SECTION_MAX_MINUTES) {
       bySection[index] = `La durée va de 0 à ${SECTION_MAX_MINUTES} minutes.`;
-    } else if (section.videoUrl.trim() && !/^https?:\/\//i.test(section.videoUrl.trim())) {
-      bySection[index] = "L'adresse de la vidéo doit commencer par https://.";
-    } else if (!section.content.trim() && !section.videoUrl.trim()) {
-      bySection[index] = 'Une section porte au moins un texte ou une vidéo.';
+    } else if (section.videoUrl.trim() && !isVideoUrl(section.videoUrl.trim())) {
+      bySection[index] = 'La vidéo doit être une adresse https:// ou un fichier téléversé.';
+    } else if (!section.content.trim() && !section.videoUrl.trim() && section.questions.length === 0) {
+      bySection[index] = 'Une section porte au moins un texte, une vidéo ou un quiz.';
+    } else {
+      const quiz = quizError(section.questions);
+      if (quiz) bySection[index] = quiz;
     }
   });
 
@@ -45,6 +51,26 @@ export function validateDraft(draft: CourseDraft): DraftErrors {
     sections: draft.sections.length === 0 ? 'Un cours comporte au moins une section.' : undefined,
     bySection,
   };
+}
+
+function isVideoUrl(url: string): boolean {
+  return HOSTED_VIDEO.test(url) || /^https?:\/\//i.test(url);
+}
+
+/** Une question se corrige seule : il lui faut un énoncé et une bonne réponse. */
+function quizError(questions: readonly QuestionDraft[]): string | undefined {
+  for (const [index, question] of questions.entries()) {
+    const numbered = `Question ${index + 1} : `;
+    if (!question.statement.trim()) return `${numbered}l'énoncé est obligatoire.`;
+    if (question.choices.length < 2) return `${numbered}au moins deux propositions.`;
+    if (question.choices.some((choice) => !choice.label.trim())) {
+      return `${numbered}une proposition ne peut pas être vide.`;
+    }
+    if (!question.choices.some((choice) => choice.correct)) {
+      return `${numbered}cochez au moins une bonne réponse.`;
+    }
+  }
+  return undefined;
 }
 
 export function draftHasErrors(errors: DraftErrors): boolean {

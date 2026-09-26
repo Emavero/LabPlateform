@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   EMPTY_DRAFT,
+  EMPTY_QUESTION,
   EMPTY_SECTION,
   KIND_LABELS,
   LEVEL_LABELS,
   type CourseDraft,
+  type QuestionDraft,
   type SectionDraft,
 } from '@/domain/models/Admin';
 import type { Course, CourseLevel, SectionKind, TrackCode } from '@/domain/models/Course';
@@ -24,7 +26,7 @@ export function AdminCourseEditorPage() {
   const { slug } = useParams();
   const editing = slug !== undefined && slug !== 'nouveau';
   const navigate = useNavigate();
-  const { admin, courses } = useDependencies();
+  const { admin } = useDependencies();
 
   const [draft, setDraft] = useState<CourseDraft>(EMPTY_DRAFT);
   const [loading, setLoading] = useState(editing);
@@ -37,13 +39,14 @@ export function AdminCourseEditorPage() {
     setLoading(true);
     setError(null);
     try {
-      setDraft(toDraft(await courses.get.execute(slug)));
+      // Lecture d'administration : c'est la seule qui révèle les bonnes réponses.
+      setDraft(toDraft(await admin.getCourse.execute(slug)));
     } catch (e) {
       setError(toAppError(e));
     } finally {
       setLoading(false);
     }
-  }, [courses.get, editing, slug]);
+  }, [admin.getCourse, editing, slug]);
 
   useEffect(() => {
     void load();
@@ -58,6 +61,8 @@ export function AdminCourseEditorPage() {
     }));
 
   const addSection = () => patch({ sections: [...draft.sections, EMPTY_SECTION] });
+
+  const patchQuestions = (index: number, questions: QuestionDraft[]) => patchSection(index, { questions });
 
   const removeSection = (index: number) =>
     patch({ sections: draft.sections.filter((_, i) => i !== index) });
@@ -246,6 +251,10 @@ export function AdminCourseEditorPage() {
               spellCheck={false}
             />
             <VideoUpload onUploaded={(url) => patchSection(index, { videoUrl: url })} />
+            <QuestionsEditor
+              questions={section.questions}
+              onChange={(questions) => patchQuestions(index, questions)}
+            />
             <label className="field">
               <span className="field__label">Contenu</span>
               <textarea
@@ -272,6 +281,102 @@ export function AdminCourseEditorPage() {
   );
 }
 
+/**
+ * Questions d'une section. Les propositions cochées « correcte » sont les
+ * bonnes réponses : le serveur en exige au moins une.
+ */
+function QuestionsEditor({
+  questions,
+  onChange,
+}: {
+  questions: readonly QuestionDraft[];
+  onChange: (questions: QuestionDraft[]) => void;
+}) {
+  const patchQuestion = (index: number, changes: Partial<QuestionDraft>) =>
+    onChange(questions.map((question, i) => (i === index ? { ...question, ...changes } : question)));
+
+  return (
+    <div className="quiz-editor">
+      <p className="field__label">Quiz ({questions.length} question{questions.length > 1 ? 's' : ''})</p>
+
+      {questions.map((question, index) => (
+        <div key={index} className="quiz-editor__question">
+          <div className="quiz-editor__row">
+            <TextField
+              label={`Question ${index + 1}`}
+              value={question.statement}
+              onChange={(e) => patchQuestion(index, { statement: e.target.value })}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onChange(questions.filter((_, i) => i !== index))}
+            >
+              Retirer
+            </Button>
+          </div>
+
+          {question.choices.map((choice, choiceIndex) => (
+            <div key={choiceIndex} className="quiz-editor__choice">
+              <input
+                className="field__input"
+                value={choice.label}
+                placeholder={`Proposition ${choiceIndex + 1}`}
+                onChange={(e) =>
+                  patchQuestion(index, {
+                    choices: question.choices.map((current, i) =>
+                      i === choiceIndex ? { ...current, label: e.target.value } : current,
+                    ),
+                  })
+                }
+              />
+              <label className="admin-check">
+                <input
+                  type="checkbox"
+                  checked={choice.correct}
+                  onChange={(e) =>
+                    patchQuestion(index, {
+                      choices: question.choices.map((current, i) =>
+                        i === choiceIndex ? { ...current, correct: e.target.checked } : current,
+                      ),
+                    })
+                  }
+                />
+                <span>Correcte</span>
+              </label>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={question.choices.length <= 2}
+                onClick={() =>
+                  patchQuestion(index, { choices: question.choices.filter((_, i) => i !== choiceIndex) })
+                }
+              >
+                ×
+              </Button>
+            </div>
+          ))}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={question.choices.length >= 6}
+            onClick={() =>
+              patchQuestion(index, { choices: [...question.choices, { label: '', correct: false }] })
+            }
+          >
+            Ajouter une proposition
+          </Button>
+        </div>
+      ))}
+
+      <Button variant="ghost" size="sm" icon="book" onClick={() => onChange([...questions, EMPTY_QUESTION])}>
+        Ajouter une question
+      </Button>
+    </div>
+  );
+}
+
 /** Le cours relu devient un brouillon : les identifiants de section sont conservés. */
 function toDraft(course: Course): CourseDraft {
   return {
@@ -286,6 +391,10 @@ function toDraft(course: Course): CourseDraft {
       minutes: section.minutes,
       content: section.content,
       videoUrl: section.videoUrl ?? '',
+      questions: section.questions.map((question) => ({
+        statement: question.statement,
+        choices: question.choices.map((choice) => ({ label: choice.label, correct: choice.correct === true })),
+      })),
     })),
   };
 }

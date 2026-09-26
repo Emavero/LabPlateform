@@ -2,6 +2,7 @@ package com.labplatform.adapter.in.web;
 
 import com.labplatform.adapter.in.web.dto.AdminDtos.AdminOverviewResponse;
 import com.labplatform.adapter.in.web.dto.AdminDtos.CourseDraftRequest;
+import com.labplatform.adapter.in.web.dto.CourseDtos.AdminCourseResponse;
 import com.labplatform.adapter.in.web.dto.CourseDtos.CourseResponse;
 import com.labplatform.adapter.in.web.security.AuthenticatedUser;
 import com.labplatform.application.port.in.academy.GetCourseUseCase;
@@ -45,19 +46,25 @@ public class AdminCourseController {
         return AdminOverviewResponse.from(overview.overview(user.toActor()));
     }
 
+    /** Fiche complète d'un cours, bonnes réponses comprises : pour l'éditeur. */
+    @GetMapping("/courses/{slug}")
+    public CourseResponse get(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
+        return AdminCourseResponse.from(getCourse.getCourse(user.toActor(), slug));
+    }
+
     @PostMapping("/courses")
     @ResponseStatus(HttpStatus.CREATED)
     public CourseResponse create(@AuthenticationPrincipal AuthenticatedUser user,
                                  @Valid @RequestBody CourseDraftRequest request) {
         Course created = manageCourses.createCourse(user.toActor(), request.toDraft());
-        return CourseResponse.from(getCourse.getCourse(user.toActor(), created.getSlug()));
+        return AdminCourseResponse.from(getCourse.getCourse(user.toActor(), created.getSlug()));
     }
 
     @PutMapping("/courses/{slug}")
     public CourseResponse update(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug,
                                  @Valid @RequestBody CourseDraftRequest request) {
         manageCourses.updateCourse(user.toActor(), slug, request.toDraft());
-        return CourseResponse.from(getCourse.getCourse(user.toActor(), slug));
+        return AdminCourseResponse.from(getCourse.getCourse(user.toActor(), slug));
     }
 
     @DeleteMapping("/courses/{slug}")

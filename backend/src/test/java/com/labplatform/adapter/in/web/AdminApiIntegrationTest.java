@@ -91,6 +91,61 @@ class AdminApiIntegrationTest {
     }
 
     @Test
+    void aQuizIsGradedByTheServerAndNeverRevealsItsAnswersBeforehand() throws Exception {
+        Cookie admin = register("admin@example.com");
+        Cookie learner = register("candidat@example.com");
+
+        MvcResult created = mvc.perform(createCourse(admin, """
+                        {"title":"Quiz de collecte","track":"FORENSICS","level":"EASY","summary":"",
+                         "sections":[{"title":"Évaluation","kind":"QUIZ","minutes":10,"content":"Répondez.",
+                           "questions":[
+                             {"statement":"Premier geste ?","choices":[
+                               {"label":"Capturer la mémoire","correct":true},
+                               {"label":"Débrancher","correct":false}]},
+                             {"statement":"On travaille sur ?","choices":[
+                               {"label":"Une copie","correct":true},
+                               {"label":"L'original","correct":false}]}]}]}"""))
+                .andExpect(status().isCreated())
+                // L'administrateur voit les bonnes réponses : c'est lui qui les écrit.
+                .andExpect(jsonPath("$.sections[0].questions.length()").value(2))
+                .andExpect(jsonPath("$.sections[0].questions[0].choices[0].correct").value(true))
+                .andReturn();
+        String body = created.getResponse().getContentAsString();
+        Number questionOne = JsonPath.read(body, "$.sections[0].questions[0].id");
+        Number rightOne = JsonPath.read(body, "$.sections[0].questions[0].choices[0].id");
+        Number wrongOne = JsonPath.read(body, "$.sections[0].questions[0].choices[1].id");
+        Number questionTwo = JsonPath.read(body, "$.sections[0].questions[1].id");
+        Number rightTwo = JsonPath.read(body, "$.sections[0].questions[1].choices[0].id");
+
+        // L'apprenant reçoit les énoncés sans les réponses.
+        mvc.perform(get("/api/courses/{slug}", "quiz-de-collecte").cookie(learner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sections[0].questions[0].choices[0].correct").doesNotExist());
+
+        // Copie ratée : rien n'est validé, mais la correction arrive.
+        mvc.perform(gradeQuiz(learner, "quiz-de-collecte", "evaluation", """
+                        {"%d":[%d],"%d":[%d]}""".formatted(questionOne.longValue(), wrongOne.longValue(),
+                        questionTwo.longValue(), rightTwo.longValue())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.correct").value(1))
+                .andExpect(jsonPath("$.passed").value(false))
+                .andExpect(jsonPath("$.answers[0].correctChoiceIds[0]").value(rightOne.intValue()));
+
+        mvc.perform(get("/api/courses/{slug}", "quiz-de-collecte").cookie(learner))
+                .andExpect(jsonPath("$.sections[0].completed").value(false));
+
+        // Copie réussie : la section est validée sans avoir à la cocher.
+        mvc.perform(gradeQuiz(learner, "quiz-de-collecte", "evaluation", """
+                        {"%d":[%d],"%d":[%d]}""".formatted(questionOne.longValue(), rightOne.longValue(),
+                        questionTwo.longValue(), rightTwo.longValue())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.passed").value(true));
+
+        mvc.perform(get("/api/courses/{slug}", "quiz-de-collecte").cookie(learner))
+                .andExpect(jsonPath("$.sections[0].completed").value(true));
+    }
+
+    @Test
     void aLearnerIsRefusedEverywhereUnderApiAdmin() throws Exception {
         Cookie learner = register("apprenant2@example.com");
 
@@ -133,6 +188,12 @@ class AdminApiIntegrationTest {
     @Test
     void adminRoutesRequireASession() throws Exception {
         mvc.perform(get("/api/admin/overview")).andExpect(status().isUnauthorized());
+    }
+
+    private static RequestBuilder gradeQuiz(Cookie session, String slug, String section, String answers) {
+        return post("/api/courses/{slug}/sections/{section}/quiz", slug, section).cookie(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(answers);
     }
 
     private static RequestBuilder createCourse(Cookie session, String body) {

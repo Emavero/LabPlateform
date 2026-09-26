@@ -7,6 +7,7 @@ import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.CourseRepositoryPort;
 import com.labplatform.application.port.out.MediaAssetRepositoryPort;
 import com.labplatform.application.port.out.MediaStoragePort;
+import com.labplatform.application.port.out.QuizRepositoryPort;
 import com.labplatform.application.port.out.WriteupRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
@@ -117,8 +118,8 @@ public class UseCaseConfig {
 
     @Bean
     public AcademyService academyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
-                                         TransactionPort transactions, Clock clock) {
-        return new AcademyService(courses, completions, transactions, clock);
+                                         QuizRepositoryPort quizzes, TransactionPort transactions, Clock clock) {
+        return new AcademyService(courses, completions, quizzes, transactions, clock);
     }
 
     @Bean
@@ -130,9 +131,10 @@ public class UseCaseConfig {
     @Bean
     public CourseAdminService courseAdminService(CourseRepositoryPort courses,
                                                  SectionCompletionRepositoryPort completions,
-                                                 UserRepositoryPort users, BoxRepositoryPort boxes,
-                                                 OwnRepositoryPort owns, TransactionPort transactions, Clock clock) {
-        return new CourseAdminService(courses, completions, users, boxes, owns, transactions, clock);
+                                                 QuizRepositoryPort quizzes, UserRepositoryPort users,
+                                                 BoxRepositoryPort boxes, OwnRepositoryPort owns,
+                                                 TransactionPort transactions, Clock clock) {
+        return new CourseAdminService(courses, completions, quizzes, users, boxes, owns, transactions, clock);
     }
 
     @Bean

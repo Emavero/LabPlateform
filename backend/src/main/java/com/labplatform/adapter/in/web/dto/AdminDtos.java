@@ -56,10 +56,37 @@ public final class AdminDtos {
             @Min(value = 0, message = "Une durée est positive")
             @Max(value = 600, message = "Une section dépasse rarement dix heures") int minutes,
             String content,
-            @Size(max = 512, message = "L'adresse de la vidéo est trop longue") String videoUrl) {
+            @Size(max = 512, message = "L'adresse de la vidéo est trop longue") String videoUrl,
+            @Valid List<QuestionDraftRequest> questions) {
 
         CourseDraft.SectionDraft toDraft() {
-            return new CourseDraft.SectionDraft(id, title, kind, minutes, content, videoUrl);
+            List<CourseDraft.QuestionDraft> quiz = questions == null
+                    ? List.of()
+                    : questions.stream().map(QuestionDraftRequest::toDraft).toList();
+            return new CourseDraft.SectionDraft(id, title, kind, minutes, content, videoUrl, quiz);
+        }
+    }
+
+    /** Question de quiz saisie : un énoncé et ses propositions. */
+    public record QuestionDraftRequest(
+            @NotBlank(message = "L'énoncé de la question est obligatoire")
+            @Size(max = 512, message = "L'énoncé est limité à 512 caractères") String statement,
+            @NotEmpty(message = "Une question a des propositions")
+            @Valid List<ChoiceDraftRequest> choices) {
+
+        CourseDraft.QuestionDraft toDraft() {
+            return new CourseDraft.QuestionDraft(statement,
+                    choices.stream().map(ChoiceDraftRequest::toDraft).toList());
+        }
+    }
+
+    public record ChoiceDraftRequest(
+            @NotBlank(message = "Une proposition ne peut pas être vide")
+            @Size(max = 256, message = "Une proposition est limitée à 256 caractères") String label,
+            boolean correct) {
+
+        CourseDraft.ChoiceDraft toDraft() {
+            return new CourseDraft.ChoiceDraft(label, correct);
         }
     }
 

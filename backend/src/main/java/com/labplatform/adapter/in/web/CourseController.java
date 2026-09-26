@@ -3,10 +3,12 @@ package com.labplatform.adapter.in.web;
 import com.labplatform.adapter.in.web.dto.CourseDtos.CourseResponse;
 import com.labplatform.adapter.in.web.dto.CourseDtos.CourseSummaryResponse;
 import com.labplatform.adapter.in.web.dto.CourseDtos.LearningProgressResponse;
+import com.labplatform.adapter.in.web.dto.CourseDtos.QuizResultResponse;
 import com.labplatform.adapter.in.web.dto.CourseDtos.TrackResponse;
 import com.labplatform.adapter.in.web.security.AuthenticatedUser;
 import com.labplatform.application.port.in.academy.GetCourseUseCase;
 import com.labplatform.application.port.in.academy.GetLearningProgressUseCase;
+import com.labplatform.application.port.in.academy.GradeQuizUseCase;
 import com.labplatform.application.port.in.academy.ListCoursesUseCase;
 import com.labplatform.application.port.in.academy.TrackSectionProgressUseCase;
 import com.labplatform.domain.academy.Track;
@@ -15,11 +17,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -29,14 +34,16 @@ public class CourseController {
     private final GetCourseUseCase getCourse;
     private final TrackSectionProgressUseCase trackProgress;
     private final GetLearningProgressUseCase learningProgress;
+    private final GradeQuizUseCase gradeQuiz;
 
     public CourseController(ListCoursesUseCase listCourses, GetCourseUseCase getCourse,
                             TrackSectionProgressUseCase trackProgress,
-                            GetLearningProgressUseCase learningProgress) {
+                            GetLearningProgressUseCase learningProgress, GradeQuizUseCase gradeQuiz) {
         this.listCourses = listCourses;
         this.getCourse = getCourse;
         this.trackProgress = trackProgress;
         this.learningProgress = learningProgress;
+        this.gradeQuiz = gradeQuiz;
     }
 
     /** Filières disponibles : c'est cette liste qui alimente le menu. */
@@ -63,6 +70,17 @@ public class CourseController {
     @GetMapping("/{slug}")
     public CourseResponse get(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
         return CourseResponse.from(getCourse.getCourse(user.toActor(), slug));
+    }
+
+    /**
+     * Rend la copie d'un quiz. Réussie, elle marque la section terminée : la
+     * correction et les bonnes réponses ne sortent qu'ici.
+     */
+    @PostMapping("/{slug}/sections/{sectionSlug}/quiz")
+    public QuizResultResponse gradeQuiz(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug,
+                                        @PathVariable String sectionSlug,
+                                        @RequestBody Map<Long, Set<Long>> answers) {
+        return QuizResultResponse.from(gradeQuiz.grade(user.toActor(), slug, sectionSlug, answers));
     }
 
     @PostMapping("/{slug}/sections/{sectionSlug}/completion")

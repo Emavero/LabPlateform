@@ -17,6 +17,25 @@ export interface AdminOverview {
  * est ce qui permet de renommer une section sans effacer l'avancement des
  * apprenants ; une nouvelle section n'en a pas.
  */
+/** Question saisie dans l'éditeur, avec ses propositions. */
+export interface ChoiceDraft {
+  readonly label: string;
+  readonly correct: boolean;
+}
+
+export interface QuestionDraft {
+  readonly statement: string;
+  readonly choices: readonly ChoiceDraft[];
+}
+
+export const EMPTY_QUESTION: QuestionDraft = {
+  statement: '',
+  choices: [
+    { label: '', correct: true },
+    { label: '', correct: false },
+  ],
+};
+
 export interface SectionDraft {
   readonly id: number | null;
   readonly title: string;
@@ -24,6 +43,7 @@ export interface SectionDraft {
   readonly minutes: number;
   readonly content: string;
   readonly videoUrl: string;
+  readonly questions: readonly QuestionDraft[];
 }
 
 export interface CourseDraft {
@@ -41,6 +61,7 @@ export const EMPTY_SECTION: SectionDraft = {
   minutes: 10,
   content: '',
   videoUrl: '',
+  questions: [],
 };
 
 export const EMPTY_DRAFT: CourseDraft = {

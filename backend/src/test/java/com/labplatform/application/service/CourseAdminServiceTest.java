@@ -4,6 +4,7 @@ import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
+import com.labplatform.application.fakes.InMemoryQuizzes;
 import com.labplatform.application.fakes.InMemoryOwns;
 import com.labplatform.application.fakes.InMemoryUsers;
 import com.labplatform.application.port.in.admin.AdminOverview;
@@ -42,6 +43,7 @@ class CourseAdminServiceTest {
 
     private InMemoryCourses courses;
     private InMemoryCompletions completions;
+    private InMemoryQuizzes quizzes;
     private CourseAdminService admin;
     private AcademyService academy;
 
@@ -49,10 +51,11 @@ class CourseAdminServiceTest {
     void setUp() {
         courses = new InMemoryCourses();
         completions = new InMemoryCompletions();
+        quizzes = new InMemoryQuizzes();
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        admin = new CourseAdminService(courses, completions, new InMemoryUsers(), new InMemoryBoxes(),
+        admin = new CourseAdminService(courses, completions, quizzes, new InMemoryUsers(), new InMemoryBoxes(),
                 new InMemoryOwns(), Fakes.NO_TRANSACTION, clock);
-        academy = new AcademyService(courses, completions, Fakes.NO_TRANSACTION, clock);
+        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION, clock);
     }
 
     private static CourseDraft draft(String title, SectionDraft... sections) {
@@ -161,6 +164,25 @@ class CourseAdminServiceTest {
         assertEquals("", section.content());
         assertTrue(section.hasVideo());
         assertNotNull(section.videoUrl());
+    }
+
+    @Test
+    void aVideoHostedOnThePlatformIsAccepted() {
+        String hosted = "/api/media/" + "0123456789abcdef".repeat(2);
+
+        Course created = admin.createCourse(ADMIN, new CourseDraft("Hébergée", Track.FORENSICS, CourseLevel.EASY,
+                null, List.of(new SectionDraft(null, "Démonstration", SectionKind.THEORY, 8, null, hosted))));
+
+        assertEquals(hosted, created.getSections().get(0).videoUrl());
+    }
+
+    @Test
+    void anArbitraryInternalPathIsNotAVideo() {
+        // Un chemin interne qui n'est pas un fichier téléversé est refusé.
+        assertThrows(InvalidInputException.class, () -> admin.createCourse(ADMIN,
+                new CourseDraft("Piégée", Track.FORENSICS, CourseLevel.EASY, null,
+                        List.of(new SectionDraft(null, "Section", SectionKind.THEORY, 5, "Texte.",
+                                "/api/vpn/profile")))));
     }
 
     @Test

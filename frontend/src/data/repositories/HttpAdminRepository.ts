@@ -56,6 +56,11 @@ export class HttpAdminRepository implements AdminRepository {
     await this.http.delete(`/admin/courses/${encodeURIComponent(slug)}`);
   }
 
+  async getCourse(slug: string): Promise<Course> {
+    const { data } = await this.http.get<CourseDto>(`/admin/courses/${encodeURIComponent(slug)}`);
+    return toCourse(data);
+  }
+
   /** Multipart : le navigateur pose lui-même la frontière du corps. */
   async uploadMedia(file: File): Promise<UploadedMedia> {
     const form = new FormData();
@@ -101,6 +106,10 @@ function body(draft: CourseDraft) {
       minutes: section.minutes,
       content: section.content,
       videoUrl: section.videoUrl.trim() || null,
+      questions: section.questions.map((question) => ({
+        statement: question.statement.trim(),
+        choices: question.choices.map((choice) => ({ label: choice.label.trim(), correct: choice.correct })),
+      })),
     })),
   };
 }

@@ -116,6 +116,12 @@ export interface CourseDto {
     content: string;
     videoUrl: string | null;
     completed: boolean;
+    questions: {
+      id: number;
+      statement: string;
+      position: number;
+      choices: { id: number; label: string; correct: boolean | null }[];
+    }[];
   }[];
 }
 

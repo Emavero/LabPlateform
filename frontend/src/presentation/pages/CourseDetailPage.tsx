@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { formatDuration, nextSection, type CourseSection } from '@/domain/models/Course';
+import { formatDuration, hasQuiz, nextSection, type CourseSection, type QuizResult } from '@/domain/models/Course';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { QuizForm } from '../features/course/QuizForm';
 import { VideoPlayer } from '../features/course/VideoPlayer';
 import { useCourse } from '../hooks/useCourse';
 import { TRACK_PAGES } from '../navigation/navigation';
@@ -79,6 +80,9 @@ export function CourseDetailPage() {
             section={section}
             pending={detail.pending === section.slug}
             onToggle={() => void detail.toggle(section)}
+            result={detail.results[section.id]}
+            grading={detail.grading === section.slug}
+            onGrade={(answers) => void detail.gradeQuiz(section, answers)}
           />
         ))}
       </div>
@@ -90,10 +94,16 @@ function SectionPanel({
   section,
   pending,
   onToggle,
+  result,
+  grading,
+  onGrade,
 }: {
   section: CourseSection;
   pending: boolean;
   onToggle: () => void;
+  result: QuizResult | undefined;
+  grading: boolean;
+  onGrade: (answers: Readonly<Record<number, readonly number[]>>) => void;
 }) {
   return (
     <Panel
@@ -101,20 +111,32 @@ function SectionPanel({
       eyebrow={`${section.position}. ${section.kindName} · ${formatDuration(section.minutes)}`}
       title={section.title}
       actions={
-        <Button
-          variant={section.completed ? 'ghost' : 'success'}
-          size="sm"
-          icon={section.completed ? 'stop' : 'check'}
-          loading={pending}
-          onClick={onToggle}
-        >
-          {section.completed ? 'Rouvrir' : 'Marquer comme terminé'}
-        </Button>
+        // Une section à quiz se valide en rendant sa copie, pas en la cochant.
+        hasQuiz(section) ? (
+          section.completed && (
+            <Button variant="ghost" size="sm" icon="stop" loading={pending} onClick={onToggle}>
+              Rouvrir
+            </Button>
+          )
+        ) : (
+          <Button
+            variant={section.completed ? 'ghost' : 'success'}
+            size="sm"
+            icon={section.completed ? 'stop' : 'check'}
+            loading={pending}
+            onClick={onToggle}
+          >
+            {section.completed ? 'Rouvrir' : 'Marquer comme terminé'}
+          </Button>
+        )
       }
     >
       {section.videoUrl && <VideoPlayer url={section.videoUrl} title={section.title} />}
       {/* Le contenu est du texte préformaté : les commandes doivent rester lisibles telles quelles. */}
       {section.content.trim() && <pre className="course-section__content">{section.content}</pre>}
+      {hasQuiz(section) && (
+        <QuizForm section={section} result={result} grading={grading} onSubmit={onGrade} />
+      )}
     </Panel>
   );
 }

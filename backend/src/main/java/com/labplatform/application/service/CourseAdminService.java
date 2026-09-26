@@ -6,12 +6,15 @@ import com.labplatform.application.port.in.admin.GetAdminOverviewUseCase;
 import com.labplatform.application.port.in.admin.ManageCoursesUseCase;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.CourseRepositoryPort;
+import com.labplatform.application.port.out.QuizRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseSection;
+import com.labplatform.domain.academy.QuizChoice;
+import com.labplatform.domain.academy.QuizQuestion;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.NotFoundException;
@@ -44,6 +47,7 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
 
     private final CourseRepositoryPort courses;
     private final SectionCompletionRepositoryPort completions;
+    private final QuizRepositoryPort quizzes;
     private final UserRepositoryPort users;
     private final BoxRepositoryPort boxes;
     private final OwnRepositoryPort owns;
@@ -51,10 +55,11 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
     private final Clock clock;
 
     public CourseAdminService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
-                              UserRepositoryPort users, BoxRepositoryPort boxes, OwnRepositoryPort owns,
-                              TransactionPort transactions, Clock clock) {
+                              QuizRepositoryPort quizzes, UserRepositoryPort users, BoxRepositoryPort boxes,
+                              OwnRepositoryPort owns, TransactionPort transactions, Clock clock) {
         this.courses = courses;
         this.completions = completions;
+        this.quizzes = quizzes;
         this.users = users;
         this.boxes = boxes;
         this.owns = owns;
@@ -72,8 +77,8 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
             if (courses.findBySlug(slug).isPresent()) {
                 throw new ConflictException("Un cours porte déjà ce titre");
             }
-            return courses.save(Course.create(slug, draft.title().trim(), draft.track(), draft.level(),
-                    summaryOf(draft), clock.instant(), sectionsOf(draft, Map.of())));
+            return saveQuizzes(courses.save(Course.create(slug, draft.title().trim(), draft.track(), draft.level(),
+                    summaryOf(draft), clock.instant(), sectionsOf(draft, Map.of()))), draft);
         });
     }
 
@@ -88,9 +93,9 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
             // qu'avant : elles gardent l'avancement des apprenants.
             Map<Long, CourseSection> known = existing.getSections().stream()
                     .collect(Collectors.toMap(CourseSection::id, Function.identity()));
-            return courses.save(Course.restore(existing.getId(), existing.getSlug(), draft.title().trim(),
-                    draft.track(), draft.level(), summaryOf(draft), existing.getPublishedAt(),
-                    sectionsOf(draft, known)));
+            return saveQuizzes(courses.save(Course.restore(existing.getId(), existing.getSlug(),
+                    draft.title().trim(), draft.track(), draft.level(), summaryOf(draft), existing.getPublishedAt(),
+                    sectionsOf(draft, known))), draft);
         });
     }
 
@@ -111,6 +116,34 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
                 catalogue.stream().mapToLong(course -> course.getSections().size()).sum(),
                 owns.count(),
                 completions.count());
+    }
+
+    /**
+     * Les quiz sont enregistrés après le cours : leurs questions se rattachent
+     * aux sections, qui viennent seulement d'obtenir leur identifiant.
+     */
+    private Course saveQuizzes(Course saved, CourseDraft draft) {
+        List<CourseSection> sections = saved.getSections();
+        for (int i = 0; i < sections.size() && i < draft.sections().size(); i++) {
+            CourseSection section = sections.get(i);
+            List<QuizQuestion> questions = questionsOf(draft.sections().get(i), section.id());
+            quizzes.replaceForSection(section.id(), questions);
+        }
+        return saved;
+    }
+
+    private static List<QuizQuestion> questionsOf(CourseDraft.SectionDraft section, Long sectionId) {
+        List<QuizQuestion> questions = new ArrayList<>();
+        int position = 1;
+        for (CourseDraft.QuestionDraft question : section.questions()) {
+            List<QuizChoice> choices = new ArrayList<>();
+            int choicePosition = 1;
+            for (CourseDraft.ChoiceDraft choice : question.choices()) {
+                choices.add(new QuizChoice(null, choice.label(), choice.correct(), choicePosition++));
+            }
+            questions.add(new QuizQuestion(null, sectionId, question.statement(), position++, choices));
+        }
+        return questions;
     }
 
     /** Les positions viennent de l'ordre de la liste, les identifiants d'URL des titres. */

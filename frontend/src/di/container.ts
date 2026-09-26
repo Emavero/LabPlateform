@@ -31,6 +31,7 @@ import {
   DeleteBoxUseCase,
   DeleteCourseUseCase,
   GetAdminOverviewUseCase,
+  GetCourseForEditingUseCase,
   ListBoxesUseCase as ListAdminBoxesUseCase,
   SaveBoxUseCase,
   SaveCourseUseCase,
@@ -46,6 +47,7 @@ import {
 import {
   GetCourseUseCase,
   GetLearningProgressUseCase,
+  GradeQuizUseCase,
   ListCoursesUseCase,
   ListTracksUseCase,
   ToggleSectionUseCase,
@@ -89,6 +91,7 @@ export interface Dependencies {
     readonly get: GetCourseUseCase;
     readonly progress: GetLearningProgressUseCase;
     readonly toggleSection: ToggleSectionUseCase;
+    readonly gradeQuiz: GradeQuizUseCase;
   };
   readonly profile: {
     readonly achievements: GetAchievementsUseCase;
@@ -103,6 +106,7 @@ export interface Dependencies {
     readonly saveBox: SaveBoxUseCase;
     readonly deleteBox: DeleteBoxUseCase;
     readonly uploadMedia: UploadMediaUseCase;
+    readonly getCourse: GetCourseForEditingUseCase;
   };
   readonly writeups: {
     readonly list: ListWriteupsUseCase;
@@ -172,6 +176,7 @@ export function createContainer(): Dependencies {
       get: new GetCourseUseCase(courseRepository),
       progress: new GetLearningProgressUseCase(courseRepository),
       toggleSection: new ToggleSectionUseCase(courseRepository),
+      gradeQuiz: new GradeQuizUseCase(courseRepository),
     },
     profile: {
       achievements: new GetAchievementsUseCase(profileRepository),
@@ -185,6 +190,7 @@ export function createContainer(): Dependencies {
       saveBox: new SaveBoxUseCase(adminRepository),
       deleteBox: new DeleteBoxUseCase(adminRepository),
       uploadMedia: new UploadMediaUseCase(adminRepository),
+      getCourse: new GetCourseForEditingUseCase(adminRepository),
     },
     writeups: {
       list: new ListWriteupsUseCase(writeupRepository),

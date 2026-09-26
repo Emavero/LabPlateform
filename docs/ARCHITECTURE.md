@@ -264,6 +264,8 @@ Seize interfaces, que les adaptateurs réalisent.
 | `VpnProfileRepositoryPort` | Certificats clients | JPA |
 | `BoxInstanceRepositoryPort` | Cibles lancées à la demande | JPA |
 | `MediaAssetRepositoryPort` / `MediaStoragePort` | Fiches et contenus des fichiers téléversés | JPA / système de fichiers |
+| `QuizRepositoryPort` | Questions et propositions des quiz | JPA |
+| `WriteupRepositoryPort` | Comptes rendus de compromission | JPA |
 | `PasswordHasherPort` | Hachage | BCrypt (coût 12) |
 | `AccessTokenIssuerPort` | Émission de jeton de session | JJWT (HMAC) |
 | `SecretGeneratorPort` | Aléa sûr (jetons, flags) | `SecureRandom` |
@@ -430,6 +432,7 @@ Neuf tables, décrites dans `backend/src/main/resources/db/schema.sql`.
 | `box_rating` | Difficulté ressentie, un vote par joueur et par machine |
 | `box_instance` | Cibles lancées à la demande, avec leur échéance |
 | `writeup` | Comptes rendus, un par auteur et par machine |
+| `quiz_question` / `quiz_choice` | Questions de quiz et leurs propositions |
 | `media_asset` | Fiches des vidéos téléversées (le contenu vit sur le disque) |
 | `course` / `course_section` | Cours et leurs sections (texte, vidéo) |
 | `course_section_completion` | Suivi de lecture |
@@ -608,7 +611,7 @@ accepte des groupes à deux niveaux et un filtre par rôle
 | `@Lob` sur une `String` | PostgreSQL écrit un *large object* et ne stocke que son identifiant ; illisible hors transaction. H2 ne le reproduit pas. | `columnDefinition = "text"`, et rejouer la suite sur PostgreSQL. |
 | Tester seulement sur H2 | Les différences de dialecte ne se voient qu'en production. | La CI rejoue tout sur PostgreSQL ; faites-le aussi en local avant une revue. |
 | Appeler l'hyperviseur dans une transaction | Un démarrage prend des secondes et bloque une connexion SQL. | Agir hors transaction, puis rouvrir une transaction courte. |
-| Sérialiser un agrégat | `Box` porte ses flags, `User` son empreinte. | Mappage DTO explicite, toujours. |
+| Sérialiser un agrégat | `Box` porte ses flags, `User` son empreinte, `QuizChoice` la bonne réponse. | Mappage DTO explicite, toujours. |
 | Répondre 403 au lieu de 404 | Un 403 révèle l'existence de la ressource d'autrui. | 404 pour tout ce qui n'appartient pas à l'appelant. |
 | Recalculer des points acquis | Rééquilibrer une machine réécrirait le passé. | Les points sont figés dans `Own` à la validation. |
 | Annoter un service `@Service` | Le cœur redevient dépendant du framework. | Une méthode `@Bean` dans `UseCaseConfig`. |

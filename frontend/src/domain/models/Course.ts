@@ -28,6 +28,36 @@ export interface CourseSummary {
   readonly publishedAt: Date;
 }
 
+/** Proposition d'une question. `correct` n'arrive qu'après correction. */
+export interface QuizChoice {
+  readonly id: number;
+  readonly label: string;
+  readonly correct: boolean | null;
+}
+
+export interface QuizQuestion {
+  readonly id: number;
+  readonly statement: string;
+  readonly position: number;
+  readonly choices: readonly QuizChoice[];
+}
+
+/** Copie corrigée par le serveur. */
+export interface QuizResult {
+  readonly correct: number;
+  readonly questions: number;
+  readonly ratio: number;
+  readonly passed: boolean;
+  readonly answers: readonly {
+    readonly questionId: number;
+    readonly correct: boolean;
+    readonly correctChoiceIds: readonly number[];
+  }[];
+}
+
+/** Réponses cochées, par question. */
+export type QuizAnswers = Readonly<Record<number, readonly number[]>>;
+
 export interface CourseSection {
   /** Identifiant renvoyé tel quel par l'éditeur d'administration. */
   readonly id: number;
@@ -40,6 +70,16 @@ export interface CourseSection {
   readonly content: string;
   readonly videoUrl: string | null;
   readonly completed: boolean;
+  readonly questions: readonly QuizQuestion[];
+}
+
+export function hasQuiz(section: CourseSection): boolean {
+  return section.questions.length > 0;
+}
+
+/** Toutes les questions ont-elles reçu au moins une réponse ? */
+export function isQuizComplete(section: CourseSection, answers: QuizAnswers): boolean {
+  return section.questions.every((question) => (answers[question.id]?.length ?? 0) > 0);
 }
 
 export interface Course {

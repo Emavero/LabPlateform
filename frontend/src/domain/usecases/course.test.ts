@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Course, CourseSummary, LearningProgress, Track } from '../models/Course';
+import type { Course, CourseSummary, LearningProgress, QuizResult, Track } from '../models/Course';
 import type { CourseRepository } from '../repositories/CourseRepository';
 import { ToggleSectionUseCase } from './course';
 
@@ -16,6 +16,10 @@ function repository(calls: string[]): CourseRepository {
     reopenSection: async (courseSlug, sectionSlug) => {
       calls.push(`reopen:${courseSlug}/${sectionSlug}`);
       return {} as Course;
+    },
+    gradeQuiz: async (courseSlug, sectionSlug) => {
+      calls.push(`grade:${courseSlug}/${sectionSlug}`);
+      return {} as QuizResult;
     },
   };
 }

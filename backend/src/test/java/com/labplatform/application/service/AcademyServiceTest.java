@@ -3,6 +3,7 @@ package com.labplatform.application.service;
 import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
+import com.labplatform.application.fakes.InMemoryQuizzes;
 import com.labplatform.application.port.in.academy.CourseView;
 import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.domain.academy.Course;
@@ -34,16 +35,18 @@ class AcademyServiceTest {
 
     private InMemoryCourses courses;
     private InMemoryCompletions completions;
+    private InMemoryQuizzes quizzes;
     private AcademyService academy;
 
     @BeforeEach
     void setUp() {
         courses = new InMemoryCourses();
         completions = new InMemoryCompletions();
+        quizzes = new InMemoryQuizzes();
         // Forensique : un cours de deux sections. Défense : un cours d'une section.
         courses.save(course("traces", "Traces", Track.FORENSICS, CourseLevel.FUNDAMENTAL, 2));
         courses.save(course("durcir", "Durcir", Track.DEFENSE, CourseLevel.MEDIUM, 1));
-        academy = new AcademyService(courses, completions, Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
+        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private static Course course(String slug, String title, Track track, CourseLevel level, int sections) {

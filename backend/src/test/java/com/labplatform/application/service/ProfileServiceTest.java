@@ -4,6 +4,7 @@ import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
+import com.labplatform.application.fakes.InMemoryQuizzes;
 import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
 import com.labplatform.application.fakes.InMemoryRatings;
@@ -55,6 +56,7 @@ class ProfileServiceTest {
         InMemoryOwns owns = new InMemoryOwns();
         InMemoryCourses courses = new InMemoryCourses();
         InMemoryCompletions completions = new InMemoryCompletions();
+        InMemoryQuizzes quizzes = new InMemoryQuizzes();
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
 
         boxes.save(box("cobalt", "Cobalt", Difficulty.EASY, EASY_USER, EASY_ROOT));
@@ -64,7 +66,7 @@ class ProfileServiceTest {
 
         ScoreboardService scoreboard = new ScoreboardService(boxes, owns);
         catalogue = new BoxService(boxes, owns, new InMemoryRatings(), new InMemoryInstances(), scoreboard, Fakes.NO_TRANSACTION, clock);
-        academy = new AcademyService(courses, completions, Fakes.NO_TRANSACTION, clock);
+        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION, clock);
         profile = new ProfileService(boxes, owns, courses, completions);
     }
 

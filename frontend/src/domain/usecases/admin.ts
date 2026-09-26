@@ -89,3 +89,12 @@ export class UploadMediaUseCase {
     return this.admin.uploadMedia(file);
   }
 }
+
+/** Lit un cours pour l'éditer : c'est la seule lecture qui révèle les bonnes réponses. */
+export class GetCourseForEditingUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(slug: string): Promise<Course> {
+    return this.admin.getCourse(slug);
+  }
+}

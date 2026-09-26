@@ -1,4 +1,4 @@
-import type { Course, CourseSummary, LearningProgress, Track } from '../models/Course';
+import type { Course, CourseSummary, LearningProgress, QuizAnswers, QuizResult, Track } from '../models/Course';
 import type { CourseRepository } from '../repositories/CourseRepository';
 
 export class ListTracksUseCase {
@@ -41,5 +41,17 @@ export class ToggleSectionUseCase {
     return completed
       ? this.courses.reopenSection(courseSlug, sectionSlug)
       : this.courses.completeSection(courseSlug, sectionSlug);
+  }
+}
+
+/**
+ * Rend la copie d'un quiz. La correction est faite par le serveur : le client
+ * ne connaît pas les bonnes réponses avant de les recevoir.
+ */
+export class GradeQuizUseCase {
+  constructor(private readonly courses: CourseRepository) {}
+
+  execute(courseSlug: string, sectionSlug: string, answers: QuizAnswers): Promise<QuizResult> {
+    return this.courses.gradeQuiz(courseSlug, sectionSlug, answers);
   }
 }
