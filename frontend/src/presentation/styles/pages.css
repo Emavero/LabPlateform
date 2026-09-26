@@ -1528,3 +1528,55 @@ button.back-link {
   color: var(--running);
   font-size: var(--step--1);
 }
+
+/* ---------- Comptes rendus ---------- */
+.writeups {
+  display: grid;
+  gap: 1rem;
+}
+
+.writeup {
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.5);
+}
+
+.writeup--mine {
+  border-color: rgba(139, 124, 255, 0.35);
+  background: var(--violet-soft);
+}
+
+.writeup__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.writeup__title {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.writeup__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+.writeup__content {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

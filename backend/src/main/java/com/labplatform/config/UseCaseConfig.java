@@ -7,6 +7,7 @@ import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.CourseRepositoryPort;
 import com.labplatform.application.port.out.MediaAssetRepositoryPort;
 import com.labplatform.application.port.out.MediaStoragePort;
+import com.labplatform.application.port.out.WriteupRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
@@ -23,6 +24,7 @@ import com.labplatform.application.service.AcademyService;
 import com.labplatform.application.service.AccountService;
 import com.labplatform.application.service.CourseAdminService;
 import com.labplatform.application.service.MediaService;
+import com.labplatform.application.service.WriteupService;
 import com.labplatform.application.service.BoxAdminService;
 import com.labplatform.application.service.BoxInstanceService;
 import com.labplatform.application.service.BoxService;
@@ -139,6 +141,13 @@ public class UseCaseConfig {
                                      AppProperties properties) {
         return new MediaService(assets, storage, secrets, transactions, clock,
                 properties.getMedia().getMaxFileSize().toBytes());
+    }
+
+    @Bean
+    public WriteupService writeupService(BoxRepositoryPort boxes, OwnRepositoryPort owns,
+                                         WriteupRepositoryPort writeups, UserRepositoryPort users,
+                                         TransactionPort transactions, Clock clock) {
+        return new WriteupService(boxes, owns, writeups, users, transactions, clock);
     }
 
     @Bean

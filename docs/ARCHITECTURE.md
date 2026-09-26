@@ -429,6 +429,7 @@ Neuf tables, décrites dans `backend/src/main/resources/db/schema.sql`.
 | `box_own` | Flags validés, points figés, first blood |
 | `box_rating` | Difficulté ressentie, un vote par joueur et par machine |
 | `box_instance` | Cibles lancées à la demande, avec leur échéance |
+| `writeup` | Comptes rendus, un par auteur et par machine |
 | `media_asset` | Fiches des vidéos téléversées (le contenu vit sur le disque) |
 | `course` / `course_section` | Cours et leurs sections (texte, vidéo) |
 | `course_section_completion` | Suivi de lecture |

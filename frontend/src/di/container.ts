@@ -8,6 +8,7 @@ import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
 import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
 import { HttpScoreboardRepository } from '@/data/repositories/HttpScoreboardRepository';
 import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
+import { HttpWriteupRepository } from '@/data/repositories/HttpWriteupRepository';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
 import { ChangePasswordUseCase, GetProfileUseCase } from '@/domain/usecases/account';
 import {
@@ -52,6 +53,7 @@ import {
 import { GetAchievementsUseCase, GetActivityUseCase } from '@/domain/usecases/profile';
 import { GetLeaderboardUseCase, GetProgressUseCase } from '@/domain/usecases/scoreboard';
 import { DownloadVpnProfileUseCase, GetVpnAccessUseCase, RegenerateVpnProfileUseCase } from '@/domain/usecases/vpn';
+import { DeleteWriteupUseCase, ListWriteupsUseCase, SaveWriteupUseCase } from '@/domain/usecases/writeup';
 
 /** Tout ce que la présentation peut appeler : des cas d'usage, jamais des détails HTTP. */
 export interface Dependencies {
@@ -102,6 +104,11 @@ export interface Dependencies {
     readonly deleteBox: DeleteBoxUseCase;
     readonly uploadMedia: UploadMediaUseCase;
   };
+  readonly writeups: {
+    readonly list: ListWriteupsUseCase;
+    readonly save: SaveWriteupUseCase;
+    readonly remove: DeleteWriteupUseCase;
+  };
   readonly scoreboard: {
     readonly progress: GetProgressUseCase;
     readonly leaderboard: GetLeaderboardUseCase;
@@ -127,6 +134,7 @@ export function createContainer(): Dependencies {
   const vpnRepository = new HttpVpnRepository(http);
   const boxRepository = new HttpBoxRepository(http);
   const scoreboardRepository = new HttpScoreboardRepository(http);
+  const writeupRepository = new HttpWriteupRepository(http);
   const courseRepository = new HttpCourseRepository(http);
   const profileRepository = new HttpProfileRepository(http);
   const adminRepository = new HttpAdminRepository(http);
@@ -177,6 +185,11 @@ export function createContainer(): Dependencies {
       saveBox: new SaveBoxUseCase(adminRepository),
       deleteBox: new DeleteBoxUseCase(adminRepository),
       uploadMedia: new UploadMediaUseCase(adminRepository),
+    },
+    writeups: {
+      list: new ListWriteupsUseCase(writeupRepository),
+      save: new SaveWriteupUseCase(writeupRepository),
+      remove: new DeleteWriteupUseCase(writeupRepository),
     },
     scoreboard: {
       progress: new GetProgressUseCase(scoreboardRepository),

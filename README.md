@@ -80,6 +80,12 @@ qui rapporte le plus. Une machine dont les deux flags sont validés est
 - **Classement.** Les joueurs sont triés aux points ; à égalité, le premier
   arrivé passe devant. Il n'y figure qu'un pseudonyme dérivé du compte,
   jamais l'adresse e-mail.
+- **Comptes rendus.** Une fois la machine possédée, le joueur écrit sa
+  méthode depuis la fiche. La publier ne la rend pas publique : elle devient
+  lisible par les joueurs qui ont eux aussi possédé la machine. Ceux qui
+  cherchent encore ne voient rien — la plateforme ne distribue pas les
+  solutions. Un compte rendu par joueur et par machine, modifiable et
+  supprimable par son seul auteur, signé d'un pseudonyme.
 - **Difficulté ressentie.** Une fois la machine possédée, on note la
   difficulté qu'on lui a trouvée. La fiche affiche la moyenne des votes à côté
   de la difficulté annoncée, et signale l'écart. Voter avant d'avoir validé
@@ -385,6 +391,9 @@ Principes appliqués :
 | POST    | `/api/boxes/{slug}/flags`      | Soumission d'un flag (400 incorrect, 409 déjà validé) |
 | POST    | `/api/boxes/{slug}/instance`   | Lance la cible (409 si une autre tourne déjà) |
 | DELETE  | `/api/boxes/{slug}/instance`   | Arrête la cible |
+| GET     | `/api/boxes/{slug}/writeups`   | Comptes rendus lisibles par l'appelant |
+| PUT     | `/api/boxes/{slug}/writeups/mine` | Écrit ou révise le sien (409 si non possédée) |
+| DELETE  | `/api/boxes/{slug}/writeups/mine` | Supprime le sien (204) |
 | GET     | `/api/scoreboard/me`           | Progression : points, rang, machines possédées |
 | GET     | `/api/scoreboard?limit=20`     | Classement public |
 | PUT     | `/api/boxes/{slug}/rating`     | Note de difficulté (409 si la machine n'est pas possédée) |
@@ -520,6 +529,5 @@ sur PostgreSQL.
 - Brancher un hyperviseur réel via `HypervisorPort` pour la machine Windows.
 - Brancher un envoi d'e-mails via `PasswordResetNotifierPort`.
 - Implémenter les modules du menu encore en attente.
-- Écriture et partage de rapports (« writeups ») une fois la machine possédée.
 - Quiz corrigés automatiquement dans les cours, plutôt que des questions
   ouvertes à traiter de son côté.

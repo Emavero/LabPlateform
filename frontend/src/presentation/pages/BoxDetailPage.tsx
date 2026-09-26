@@ -7,6 +7,7 @@ import { FlagForm, FlagSuccess } from '../features/box/FlagForm';
 import { FlagChip } from '../features/box/FlagChip';
 import { InstancePanel } from '../features/box/InstancePanel';
 import { RatingPicker } from '../features/box/RatingPicker';
+import { Writeups } from '../features/box/Writeups';
 import { useBoxDetail } from '../hooks/useBoxDetail';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -142,6 +143,8 @@ export function BoxDetailPage() {
           )}
         </Panel>
       </div>
+
+      <Writeups slug={box.slug} pwned={box.pwned} />
     </div>
   );
 }
