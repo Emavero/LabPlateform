@@ -28,6 +28,13 @@ export interface Box {
   readonly firstBlood: boolean;
   readonly pointsEarned: number;
   readonly lastOwnedAt: Date | null;
+  /** Difficulté ressentie par ceux qui ont fait la machine. */
+  readonly ratingVotes: number;
+  readonly ratingAverage: number;
+  readonly perceivedDifficulty: Difficulty | null;
+  readonly perceivedDifficultyName: string | null;
+  /** Note donnée par le joueur connecté, nulle s'il n'a pas voté. */
+  readonly myRating: Difficulty | null;
 }
 
 /** Ordre d'affichage des difficultés, du plus abordable au plus exigeant. */
@@ -54,6 +61,12 @@ export function pointsOf(box: Box, kind: FlagKind): number {
 /** Flags restant à valider, dans l'ordre où on les obtient sur la machine. */
 export function remainingFlags(box: Box): FlagKind[] {
   return (['USER', 'ROOT'] as const).filter((kind) => !isOwned(box, kind));
+}
+
+/** Écart entre la difficulté annoncée et celle ressentie, en paliers. */
+export function ratingGap(box: Box): number {
+  if (!box.perceivedDifficulty) return 0;
+  return DIFFICULTY_ORDER.indexOf(box.perceivedDifficulty) - DIFFICULTY_ORDER.indexOf(box.difficulty);
 }
 
 export type BoxFilter = 'ALL' | 'TODO' | 'PWNED';

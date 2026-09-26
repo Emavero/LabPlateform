@@ -1,4 +1,14 @@
 import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
+import type {
+  Course,
+  CourseLevel,
+  CourseSummary,
+  LearningProgress,
+  SectionKind,
+  Track,
+  TrackCode,
+} from '@/domain/models/Course';
+import type { Achievement, ActivityEntry, ActivityKind } from '@/domain/models/Profile';
 import type { LeaderboardEntry, PlayerProgress, Rank } from '@/domain/models/Progress';
 import type { Role, User, UserProfile } from '@/domain/models/User';
 import type {
@@ -55,6 +65,88 @@ export interface BoxDto {
   firstBlood: boolean;
   pointsEarned: number;
   lastOwnedAt: string | null;
+  ratingVotes: number;
+  ratingAverage: number;
+  perceivedDifficulty: Difficulty | null;
+  perceivedDifficultyName: string | null;
+  myRating: Difficulty | null;
+}
+
+export interface CourseSummaryDto {
+  slug: string;
+  title: string;
+  track: TrackCode;
+  trackName: string;
+  trackSlug: string;
+  level: CourseLevel;
+  levelName: string;
+  summary: string;
+  sections: number;
+  sectionsCompleted: number;
+  minutes: number;
+  completed: boolean;
+  started: boolean;
+  publishedAt: string;
+}
+
+export interface CourseDto {
+  slug: string;
+  title: string;
+  track: TrackCode;
+  trackName: string;
+  trackSlug: string;
+  level: CourseLevel;
+  levelName: string;
+  summary: string;
+  minutes: number;
+  sectionsCompleted: number;
+  completed: boolean;
+  publishedAt: string;
+  sections: {
+    slug: string;
+    title: string;
+    kind: SectionKind;
+    kindName: string;
+    position: number;
+    minutes: number;
+    content: string;
+    completed: boolean;
+  }[];
+}
+
+export interface TrackDto {
+  track: TrackCode;
+  slug: string;
+  name: string;
+  description: string;
+}
+
+export interface LearningProgressDto {
+  track: TrackCode;
+  trackName: string;
+  trackSlug: string;
+  courses: number;
+  coursesCompleted: number;
+  sections: number;
+  sectionsCompleted: number;
+  minutesDone: number;
+  ratio: number;
+}
+
+export interface AchievementDto {
+  code: string;
+  name: string;
+  requirement: string;
+  earned: boolean;
+}
+
+export interface ActivityDto {
+  kind: ActivityKind;
+  title: string;
+  detail: string;
+  points: number;
+  firstBlood: boolean;
+  at: string;
 }
 
 export interface ProgressDto {
@@ -128,4 +220,32 @@ export function toProgress(dto: ProgressDto): PlayerProgress {
 
 export function toLeaderboard(dto: LeaderboardDto): LeaderboardEntry[] {
   return dto.entries.map((entry) => ({ ...entry }));
+}
+
+export function toTrack(dto: TrackDto): Track {
+  return { ...dto };
+}
+
+export function toCourseSummary(dto: CourseSummaryDto): CourseSummary {
+  return { ...dto, publishedAt: new Date(dto.publishedAt) };
+}
+
+export function toCourse(dto: CourseDto): Course {
+  return {
+    ...dto,
+    publishedAt: new Date(dto.publishedAt),
+    sections: dto.sections.map((section) => ({ ...section })),
+  };
+}
+
+export function toLearningProgress(dto: LearningProgressDto): LearningProgress {
+  return { ...dto };
+}
+
+export function toAchievement(dto: AchievementDto): Achievement {
+  return { ...dto };
+}
+
+export function toActivityEntry(dto: ActivityDto): ActivityEntry {
+  return { ...dto, at: new Date(dto.at) };
 }

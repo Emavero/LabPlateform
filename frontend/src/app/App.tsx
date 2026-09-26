@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Dependencies } from '@/di/container';
 import { AppShell } from '@/presentation/layouts/AppShell';
 import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
+import { CourseDetailPage } from '@/presentation/pages/CourseDetailPage';
+import { CoursesPage } from '@/presentation/pages/CoursesPage';
 import { DashboardPage } from '@/presentation/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
 import { LabsPage } from '@/presentation/pages/LabsPage';
@@ -10,6 +12,7 @@ import { MachinesPage } from '@/presentation/pages/MachinesPage';
 import { ModulePlaceholderPage } from '@/presentation/pages/ModulePlaceholderPage';
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
 import { RegisterPage } from '@/presentation/pages/RegisterPage';
+import { ProfilePage } from '@/presentation/pages/ProfilePage';
 import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
 import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
@@ -40,6 +43,9 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                 <Route path="/machines" element={<MachinesPage />} />
                 <Route path="/machines/:slug" element={<BoxDetailPage />} />
                 <Route path="/scoreboard" element={<ScoreboardPage />} />
+                <Route path="/cours/:track" element={<CoursesPage />} />
+                <Route path="/cours/:track/:slug" element={<CourseDetailPage />} />
+                <Route path="/profil" element={<ProfilePage />} />
                 <Route path="/labs" element={<LabsPage />} />
                 <Route path="/labs/:id" element={<VmDetailPage />} />
                 <Route path="/vpn" element={<VpnPage />} />

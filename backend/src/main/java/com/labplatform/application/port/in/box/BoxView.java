@@ -1,6 +1,8 @@
 package com.labplatform.application.port.in.box;
 
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.CommunityRating;
+import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.FlagKind;
 import com.labplatform.domain.box.Own;
 
@@ -11,17 +13,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Une machine du catalogue vue par un joueur donné : la machine, plus ce
- * qu'il en a déjà validé. Les flags ne quittent jamais l'agrégat.
+ * Une machine du catalogue vue par un joueur donné : la machine, ce qu'il en
+ * a déjà validé, et la difficulté ressentie par ceux qui l'ont faite. Les
+ * flags ne quittent jamais l'agrégat.
+ *
+ * @param myVote note donnée par ce joueur, nulle s'il n'a pas voté
  */
-public record BoxView(Box box, Map<FlagKind, Own> owns) {
+public record BoxView(Box box, Map<FlagKind, Own> owns, CommunityRating rating, Difficulty myVote) {
 
     public static BoxView of(Box box, List<Own> ownsOfPlayer) {
+        return of(box, ownsOfPlayer, CommunityRating.NONE, null);
+    }
+
+    public static BoxView of(Box box, List<Own> ownsOfPlayer, CommunityRating rating, Difficulty myVote) {
         Map<FlagKind, Own> byKind = new EnumMap<>(FlagKind.class);
         ownsOfPlayer.stream()
                 .filter(own -> own.boxId().equals(box.getId()))
                 .forEach(own -> byKind.put(own.kind(), own));
-        return new BoxView(box, byKind);
+        return new BoxView(box, byKind, rating, myVote);
     }
 
     public boolean isOwned(FlagKind kind) {

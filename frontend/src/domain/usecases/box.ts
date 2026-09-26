@@ -1,4 +1,4 @@
-import type { Box, FlagKind } from '../models/Box';
+import type { Box, Difficulty, FlagKind } from '../models/Box';
 import { AppError } from '../errors/AppError';
 import type { BoxRepository, FlagSubmission } from '../repositories/BoxRepository';
 import { normalizeFlag, validateFlag } from '../validation/flag';
@@ -31,5 +31,14 @@ export class SubmitFlagUseCase {
     const error = validateFlag(flag);
     if (error) return Promise.reject(AppError.validation({ flag: error }));
     return this.boxes.submitFlag(slug, kind, normalizeFlag(flag));
+  }
+}
+
+/** Note la difficulté ressentie d'une machine possédée. */
+export class RateBoxUseCase {
+  constructor(private readonly boxes: BoxRepository) {}
+
+  execute(slug: string, difficulty: Difficulty): Promise<Box> {
+    return this.boxes.rate(slug, difficulty);
   }
 }

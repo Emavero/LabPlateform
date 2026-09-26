@@ -1,24 +1,49 @@
 import { NavLink } from 'react-router-dom';
 import { Icon, Logo } from '../design-system';
-import { PRIMARY_NAV, SECONDARY_NAV, type NavItem } from '../navigation/navigation';
+import { isGroup, PRIMARY_NAV, SECONDARY_NAV, type NavEntry, type NavItem } from '../navigation/navigation';
 import { UserMenu } from './UserMenu';
 
-function NavList({ items, onNavigate }: { items: readonly NavItem[]; onNavigate?: () => void }) {
+function NavLinkItem({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: () => void; nested?: boolean }) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        ['nav-link', nested && 'nav-link--nested', isActive && 'nav-link--active'].filter(Boolean).join(' ')
+      }
+    >
+      <Icon name={item.icon} size={nested ? 18 : 20} />
+      <span>{item.label}</span>
+    </NavLink>
+  );
+}
+
+/** Une entrée simple est un lien ; un groupe est un intitulé suivi de ses sous-entrées. */
+function NavList({ items, onNavigate }: { items: readonly NavEntry[]; onNavigate?: () => void }) {
   return (
     <ul className="nav-list">
-      {items.map((item) => (
-        <li key={item.to}>
-          <NavLink
-            to={item.to}
-            end={item.end}
-            onClick={onNavigate}
-            className={({ isActive }) => ['nav-link', isActive && 'nav-link--active'].filter(Boolean).join(' ')}
-          >
-            <Icon name={item.icon} size={20} />
-            <span>{item.label}</span>
-          </NavLink>
-        </li>
-      ))}
+      {items.map((entry) =>
+        isGroup(entry) ? (
+          <li key={entry.label} className="nav-group">
+            <p className="nav-group__label">
+              <Icon name={entry.icon} size={20} />
+              <span>{entry.label}</span>
+            </p>
+            <ul className="nav-list nav-list--nested">
+              {entry.children.map((child) => (
+                <li key={child.to}>
+                  <NavLinkItem item={child} onNavigate={onNavigate} nested />
+                </li>
+              ))}
+            </ul>
+          </li>
+        ) : (
+          <li key={entry.to}>
+            <NavLinkItem item={entry} onNavigate={onNavigate} />
+          </li>
+        ),
+      )}
     </ul>
   );
 }

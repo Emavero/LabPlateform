@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -122,6 +123,37 @@ class BoxApiIntegrationTest {
     }
 
     @Test
+    void aMachineIsRatedOnlyOncePwnedAndTheVoteIsCounted() throws Exception {
+        Cookie session = register("juge@example.com");
+
+        mvc.perform(rate(session, "MEDIUM")).andExpect(status().isConflict());
+
+        mvc.perform(submit(session, "USER", USER_FLAG)).andExpect(status().isOk());
+        mvc.perform(submit(session, "ROOT", ROOT_FLAG)).andExpect(status().isOk());
+
+        mvc.perform(rate(session, "HARD"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.myRating").value("HARD"))
+                .andExpect(jsonPath("$.ratingVotes").value(1))
+                .andExpect(jsonPath("$.perceivedDifficulty").value("HARD"));
+
+        // Revoter remplace le vote, il ne s'ajoute pas.
+        mvc.perform(rate(session, "EASY"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.myRating").value("EASY"))
+                .andExpect(jsonPath("$.ratingVotes").value(1));
+
+        mvc.perform(get("/api/boxes/{slug}", SLUG).cookie(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.myRating").value("EASY"))
+                .andExpect(jsonPath("$.perceivedDifficultyName").value("Facile"));
+
+        mvc.perform(put("/api/boxes/{slug}/rating", SLUG).cookie(session)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"difficulty\":\"IMPOSSIBLE\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void aMalformedSubmissionOrAnUnknownMachineIsRefused() throws Exception {
         Cookie session = register("malformed@example.com");
 
@@ -142,6 +174,12 @@ class BoxApiIntegrationTest {
         mvc.perform(get("/api/boxes")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/scoreboard")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/scoreboard/me")).andExpect(status().isUnauthorized());
+    }
+
+    private static RequestBuilder rate(Cookie session, String difficulty) {
+        return put("/api/boxes/{slug}/rating", SLUG).cookie(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"difficulty\":\"" + difficulty + "\"}");
     }
 
     private static RequestBuilder submit(Cookie session, String kind, String flag) {

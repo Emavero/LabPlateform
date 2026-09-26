@@ -1,6 +1,9 @@
 package com.labplatform.config;
 
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
+import com.labplatform.application.port.out.BoxRatingRepositoryPort;
+import com.labplatform.application.port.out.CourseRepositoryPort;
+import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
@@ -12,8 +15,10 @@ import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
+import com.labplatform.application.service.AcademyService;
 import com.labplatform.application.service.AccountService;
 import com.labplatform.application.service.BoxService;
+import com.labplatform.application.service.ProfileService;
 import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.AuthenticationService;
 import com.labplatform.application.service.LabService;
@@ -82,9 +87,21 @@ public class UseCaseConfig {
     }
 
     @Bean
-    public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns,
+    public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
                                  GetPlayerProgressUseCase progress, TransactionPort transactions, Clock clock) {
-        return new BoxService(boxes, owns, progress, transactions, clock);
+        return new BoxService(boxes, owns, ratings, progress, transactions, clock);
+    }
+
+    @Bean
+    public AcademyService academyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
+                                         TransactionPort transactions, Clock clock) {
+        return new AcademyService(courses, completions, transactions, clock);
+    }
+
+    @Bean
+    public ProfileService profileService(BoxRepositoryPort boxes, OwnRepositoryPort owns, CourseRepositoryPort courses,
+                                         SectionCompletionRepositoryPort completions) {
+        return new ProfileService(boxes, owns, courses, completions);
     }
 
     @Bean

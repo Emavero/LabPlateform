@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Box, FlagKind } from '@/domain/models/Box';
+import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { FlagSubmission } from '@/domain/repositories/BoxRepository';
 import { useDependencies } from '../state/DependenciesContext';
@@ -13,6 +13,9 @@ export interface BoxDetailState {
   submitting: FlagKind | null;
   submitError: AppError | null;
   submit: (kind: FlagKind, flag: string) => Promise<boolean>;
+  /** Note de difficulté : refusée par le serveur tant que la machine n'est pas possédée. */
+  rate: (difficulty: Difficulty) => Promise<void>;
+  rating: boolean;
   reload: () => Promise<void>;
 }
 
@@ -24,6 +27,7 @@ export function useBoxDetail(slug: string): BoxDetailState {
   const [lastSubmission, setLastSubmission] = useState<FlagSubmission | null>(null);
   const [submitting, setSubmitting] = useState<FlagKind | null>(null);
   const [submitError, setSubmitError] = useState<AppError | null>(null);
+  const [rating, setRating] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -60,5 +64,20 @@ export function useBoxDetail(slug: string): BoxDetailState {
     [boxes.submitFlag, boxes.get, slug],
   );
 
-  return { box, loading, error, lastSubmission, submitting, submitError, submit, reload };
+  const rate = useCallback(
+    async (difficulty: Difficulty) => {
+      setRating(true);
+      setSubmitError(null);
+      try {
+        setBox(await boxes.rate.execute(slug, difficulty));
+      } catch (e) {
+        setSubmitError(toAppError(e));
+      } finally {
+        setRating(false);
+      }
+    },
+    [boxes.rate, slug],
+  );
+
+  return { box, loading, error, lastSubmission, submitting, submitError, submit, rate, rating, reload };
 }
