@@ -51,7 +51,8 @@ class ScoreboardServiceTest {
         boxes.save(box(boxes, "cobalt", Difficulty.EASY, EASY_USER, EASY_ROOT));
         boxes.save(box(boxes, "blackice", Difficulty.HARD, HARD_USER, HARD_ROOT));
         scoreboard = new ScoreboardService(boxes, owns);
-        catalogue = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
+        catalogue = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN,
+                Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private static Box box(InMemoryBoxes boxes, String slug, Difficulty difficulty, String userFlag, String rootFlag) {

@@ -33,12 +33,17 @@ public class Box {
     private final String maker;
     private final Instant releasedAt;
     private final boolean retired;
+    /**
+     * Machine réservée aux abonnés Pro. Vraie par défaut : une machine publiée
+     * sans précision n'est pas ouverte à tous par accident.
+     */
+    private final boolean proOnly;
     private final Flag userFlag;
     private final Flag rootFlag;
 
     private Box(Long id, String slug, String name, OperatingSystem operatingSystem, Difficulty difficulty,
                 String synopsis, String ipAddress, String maker, Instant releasedAt, boolean retired,
-                Flag userFlag, Flag rootFlag) {
+                boolean proOnly, Flag userFlag, Flag rootFlag) {
         this.id = id;
         this.slug = requireSlug(slug);
         this.name = requireName(name);
@@ -49,6 +54,7 @@ public class Box {
         this.maker = Objects.requireNonNull(maker, "maker");
         this.releasedAt = Objects.requireNonNull(releasedAt, "releasedAt");
         this.retired = retired;
+        this.proOnly = proOnly;
         this.userFlag = Objects.requireNonNull(userFlag, "userFlag");
         this.rootFlag = Objects.requireNonNull(rootFlag, "rootFlag");
     }
@@ -58,23 +64,26 @@ public class Box {
                              String synopsis, String ipAddress, String maker, Instant releasedAt,
                              Flag userFlag, Flag rootFlag) {
         return new Box(null, slug, name, operatingSystem, difficulty, synopsis, ipAddress, maker, releasedAt,
-                false, userFlag, rootFlag);
+                false, true, userFlag, rootFlag);
     }
 
-    /** Nouvelle machine, avec son état de retrait décidé par l'administration. */
+    /**
+     * Nouvelle machine, avec son état de retrait et sa réserve aux abonnés
+     * décidés par l'administration.
+     */
     public static Box create(String slug, String name, OperatingSystem operatingSystem, Difficulty difficulty,
                              String synopsis, String ipAddress, String maker, Instant releasedAt, boolean retired,
-                             Flag userFlag, Flag rootFlag) {
+                             boolean proOnly, Flag userFlag, Flag rootFlag) {
         return new Box(null, slug, name, operatingSystem, difficulty, synopsis, ipAddress, maker, releasedAt,
-                retired, userFlag, rootFlag);
+                retired, proOnly, userFlag, rootFlag);
     }
 
     /** Reconstitution depuis la persistance. */
     public static Box restore(Long id, String slug, String name, OperatingSystem operatingSystem,
                               Difficulty difficulty, String synopsis, String ipAddress, String maker,
-                              Instant releasedAt, boolean retired, Flag userFlag, Flag rootFlag) {
+                              Instant releasedAt, boolean retired, boolean proOnly, Flag userFlag, Flag rootFlag) {
         return new Box(Objects.requireNonNull(id, "id"), slug, name, operatingSystem, difficulty, synopsis,
-                ipAddress, maker, releasedAt, retired, userFlag, rootFlag);
+                ipAddress, maker, releasedAt, retired, proOnly, userFlag, rootFlag);
     }
 
     /**
@@ -155,6 +164,10 @@ public class Box {
 
     public boolean isRetired() {
         return retired;
+    }
+
+    public boolean isProOnly() {
+        return proOnly;
     }
 
     public Flag getUserFlag() {

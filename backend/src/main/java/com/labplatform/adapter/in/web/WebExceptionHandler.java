@@ -8,6 +8,7 @@ import com.labplatform.domain.shared.ForbiddenException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.shared.NotFoundException;
+import com.labplatform.domain.shared.PaymentRequiredException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,10 @@ public class WebExceptionHandler {
     private static final Map<Class<? extends DomainException>, HttpStatus> STATUS_BY_CATEGORY = Map.of(
             InvalidInputException.class, HttpStatus.BAD_REQUEST,
             AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED,
+            // 402 plutôt que 403 : l'appelant n'est pas indésirable, il lui
+            // manque un abonnement. L'interface peut donc proposer de le
+            // prendre au lieu d'afficher un refus.
+            PaymentRequiredException.class, HttpStatus.PAYMENT_REQUIRED,
             ForbiddenException.class, HttpStatus.FORBIDDEN,
             NotFoundException.class, HttpStatus.NOT_FOUND,
             ConflictException.class, HttpStatus.CONFLICT,

@@ -1,3 +1,12 @@
+import type {
+  Billing,
+  Money,
+  PaymentMethod,
+  PaymentStatus,
+  Plan,
+  PlanOffer,
+  SubscriptionStatus,
+} from '@/domain/models/Billing';
 import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
 import type {
   Course,
@@ -55,7 +64,8 @@ export interface BoxDto {
   rootFlagPoints: number;
   totalPoints: number;
   synopsis: string;
-  ipAddress: string;
+  /** Absente sur une machine verrouillée : elle fait partie de ce qui s'achète. */
+  ipAddress: string | null;
   maker: string;
   releasedAt: string;
   retired: boolean;
@@ -73,6 +83,34 @@ export interface BoxDto {
   instanceStatus: 'STOPPED' | 'RUNNING';
   instanceAddress: string | null;
   instanceExpiresAt: string | null;
+  proOnly: boolean;
+  locked: boolean;
+}
+
+export interface BillingDto {
+  plan: Plan;
+  planName: string;
+  status: SubscriptionStatus;
+  expiresAt: string | null;
+  pro: boolean;
+  renewing: boolean;
+  offers: PlanOffer[];
+  payments: PaymentDto[];
+}
+
+export interface PaymentDto {
+  reference: string;
+  amount: Money;
+  method: PaymentMethod;
+  methodName: string;
+  status: PaymentStatus;
+  createdAt: string;
+  settledAt: string | null;
+}
+
+export interface CheckoutDto {
+  reference: string;
+  redirectUrl: string;
 }
 
 export interface CourseSummaryDto {
@@ -223,6 +261,18 @@ export function toBox(dto: BoxDto): Box {
     releasedAt: new Date(dto.releasedAt),
     lastOwnedAt: dto.lastOwnedAt ? new Date(dto.lastOwnedAt) : null,
     instanceExpiresAt: dto.instanceExpiresAt ? new Date(dto.instanceExpiresAt) : null,
+  };
+}
+
+export function toBilling(dto: BillingDto): Billing {
+  return {
+    ...dto,
+    expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+    payments: dto.payments.map((payment) => ({
+      ...payment,
+      createdAt: new Date(payment.createdAt),
+      settledAt: payment.settledAt ? new Date(payment.settledAt) : null,
+    })),
   };
 }
 

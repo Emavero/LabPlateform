@@ -19,7 +19,8 @@ export interface Box {
   readonly rootFlagPoints: number;
   readonly totalPoints: number;
   readonly synopsis: string;
-  readonly ipAddress: string;
+  /** Nulle sur une machine verrouillée : le serveur ne l'envoie pas. */
+  readonly ipAddress: string | null;
   readonly maker: string;
   readonly releasedAt: Date;
   readonly retired: boolean;
@@ -40,6 +41,14 @@ export interface Box {
   readonly instanceStatus: InstanceStatus;
   readonly instanceAddress: string | null;
   readonly instanceExpiresAt: Date | null;
+  /** Machine réservée aux abonnés Pro. */
+  readonly proOnly: boolean;
+  /**
+   * Réservée, et ce joueur n'y a pas droit. La fiche reste consultable pour
+   * qu'il voie ce qu'il obtiendrait, mais son adresse et son synopsis ne sont
+   * pas envoyés et toute action dessus est refusée par le serveur.
+   */
+  readonly locked: boolean;
 }
 
 export function isInstanceRunning(box: Box): boolean {

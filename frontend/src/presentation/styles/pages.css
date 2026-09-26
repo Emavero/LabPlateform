@@ -1681,3 +1681,220 @@ button.back-link {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* ── Abonnement ─────────────────────────────────────────────────────────── */
+
+/* Machine réservée : l'or signale ce qui s'achète, sans jamais crier. */
+.badge--locked {
+  color: var(--warning);
+  background: rgba(255, 181, 71, 0.12);
+  border-color: rgba(255, 181, 71, 0.35);
+}
+
+.box-card--locked {
+  /* La vignette reste lisible : c'est une invitation, pas une erreur. */
+  border-style: dashed;
+}
+
+.box-card--locked .box-card__synopsis {
+  color: var(--text-muted);
+}
+
+.box-card__ip--hidden {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-faint);
+  font-family: var(--font-body);
+}
+
+.paywall__list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+}
+
+.paywall__list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.paywall__list svg {
+  color: var(--warning);
+  flex: none;
+}
+
+.paywall__note {
+  margin: 0 0 1rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.plan-picker {
+  display: grid;
+  gap: 1rem;
+}
+
+.plan-picker__periods {
+  display: inline-flex;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.5);
+  justify-self: start;
+}
+
+.plan-period {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.9rem;
+  border: 0;
+  border-radius: calc(var(--radius-md) - 0.25rem);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.plan-period--active {
+  background: var(--violet-soft);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.plan-period__badge {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(52, 224, 161, 0.14);
+  color: var(--running);
+  font-size: 0.7rem;
+}
+
+.plan-picker__methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-method {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.5);
+}
+
+/* Moyen proposé mais non configuré : visible et inerte, jamais trompeur. */
+.plan-method--off {
+  opacity: 0.55;
+}
+
+.plan-method__head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+
+.plan-method__name {
+  font-family: var(--font-display);
+  color: var(--text);
+}
+
+.plan-method__price {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+
+.plan-method__hint {
+  margin: 0 0 0.35rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.billing__plan {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+
+.billing__plan svg {
+  color: var(--warning);
+}
+
+.billing__term {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+}
+
+.billing__note {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.billing__payments {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.billing__payment {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--step--1);
+}
+
+.billing__payment:last-child {
+  border-bottom: 0;
+}
+
+.billing__payment-date,
+.billing__payment-method {
+  color: var(--text-muted);
+}
+
+.billing__payment-amount {
+  font-family: var(--font-mono);
+}
+
+.billing__payment-status--succeeded {
+  color: var(--running);
+}
+
+.billing__payment-status--failed,
+.billing__payment-status--cancelled {
+  color: var(--danger);
+}
+
+.billing__payment-status--pending {
+  color: var(--warning);
+}
+
+@media (max-width: 40rem) {
+  .billing__payment {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

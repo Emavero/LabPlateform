@@ -54,6 +54,7 @@ export function AdminBoxesPage() {
       ipAddress: box.ipAddress,
       maker: box.maker,
       retired: box.retired,
+      proOnly: box.proOnly,
       userFlag: '',
       rootFlag: '',
     });
@@ -222,6 +223,17 @@ export function AdminBoxesPage() {
             />
             <span>Machine retirée (elle reste jouable, mais signalée comme ancienne)</span>
           </label>
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={draft.proOnly}
+              onChange={(e) => patch({ proOnly: e.target.checked })}
+            />
+            <span>
+              Réservée aux abonnés Pro (décochez-la pour en faire une machine d’initiation, visible et jouable
+              sans abonnement)
+            </span>
+          </label>
           <div className="editor-footer">
             <span />
             <Button type="submit" icon="check" loading={saving} loadingLabel="Enregistrement…">
@@ -244,7 +256,12 @@ export function AdminBoxesPage() {
               <li key={box.slug} className="admin-list__item">
                 <span className="admin-list__text">
                   <span className="admin-list__title">
-                    {box.name} {box.retired && <span className="badge">Retirée</span>}
+                    {box.name} {box.retired && <span className="badge">Retirée</span>}{' '}
+                    {box.proOnly ? (
+                      <span className="badge badge--locked">Pro</span>
+                    ) : (
+                      <span className="badge">Ouverte à tous</span>
+                    )}
                   </span>
                   <span className="admin-list__meta">
                     {box.osName} · {box.difficultyName} · {box.totalPoints} pts · <code>{box.ipAddress}</code> ·{' '}

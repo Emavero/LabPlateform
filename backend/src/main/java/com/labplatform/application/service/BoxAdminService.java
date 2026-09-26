@@ -69,7 +69,7 @@ public class BoxAdminService implements ManageBoxesUseCase {
             }
             return boxes.save(Box.create(slug, draft.name().trim(), draft.operatingSystem(), draft.difficulty(),
                     synopsisOf(draft), draft.ipAddress().trim(), makerOf(draft), clock.instant(), draft.retired(),
-                    Flag.ofSecret(userSecret), Flag.ofSecret(rootSecret)));
+                    draft.proOnly(), Flag.ofSecret(userSecret), Flag.ofSecret(rootSecret)));
         });
         return new PublishedBox(saved, userSecret, rootSecret);
     }
@@ -86,7 +86,7 @@ public class BoxAdminService implements ManageBoxesUseCase {
             Box existing = require(slug);
             return boxes.save(Box.restore(existing.getId(), existing.getSlug(), draft.name().trim(),
                     draft.operatingSystem(), draft.difficulty(), synopsisOf(draft), draft.ipAddress().trim(),
-                    makerOf(draft), existing.getReleasedAt(), draft.retired(),
+                    makerOf(draft), existing.getReleasedAt(), draft.retired(), draft.proOnly(),
                     userSecret == null ? existing.getUserFlag() : Flag.ofSecret(userSecret),
                     rootSecret == null ? existing.getRootFlag() : Flag.ofSecret(rootSecret)));
         });

@@ -59,8 +59,8 @@ class BoxServiceTest {
         boxes.save(newBox("sentinel", "Sentinel", Difficulty.VERY_EASY, SENTINEL_USER, SENTINEL_ROOT, 2));
         boxes.save(newBox("northwind", "Northwind", Difficulty.EASY, NORTHWIND_USER, NORTHWIND_ROOT, 1));
         scoreboard = new ScoreboardService(boxes, owns);
-        service = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.NO_TRANSACTION,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+        service = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN,
+                Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private static Box newBox(String slug, String name, Difficulty difficulty, String userFlag, String rootFlag,

@@ -38,7 +38,7 @@ public class InMemoryBoxes implements BoxRepositoryPort {
         Long id = box.getId() != null ? box.getId() : ++sequence;
         Box stored = Box.restore(id, box.getSlug(), box.getName(), box.getOperatingSystem(), box.getDifficulty(),
                 box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(), box.isRetired(),
-                box.getUserFlag(), box.getRootFlag());
+                box.isProOnly(), box.getUserFlag(), box.getRootFlag());
         store.put(id, stored);
         return stored;
     }

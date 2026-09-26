@@ -29,8 +29,15 @@ export function isGroup(entry: NavEntry): entry is NavGroup {
 }
 
 /**
- * Menu tel que ce rôle le voit. Le filtrage est un confort d'affichage, pas
- * une protection : c'est le serveur qui refuse les routes d'administration.
+ * Menu tel que ce rôle le voit.
+ * <p>
+ * Le filtrage va dans les deux sens : l'administrateur ne voit pas les pages de
+ * joueur, et le joueur ne voit pas celles d'administration. La séparation est
+ * voulue — l'administrateur publie le contenu, il ne le consomme pas, et un
+ * menu qui mélange les deux métiers n'aide personne.
+ * <p>
+ * Ce n'est pas une protection : c'est le serveur qui refuse /api/admin/** à
+ * quiconque n'a pas le rôle.
  */
 export function navigationFor(entries: readonly NavEntry[], role: Role | undefined): NavEntry[] {
   const allowed = (roles: readonly Role[] | undefined) => !roles || (role !== undefined && roles.includes(role));
@@ -51,24 +58,29 @@ export interface ModuleInfo {
  * Menu déclaratif : ajouter une entrée ne demande aucune modification de la
  * Sidebar (OCP). Les modules non encore livrés pointent vers une page d'attente.
  */
+/** Rôles qui jouent : tout sauf l'administration. */
+const PLAYER: readonly Role[] = ['USER'];
+
 export const PRIMARY_NAV: readonly NavEntry[] = [
-  { label: 'Dashboard', to: '/', icon: 'dashboard', end: true },
-  { label: 'Machines', to: '/machines', icon: 'target' },
-  { label: 'Classement', to: '/scoreboard', icon: 'trophy' },
+  { label: 'Dashboard', to: '/', icon: 'dashboard', end: true, roles: PLAYER },
+  { label: 'Machines', to: '/machines', icon: 'target', roles: PLAYER },
+  { label: 'Classement', to: '/scoreboard', icon: 'trophy', roles: PLAYER },
   {
     label: 'Cours',
     icon: 'book',
+    roles: PLAYER,
     children: [
       { label: 'Forensique', to: '/cours/forensique', icon: 'search' },
       { label: 'Défense', to: '/cours/defense', icon: 'shield' },
     ],
   },
-  { label: 'Lab Infrastructure', to: '/labs', icon: 'server' },
-  { label: 'VPN Access', to: '/vpn', icon: 'vpn' },
-  { label: 'Exposure Analysis', to: '/modules/exposure-analysis', icon: 'radar' },
-  { label: 'Attack Paths', to: '/modules/attack-paths', icon: 'route' },
-  { label: 'Events', to: '/modules/events', icon: 'activity' },
-  { label: 'Scenario Designer', to: '/modules/scenario-designer', icon: 'scenario' },
+  { label: 'Lab Infrastructure', to: '/labs', icon: 'server', roles: PLAYER },
+  { label: 'VPN Access', to: '/vpn', icon: 'vpn', roles: PLAYER },
+  { label: 'Exposure Analysis', to: '/modules/exposure-analysis', icon: 'radar', roles: PLAYER },
+  { label: 'Attack Paths', to: '/modules/attack-paths', icon: 'route', roles: PLAYER },
+  { label: 'Events', to: '/modules/events', icon: 'activity', roles: PLAYER },
+  { label: 'Scenario Designer', to: '/modules/scenario-designer', icon: 'scenario', roles: PLAYER },
+  { label: 'Report Center', to: '/modules/report-center', icon: 'report', roles: PLAYER },
   {
     label: 'Administration',
     icon: 'admin',
@@ -79,13 +91,14 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
       { label: 'Gérer les machines', to: '/admin/machines', icon: 'target' },
     ],
   },
-  { label: 'Report Center', to: '/modules/report-center', icon: 'report' },
 ];
 
 export const SECONDARY_NAV: readonly NavEntry[] = [
-  { label: 'Profil', to: '/profil', icon: 'medal' },
+  { label: 'Profil', to: '/profil', icon: 'medal', roles: PLAYER },
+  { label: 'Abonnement', to: '/abonnement', icon: 'crown', roles: PLAYER },
+  // Les réglages du compte (mot de passe, langue) valent pour les deux rôles.
   { label: 'Settings', to: '/settings', icon: 'settings' },
-  { label: 'Support', to: '/modules/support', icon: 'support' },
+  { label: 'Support', to: '/modules/support', icon: 'support', roles: PLAYER },
 ];
 
 /**

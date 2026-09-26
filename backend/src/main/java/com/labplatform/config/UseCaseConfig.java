@@ -1,5 +1,6 @@
 package com.labplatform.config;
 
+import com.labplatform.application.port.in.billing.GetEffectivePlanUseCase;
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
 import com.labplatform.application.port.in.box.GetBoxUseCase;
 import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
@@ -17,11 +18,16 @@ import com.labplatform.application.port.out.DomainEventPublisherPort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
 import com.labplatform.application.port.out.PasswordResetNotifierPort;
+import com.labplatform.application.port.out.PaymentGatewayPort;
+import com.labplatform.application.port.out.PaymentRepositoryPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
+import com.labplatform.application.port.out.SubscriptionRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AcademyService;
+import com.labplatform.application.service.BillingService;
+import com.labplatform.application.service.BillingSettings;
 import com.labplatform.application.service.AccountService;
 import com.labplatform.application.service.CourseAdminService;
 import com.labplatform.application.service.MediaService;
@@ -101,18 +107,25 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public BillingService billingService(SubscriptionRepositoryPort subscriptions, PaymentRepositoryPort payments,
+                                         PaymentGatewayPort gateway, SecretGeneratorPort secrets,
+                                         TransactionPort transactions, Clock clock, BillingSettings settings) {
+        return new BillingService(subscriptions, payments, gateway, secrets, transactions, clock, settings);
+    }
+
+    @Bean
     public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
                                  BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
-                                 TransactionPort transactions, Clock clock) {
-        return new BoxService(boxes, owns, ratings, instances, progress, transactions, clock);
+                                 GetEffectivePlanUseCase plans, TransactionPort transactions, Clock clock) {
+        return new BoxService(boxes, owns, ratings, instances, progress, plans, transactions, clock);
     }
 
     @Bean
     public BoxInstanceService boxInstanceService(BoxRepositoryPort boxes, BoxInstanceRepositoryPort instances,
                                                  HypervisorPort hypervisor, GetBoxUseCase boxView,
-                                                 TransactionPort transactions, Clock clock,
-                                                 AppProperties properties) {
-        return new BoxInstanceService(boxes, instances, hypervisor, boxView, transactions, clock,
+                                                 GetEffectivePlanUseCase plans, TransactionPort transactions,
+                                                 Clock clock, AppProperties properties) {
+        return new BoxInstanceService(boxes, instances, hypervisor, boxView, plans, transactions, clock,
                 properties.getBoxes().getInstanceLifetime());
     }
 

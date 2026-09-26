@@ -47,12 +47,12 @@ public class BoxPersistenceAdapter implements BoxRepositoryPort {
     private static BoxJpaEntity toEntity(Box box) {
         return new BoxJpaEntity(box.getId(), box.getSlug(), box.getName(), box.getOperatingSystem(),
                 box.getDifficulty(), box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(),
-                box.isRetired(), box.getUserFlag().hash(), box.getRootFlag().hash());
+                box.isRetired(), box.isProOnly(), box.getUserFlag().hash(), box.getRootFlag().hash());
     }
 
     private static Box toDomain(BoxJpaEntity e) {
         return Box.restore(e.getId(), e.getSlug(), e.getName(), e.getOperatingSystem(), e.getDifficulty(),
-                e.getSynopsis(), e.getIpAddress(), e.getMaker(), e.getReleasedAt(), e.isRetired(),
+                e.getSynopsis(), e.getIpAddress(), e.getMaker(), e.getReleasedAt(), e.isRetired(), e.isProOnly(),
                 Flag.ofHash(e.getUserFlagHash()), Flag.ofHash(e.getRootFlagHash()));
     }
 }

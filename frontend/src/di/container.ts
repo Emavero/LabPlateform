@@ -2,6 +2,7 @@ import { createHttpClient } from '@/data/http/httpClient';
 import { HttpAccountRepository } from '@/data/repositories/HttpAccountRepository';
 import { HttpAdminRepository } from '@/data/repositories/HttpAdminRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
+import { HttpBillingRepository } from '@/data/repositories/HttpBillingRepository';
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
@@ -11,6 +12,12 @@ import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
 import { HttpWriteupRepository } from '@/data/repositories/HttpWriteupRepository';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
 import { ChangePasswordUseCase, GetProfileUseCase } from '@/domain/usecases/account';
+import {
+  CancelSubscriptionUseCase,
+  ConfirmPaymentUseCase,
+  GetBillingUseCase,
+  StartCheckoutUseCase,
+} from '@/domain/usecases/billing';
 import {
   LoginUseCase,
   LogoutUseCase,
@@ -78,6 +85,13 @@ export interface Dependencies {
     readonly runAction: RunVmActionUseCase;
     readonly console: GetVmConsoleUseCase;
   };
+  /** Abonnement du compte connecté : formule, offre, paiements. */
+  readonly billing: {
+    readonly get: GetBillingUseCase;
+    readonly startCheckout: StartCheckoutUseCase;
+    readonly confirm: ConfirmPaymentUseCase;
+    readonly cancel: CancelSubscriptionUseCase;
+  };
   readonly boxes: {
     readonly list: ListBoxesUseCase;
     readonly get: GetBoxUseCase;
@@ -142,6 +156,7 @@ export function createContainer(): Dependencies {
   const courseRepository = new HttpCourseRepository(http);
   const profileRepository = new HttpProfileRepository(http);
   const adminRepository = new HttpAdminRepository(http);
+  const billingRepository = new HttpBillingRepository(http);
 
   return {
     sessionMonitor,
@@ -162,6 +177,12 @@ export function createContainer(): Dependencies {
       get: new GetVmUseCase(labRepository),
       runAction: new RunVmActionUseCase(new StartVmUseCase(labRepository), new StopVmUseCase(labRepository)),
       console: new GetVmConsoleUseCase(labRepository),
+    },
+    billing: {
+      get: new GetBillingUseCase(billingRepository),
+      startCheckout: new StartCheckoutUseCase(billingRepository),
+      confirm: new ConfirmPaymentUseCase(billingRepository),
+      cancel: new CancelSubscriptionUseCase(billingRepository),
     },
     boxes: {
       list: new ListBoxesUseCase(boxRepository),

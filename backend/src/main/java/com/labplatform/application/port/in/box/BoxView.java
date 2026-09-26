@@ -20,21 +20,25 @@ import java.util.Map;
  *
  * @param myVote   note donnée par ce joueur, nulle s'il n'a pas voté
  * @param instance cible lancée par ce joueur, nulle s'il n'en a jamais lancé
+ * @param locked   machine réservée aux abonnés, que ce joueur n'est pas. La
+ *                 fiche existe quand même — nom, système, difficulté, points —
+ *                 pour qu'il sache ce qu'il obtiendrait ; c'est l'adaptateur
+ *                 qui tait ce qui sert à l'attaquer.
  */
 public record BoxView(Box box, Map<FlagKind, Own> owns, CommunityRating rating, Difficulty myVote,
-                      BoxInstance instance) {
+                      BoxInstance instance, boolean locked) {
 
     public static BoxView of(Box box, List<Own> ownsOfPlayer) {
-        return of(box, ownsOfPlayer, CommunityRating.NONE, null, null);
+        return of(box, ownsOfPlayer, CommunityRating.NONE, null, null, false);
     }
 
     public static BoxView of(Box box, List<Own> ownsOfPlayer, CommunityRating rating, Difficulty myVote,
-                             BoxInstance instance) {
+                             BoxInstance instance, boolean locked) {
         Map<FlagKind, Own> byKind = new EnumMap<>(FlagKind.class);
         ownsOfPlayer.stream()
                 .filter(own -> own.boxId().equals(box.getId()))
                 .forEach(own -> byKind.put(own.kind(), own));
-        return new BoxView(box, byKind, rating, myVote, instance);
+        return new BoxView(box, byKind, rating, myVote, locked ? null : instance, locked);
     }
 
     public boolean isOwned(FlagKind kind) {

@@ -41,6 +41,7 @@ class BoxApiIntegrationTest {
 
     private static final String COOKIE = "LAB_SESSION";
     private static final String SLUG = "integration";
+    private static final String PRO_SLUG = "integration-pro";
     private static final String USER_FLAG = "0f0e0d0c0b0a09080706050403020100";
     private static final String ROOT_FLAG = "1f1e1d1c1b1a19181716151413121110";
 
@@ -50,12 +51,23 @@ class BoxApiIntegrationTest {
     @Autowired
     private BoxRepositoryPort boxes;
 
+    /**
+     * La machine du parcours est ouverte à tous : ces cas portent sur les
+     * flags et le classement, pas sur l'abonnement, qui a son propre test.
+     */
     @BeforeEach
     void seedKnownBox() {
         if (boxes.findBySlug(SLUG).isEmpty()) {
             boxes.save(Box.create(SLUG, "Integration", OperatingSystem.LINUX, Difficulty.EASY,
                     "Machine de test du parcours complet.", "10.10.10.99", "cyberMans",
-                    Instant.parse("2026-01-01T00:00:00Z"), Flag.ofSecret(USER_FLAG), Flag.ofSecret(ROOT_FLAG)));
+                    Instant.parse("2026-01-01T00:00:00Z"), false, false,
+                    Flag.ofSecret(USER_FLAG), Flag.ofSecret(ROOT_FLAG)));
+        }
+        if (boxes.findBySlug(PRO_SLUG).isEmpty()) {
+            boxes.save(Box.create(PRO_SLUG, "Integration Pro", OperatingSystem.LINUX, Difficulty.HARD,
+                    "Machine réservée aux abonnés.", "10.10.10.98", "cyberMans",
+                    Instant.parse("2026-01-02T00:00:00Z"), false, true,
+                    Flag.ofSecret(USER_FLAG), Flag.ofSecret(ROOT_FLAG)));
         }
     }
 

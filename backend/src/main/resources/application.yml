@@ -60,6 +60,33 @@ app:
     # Comptes administrateurs, séparés par des virgules. Ils accèdent au
     # tableau de bord d'administration ; le rôle ne s'obtient pas autrement.
     admin-emails: ${APP_ADMIN_EMAILS:}
+  # Abonnement Pro et encaissement.
+  billing:
+    # false ouvre toute la plateforme : aucun contenu réservé, aucune page
+    # d'abonnement utile. À garder pour un lab interne.
+    enabled: ${APP_BILLING_ENABLED:true}
+    # « simulated » déroule le parcours sans prestataire — pratique en
+    # développement, mais l'abonnement s'obtient alors en cliquant. « live »
+    # appelle réellement Stripe et Wave avec les clés ci-dessous.
+    mode: ${APP_BILLING_MODE:simulated}
+    methods: ${APP_BILLING_METHODS:CARD,WAVE}
+    # Tarif de base, écrit comme il s'affiche. Le XOF n'a pas de subdivision.
+    currency: ${APP_BILLING_CURRENCY:XOF}
+    monthly: ${APP_BILLING_MONTHLY:5000}
+    yearly: ${APP_BILLING_YEARLY:50000}
+    # Les réseaux bancaires n'acceptent pas le franc CFA : la carte a son tarif.
+    card:
+      currency: ${APP_BILLING_CARD_CURRENCY:EUR}
+      monthly: ${APP_BILLING_CARD_MONTHLY:8.00}
+      yearly: ${APP_BILLING_CARD_YEARLY:80.00}
+    success-url: ${APP_BILLING_SUCCESS_URL:http://localhost:3000/abonnement/retour}
+    cancel-url: ${APP_BILLING_CANCEL_URL:http://localhost:3000/abonnement}
+    stripe:
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    wave:
+      api-key: ${WAVE_API_KEY:}
+      webhook-secret: ${WAVE_WEBHOOK_SECRET:}
   # Fichiers téléversés (vidéos de cours).
   media:
     directory: ${APP_MEDIA_DIRECTORY:/var/lib/labplatform/media}

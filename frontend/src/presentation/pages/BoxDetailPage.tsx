@@ -5,6 +5,7 @@ import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { DifficultyMeter } from '../features/box/DifficultyMeter';
 import { FlagForm, FlagSuccess } from '../features/box/FlagForm';
 import { FlagChip } from '../features/box/FlagChip';
+import { PaywallPanel } from '../features/billing/PaywallPanel';
 import { InstancePanel } from '../features/box/InstancePanel';
 import { RatingPicker } from '../features/box/RatingPicker';
 import { Writeups } from '../features/box/Writeups';
@@ -59,10 +60,19 @@ export function BoxDetailPage() {
             {OS_FAMILY_LABELS[box.os]} · {box.osName} · par {box.maker}
           </p>
           <h1 className="page__title">{box.name}</h1>
-          <p className="page__lead">{box.synopsis}</p>
+          <p className="page__lead">
+            {box.locked
+              ? 'Le détail de cette machine est réservé aux abonnés Pro.'
+              : box.synopsis}
+          </p>
         </div>
         <div className="box-detail__badges">
           <DifficultyMeter difficulty={box.difficulty} label={box.difficultyName} />
+          {box.locked && (
+            <span className="badge badge--locked">
+              <Icon name="lock" size={13} /> Pro
+            </span>
+          )}
           {box.pwned && (
             <span className="badge badge--pwned">
               <Icon name="check" size={13} /> Possédée
@@ -76,6 +86,31 @@ export function BoxDetailPage() {
         </div>
       </header>
 
+      {box.locked ? (
+        <div className="detail-grid">
+          <PaywallPanel box={box} />
+          <Panel title="Ce que vous verrez" description="Une fois l'abonnement actif, cette fiche s'ouvre entièrement.">
+            <dl className="box-detail__facts">
+              <div>
+                <dt>Difficulté</dt>
+                <dd>{box.difficultyName}</dd>
+              </div>
+              <div>
+                <dt>Points</dt>
+                <dd>{box.totalPoints}</dd>
+              </div>
+              <div>
+                <dt>Publiée le</dt>
+                <dd>{box.releasedAt.toLocaleDateString('fr-FR')}</dd>
+              </div>
+              <div>
+                <dt>Difficulté ressentie</dt>
+                <dd>{box.perceivedDifficultyName ?? 'Pas encore notée'}</dd>
+              </div>
+            </dl>
+          </Panel>
+        </div>
+      ) : (
       <div className="detail-grid">
         <Panel title="Cible" description="Lancée à la demande, joignable une fois le VPN du lab monté.">
           <InstancePanel box={box} pending={detail.instancePending} onToggle={() => void detail.toggleInstance()} />
@@ -143,8 +178,9 @@ export function BoxDetailPage() {
           )}
         </Panel>
       </div>
+      )}
 
-      <Writeups slug={box.slug} pwned={box.pwned} />
+      {!box.locked && <Writeups slug={box.slug} pwned={box.pwned} />}
     </div>
   );
 }

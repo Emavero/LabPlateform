@@ -101,12 +101,14 @@ public final class AdminDtos {
             @Size(max = 45, message = "Adresse trop longue") String ipAddress,
             @Size(max = 64, message = "Nom d'auteur trop long") String maker,
             boolean retired,
+            /** Réservée aux abonnés Pro. Le formulaire l'envoie toujours. */
+            boolean proOnly,
             String userFlag,
             String rootFlag) {
 
         public BoxDraft toDraft() {
-            return new BoxDraft(name, operatingSystem, difficulty, synopsis, ipAddress, maker, retired, userFlag,
-                    rootFlag);
+            return new BoxDraft(name, operatingSystem, difficulty, synopsis, ipAddress, maker, retired, proOnly,
+                    userFlag, rootFlag);
         }
     }
 
@@ -118,7 +120,7 @@ public final class AdminDtos {
     public record AdminBoxResponse(String slug, String name, String os, String osName, String difficulty,
                                    String difficultyName, int userFlagPoints, int rootFlagPoints, int totalPoints,
                                    String synopsis, String ipAddress, String maker, Instant releasedAt,
-                                   boolean retired, String userFlagOnce, String rootFlagOnce) {
+                                   boolean retired, boolean proOnly, String userFlagOnce, String rootFlagOnce) {
 
         public static AdminBoxResponse from(PublishedBox published) {
             return from(published.box(), published.userFlagOnce(), published.rootFlagOnce());
@@ -133,7 +135,7 @@ public final class AdminDtos {
                     box.getOperatingSystem().displayName(), box.getDifficulty().name(),
                     box.getDifficulty().displayName(), box.pointsFor(FlagKind.USER), box.pointsFor(FlagKind.ROOT),
                     box.totalPoints(), box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(),
-                    box.isRetired(), userFlagOnce, rootFlagOnce);
+                    box.isRetired(), box.isProOnly(), userFlagOnce, rootFlagOnce);
         }
     }
 

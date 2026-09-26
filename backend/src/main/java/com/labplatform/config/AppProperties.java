@@ -3,6 +3,7 @@ package com.labplatform.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class AppProperties {
     private final Vpn vpn = new Vpn();
     private final Boxes boxes = new Boxes();
     private final Media media = new Media();
+    private final Billing billing = new Billing();
 
     public Jwt getJwt() {
         return jwt;
@@ -50,6 +52,10 @@ public class AppProperties {
 
     public Media getMedia() {
         return media;
+    }
+
+    public Billing getBilling() {
+        return billing;
     }
 
     public static class Jwt {
@@ -156,6 +162,210 @@ public class AppProperties {
 
         public void setResetTokenValidity(Duration resetTokenValidity) {
             this.resetTokenValidity = resetTokenValidity;
+        }
+    }
+
+    /**
+     * Abonnement Pro et encaissement.
+     * <p>
+     * {@code mode} vaut {@code simulated} par défaut : l'abonnement se déroule
+     * de bout en bout sans compte marchand, ce qui convient à une
+     * démonstration ou à un lab interne, mais accorde l'abonnement à qui
+     * clique. Une installation qui facture réellement passe en {@code live} et
+     * renseigne les clés du ou des prestataires.
+     * <p>
+     * Le tarif de base est exprimé dans {@code currency}, avec le montant tel
+     * qu'il s'écrit (« 5000 » pour 5 000 F CFA, « 8.00 » pour huit euros).
+     * {@code card} le remplace pour la carte, dont les réseaux n'acceptent pas
+     * le franc CFA.
+     */
+    public static class Billing {
+        private boolean enabled = true;
+        private String mode = "simulated";
+        private String currency = "XOF";
+        private BigDecimal monthly = new BigDecimal("5000");
+        private BigDecimal yearly = new BigDecimal("50000");
+        private List<String> methods = new ArrayList<>(List.of("CARD", "WAVE"));
+        /** Page de retour après paiement, côté frontend. */
+        private String successUrl = "http://localhost:3000/abonnement/retour";
+        private String cancelUrl = "http://localhost:3000/abonnement";
+        private final Price card = new Price();
+        private final Stripe stripe = new Stripe();
+        private final Wave wave = new Wave();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getMode() {
+            return mode;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public boolean isLive() {
+            return "live".equalsIgnoreCase(mode);
+        }
+
+        public String getCurrency() {
+            return currency;
+        }
+
+        public void setCurrency(String currency) {
+            this.currency = currency;
+        }
+
+        public BigDecimal getMonthly() {
+            return monthly;
+        }
+
+        public void setMonthly(BigDecimal monthly) {
+            this.monthly = monthly;
+        }
+
+        public BigDecimal getYearly() {
+            return yearly;
+        }
+
+        public void setYearly(BigDecimal yearly) {
+            this.yearly = yearly;
+        }
+
+        public List<String> getMethods() {
+            return methods;
+        }
+
+        public void setMethods(List<String> methods) {
+            this.methods = methods;
+        }
+
+        public String getSuccessUrl() {
+            return successUrl;
+        }
+
+        public void setSuccessUrl(String successUrl) {
+            this.successUrl = successUrl;
+        }
+
+        public String getCancelUrl() {
+            return cancelUrl;
+        }
+
+        public void setCancelUrl(String cancelUrl) {
+            this.cancelUrl = cancelUrl;
+        }
+
+        public Price getCard() {
+            return card;
+        }
+
+        public Stripe getStripe() {
+            return stripe;
+        }
+
+        public Wave getWave() {
+            return wave;
+        }
+
+        /** Tarif propre à un moyen de paiement. Devise vide : pas de dérogation. */
+        public static class Price {
+            private String currency = "";
+            private BigDecimal monthly;
+            private BigDecimal yearly;
+
+            public boolean isDefined() {
+                return !currency.isBlank() && monthly != null && yearly != null;
+            }
+
+            public String getCurrency() {
+                return currency;
+            }
+
+            public void setCurrency(String currency) {
+                this.currency = currency;
+            }
+
+            public BigDecimal getMonthly() {
+                return monthly;
+            }
+
+            public void setMonthly(BigDecimal monthly) {
+                this.monthly = monthly;
+            }
+
+            public BigDecimal getYearly() {
+                return yearly;
+            }
+
+            public void setYearly(BigDecimal yearly) {
+                this.yearly = yearly;
+            }
+        }
+
+        public static class Stripe {
+            private String baseUrl = "";
+            private String secretKey = "";
+            private String webhookSecret = "";
+
+            public String getBaseUrl() {
+                return baseUrl;
+            }
+
+            public void setBaseUrl(String baseUrl) {
+                this.baseUrl = baseUrl;
+            }
+
+            public String getSecretKey() {
+                return secretKey;
+            }
+
+            public void setSecretKey(String secretKey) {
+                this.secretKey = secretKey;
+            }
+
+            public String getWebhookSecret() {
+                return webhookSecret;
+            }
+
+            public void setWebhookSecret(String webhookSecret) {
+                this.webhookSecret = webhookSecret;
+            }
+        }
+
+        public static class Wave {
+            private String baseUrl = "";
+            private String apiKey = "";
+            private String webhookSecret = "";
+
+            public String getBaseUrl() {
+                return baseUrl;
+            }
+
+            public void setBaseUrl(String baseUrl) {
+                this.baseUrl = baseUrl;
+            }
+
+            public String getApiKey() {
+                return apiKey;
+            }
+
+            public void setApiKey(String apiKey) {
+                this.apiKey = apiKey;
+            }
+
+            public String getWebhookSecret() {
+                return webhookSecret;
+            }
+
+            public void setWebhookSecret(String webhookSecret) {
+                this.webhookSecret = webhookSecret;
+            }
         }
     }
 

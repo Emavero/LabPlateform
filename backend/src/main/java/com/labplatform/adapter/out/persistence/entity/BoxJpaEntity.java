@@ -51,6 +51,9 @@ public class BoxJpaEntity {
     @Column(name = "retired", nullable = false)
     private boolean retired;
 
+    @Column(name = "pro_only", nullable = false)
+    private boolean proOnly;
+
     @Column(name = "user_flag_hash", nullable = false, length = 64)
     private String userFlagHash;
 
@@ -63,7 +66,7 @@ public class BoxJpaEntity {
 
     public BoxJpaEntity(Long id, String slug, String name, OperatingSystem operatingSystem, Difficulty difficulty,
                         String synopsis, String ipAddress, String maker, Instant releasedAt, boolean retired,
-                        String userFlagHash, String rootFlagHash) {
+                        boolean proOnly, String userFlagHash, String rootFlagHash) {
         this.id = id;
         this.slug = slug;
         this.name = name;
@@ -74,6 +77,7 @@ public class BoxJpaEntity {
         this.maker = maker;
         this.releasedAt = releasedAt;
         this.retired = retired;
+        this.proOnly = proOnly;
         this.userFlagHash = userFlagHash;
         this.rootFlagHash = rootFlagHash;
     }
@@ -116,6 +120,10 @@ public class BoxJpaEntity {
 
     public boolean isRetired() {
         return retired;
+    }
+
+    public boolean isProOnly() {
+        return proOnly;
     }
 
     public String getUserFlagHash() {

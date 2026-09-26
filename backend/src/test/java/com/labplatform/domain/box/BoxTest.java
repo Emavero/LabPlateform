@@ -19,7 +19,7 @@ class BoxTest {
 
     private static Box box(Difficulty difficulty) {
         return Box.restore(7L, "mirage", "Mirage", OperatingSystem.LINUX, difficulty, "Portail interne.",
-                "10.10.10.14", "cyberMans", NOW.minusSeconds(86_400), false,
+                "10.10.10.14", "cyberMans", NOW.minusSeconds(86_400), false, true,
                 Flag.ofSecret(USER_FLAG), Flag.ofSecret(ROOT_FLAG));
     }
 

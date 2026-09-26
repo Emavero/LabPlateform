@@ -87,6 +87,7 @@ function boxBody(draft: BoxDraft) {
     ipAddress: draft.ipAddress.trim(),
     maker: draft.maker.trim(),
     retired: draft.retired,
+    proOnly: draft.proOnly,
     userFlag: draft.userFlag.trim() || null,
     rootFlag: draft.rootFlag.trim() || null,
   };

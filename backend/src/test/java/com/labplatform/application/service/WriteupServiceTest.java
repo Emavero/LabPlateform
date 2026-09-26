@@ -60,7 +60,7 @@ class WriteupServiceTest {
 
         ScoreboardService scoreboard = new ScoreboardService(boxes, owns);
         catalogue = new BoxService(boxes, owns, new InMemoryRatings(), new InMemoryInstances(), scoreboard,
-                Fakes.NO_TRANSACTION, clock);
+                Fakes.PRO_PLAN, Fakes.NO_TRANSACTION, clock);
         writeups = new WriteupService(boxes, owns, new InMemoryWriteups(), users, Fakes.NO_TRANSACTION, clock);
     }
 

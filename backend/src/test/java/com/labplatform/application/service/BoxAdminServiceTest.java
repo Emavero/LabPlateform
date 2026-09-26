@@ -46,7 +46,7 @@ class BoxAdminServiceTest {
 
     private static BoxDraft draft(String name, String userFlag, String rootFlag) {
         return new BoxDraft(name, OperatingSystem.LINUX, Difficulty.HARD, "Synopsis.", "10.10.10.20", "cyberMans",
-                false, userFlag, rootFlag);
+                false, true, userFlag, rootFlag);
     }
 
     @Test
@@ -77,7 +77,7 @@ class BoxAdminServiceTest {
 
         PublishedBox updated = admin.updateBox(ADMIN, created.getSlug(),
                 new BoxDraft("Mirage Bis", OperatingSystem.WINDOWS, Difficulty.INSANE, "Autre synopsis.",
-                        "10.10.10.21", "cyberMans", true, "  ", null));
+                        "10.10.10.21", "cyberMans", true, false, "  ", null));
 
         assertTrue(updated.box().getUserFlag().matches(FLAG));
         assertNull(updated.userFlagOnce());
@@ -95,8 +95,8 @@ class BoxAdminServiceTest {
     @Test
     void anAddressIsRequired() {
         assertThrows(InvalidInputException.class, () -> admin.createBox(ADMIN,
-                new BoxDraft("Sans adresse", OperatingSystem.LINUX, Difficulty.EASY, "x", "  ", null, false, null,
-                        null)));
+                new BoxDraft("Sans adresse", OperatingSystem.LINUX, Difficulty.EASY, "x", "  ", null, false, true,
+                        null, null)));
     }
 
     @Test

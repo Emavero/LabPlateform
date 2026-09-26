@@ -10,6 +10,9 @@ interface ApiErrorBody {
 const KIND_BY_STATUS: Record<number, AppErrorKind> = {
   400: 'validation',
   401: 'unauthorized',
+  // 402 : l'appelant n'est pas indésirable, il lui manque un abonnement.
+  // Distinguer ce cas permet de proposer l'abonnement au lieu d'une erreur.
+  402: 'payment_required',
   404: 'not_found',
   409: 'conflict',
 };

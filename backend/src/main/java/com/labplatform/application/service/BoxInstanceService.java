@@ -1,5 +1,6 @@
 package com.labplatform.application.service;
 
+import com.labplatform.application.port.in.billing.GetEffectivePlanUseCase;
 import com.labplatform.application.port.in.box.BoxView;
 import com.labplatform.application.port.in.box.GetBoxUseCase;
 import com.labplatform.application.port.in.box.SpawnBoxUseCase;
@@ -7,6 +8,7 @@ import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.TransactionPort;
+import com.labplatform.domain.billing.ProAccessPolicy;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.box.BoxInstance;
 import com.labplatform.domain.shared.ConflictException;
@@ -37,16 +39,19 @@ public class BoxInstanceService implements SpawnBoxUseCase {
     private final BoxInstanceRepositoryPort instances;
     private final HypervisorPort hypervisor;
     private final GetBoxUseCase boxView;
+    private final GetEffectivePlanUseCase plans;
     private final TransactionPort transactions;
     private final Clock clock;
     private final Duration lifetime;
 
     public BoxInstanceService(BoxRepositoryPort boxes, BoxInstanceRepositoryPort instances, HypervisorPort hypervisor,
-                              GetBoxUseCase boxView, TransactionPort transactions, Clock clock, Duration lifetime) {
+                              GetBoxUseCase boxView, GetEffectivePlanUseCase plans, TransactionPort transactions,
+                              Clock clock, Duration lifetime) {
         this.boxes = boxes;
         this.instances = instances;
         this.hypervisor = hypervisor;
         this.boxView = boxView;
+        this.plans = plans;
         this.transactions = transactions;
         this.clock = clock;
         this.lifetime = lifetime;
@@ -55,6 +60,11 @@ public class BoxInstanceService implements SpawnBoxUseCase {
     @Override
     public BoxView spawn(Actor actor, String slug) {
         Box box = require(slug);
+        // Vérifié avant d'allumer quoi que ce soit : une cible réservée ne
+        // consomme pas de ressources pour un compte qui n'y a pas droit.
+        if (box.isProOnly()) {
+            ProAccessPolicy.requirePro(actor, plans.planOf(actor));
+        }
         expireOutdated(actor.userId());
 
         Optional<BoxInstance> running = instances.findRunningByUser(actor.userId());

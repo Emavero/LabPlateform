@@ -137,7 +137,57 @@ Linux, puis on reconstitue depuis la défense ce que l'on vient de faire en
 attaque. Ajouter une filière revient à ajouter une constante dans
 `domain/academy/Track` et une entrée de menu.
 
+## Abonnement Pro et paiement
+
+Le catalogue se **consulte** sans abonnement : chaque machine montre son nom,
+son système, sa difficulté et ce qu'elle rapporte. Ce qui sert à l'attaquer est
+réservé aux abonnés — l'adresse dans le réseau du lab, la cible à la demande,
+la soumission des flags et les comptes rendus. Les cours, le classement et le
+profil restent ouverts à tous, et l'administration peut ouvrir une machine à
+tous (case *Réservée aux abonnés* décochée) : le catalogue livré en contient
+deux, pour qu'un compte gratuit sache ce qu'il achèterait.
+
+Un appel sur une machine réservée répond **402 Payment Required** plutôt que
+403 : l'appelant n'est pas indésirable, il lui manque un abonnement, et
+l'interface propose donc de le prendre au lieu d'afficher un refus.
+
+- **Deux moyens de paiement, deux devises.** La carte bancaire ne couvre pas
+  l'Afrique de l'Ouest, où le paiement passe par un portefeuille mobile : la
+  carte (Stripe) et **Wave** coexistent. Les réseaux bancaires n'acceptant pas
+  le franc CFA, chaque moyen a son tarif — `APP_BILLING_CURRENCY` pour la base
+  (5 000 F CFA/mois par défaut), `APP_BILLING_CARD_*` pour la carte (8 €/mois).
+  Ajouter un opérateur, c'est une classe dans `adapter/out/payment` et une
+  ligne de configuration : ni le domaine ni les cas d'usage ne bougent.
+- **La plateforme ne décide jamais qu'un paiement a réussi.** Elle le demande
+  au prestataire (au retour du payeur) ou reçoit sa notification signée. Une
+  requête du navigateur sur l'URL de retour ne suffit donc pas à s'offrir un
+  abonnement.
+- **Tout est idempotent.** Les prestataires répètent leurs notifications ; un
+  paiement ne se règle qu'une fois, et une échéance ne se crédite qu'une fois.
+  Renouveler d'avance prolonge le terme en cours au lieu de le remettre à zéro.
+- **Notifications authentifiées par signature.** Le corps brut est vérifié en
+  HMAC-SHA256 contre l'horodatage de l'en-tête, comparé à temps constant, avec
+  une tolérance de cinq minutes qui interdit le rejeu. Un corps non signé n'est
+  pas une notification.
+- **Résilier ne coupe pas l'accès** : le terme déjà payé reste dû, seul le
+  renouvellement s'arrête.
+
+Par défaut, `APP_BILLING_MODE=simulated` : le parcours complet se déroule sans
+compte marchand, ce qui permet de l'essayer — mais **tout compte peut alors
+s'attribuer un abonnement en cliquant**, et le démarrage l'annonce dans les
+journaux. Une installation qui facture réellement passe en `live` et renseigne
+`STRIPE_SECRET_KEY` / `WAVE_API_KEY` et leurs secrets de notification.
+
+```bash
+APP_BILLING_MODE=live STRIPE_SECRET_KEY=sk_live_… WAVE_API_KEY=wave_… docker compose up -d
+```
+
 ## Administration
+
+L'administrateur ne voit pas les pages de joueur : son menu ne contient que
+l'administration et les réglages de son compte, et taper `/machines` le renvoie
+à son tableau de bord. La séparation est volontaire — il publie le contenu, il
+ne le consomme pas, et il n'a ni abonnement ni progression.
 
 Le menu **Administration** n'apparaît que pour les comptes administrateurs.
 Il ouvre un tableau de bord (ce qui est publié, ce qui est utilisé) et
@@ -398,6 +448,11 @@ Principes appliqués :
 | POST    | `/api/boxes/{slug}/flags`      | Soumission d'un flag (400 incorrect, 409 déjà validé) |
 | POST    | `/api/boxes/{slug}/instance`   | Lance la cible (409 si une autre tourne déjà) |
 | DELETE  | `/api/boxes/{slug}/instance`   | Arrête la cible |
+| GET     | `/api/billing`                 | Abonnement du compte : formule, échéance, offre, paiements |
+| POST    | `/api/billing/checkout`        | Ouvre le paiement et rend l'adresse du prestataire |
+| POST    | `/api/billing/confirm`         | Relit l'état du paiement au retour du payeur |
+| DELETE  | `/api/billing`                 | Résilie (l'accès court jusqu'à l'échéance payée) |
+| POST    | `/api/billing/webhooks/{method}` | Notification du prestataire, authentifiée par signature |
 | GET     | `/api/boxes/{slug}/writeups`   | Comptes rendus lisibles par l'appelant |
 | PUT     | `/api/boxes/{slug}/writeups/mine` | Écrit ou révise le sien (409 si non possédée) |
 | DELETE  | `/api/boxes/{slug}/writeups/mine` | Supprime le sien (204) |
@@ -523,6 +578,13 @@ prête à être remplacée module par module.
 | `APP_BOXES_LEADERBOARD_SIZE` | `20`             | Nombre de joueurs affichés dans le classement |
 | `APP_BOXES_INSTANCE_LIFETIME` | `2h`            | Durée de vie d'une cible lancée à la demande |
 | `APP_MEDIA_MAX_FILE_SIZE`  | `256MB`            | Taille maximale d'une vidéo téléversée |
+| `APP_BILLING_ENABLED`      | `true`             | `false` ouvre toute la plateforme, sans contenu réservé |
+| `APP_BILLING_MODE`         | `simulated`        | `live` appelle réellement les prestataires |
+| `APP_BILLING_METHODS`      | `CARD,WAVE`        | Moyens de paiement proposés |
+| `APP_BILLING_CURRENCY`     | `XOF`              | Devise et tarif de base (`_MONTHLY`, `_YEARLY`) |
+| `APP_BILLING_CARD_CURRENCY`| `EUR`              | Tarif propre à la carte (`_MONTHLY`, `_YEARLY`) |
+| `STRIPE_SECRET_KEY`        | vide               | Clé Stripe, requise en mode `live` |
+| `WAVE_API_KEY`             | vide               | Clé Wave, requise en mode `live` |
 
 ## Intégration continue
 

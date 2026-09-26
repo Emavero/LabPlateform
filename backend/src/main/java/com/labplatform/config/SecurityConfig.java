@@ -52,6 +52,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/vpn/crl.pem").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Un serveur de paiement n'a pas de cookie de session :
+                        // la notification est authentifiée par sa signature,
+                        // vérifiée dans l'adaptateur du prestataire.
+                        .requestMatchers("/api/billing/webhooks/**").permitAll()
                         // Le contenu que tout le monde consulte n'est modifiable que par un administrateur.
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

@@ -30,6 +30,8 @@ const box: Box = {
   instanceStatus: 'STOPPED',
   instanceAddress: null,
   instanceExpiresAt: null,
+  proOnly: false,
+  locked: false,
 };
 
 describe('ratingGap', () => {

@@ -41,22 +41,22 @@ public class BoxCatalogSeeder implements ApplicationRunner {
     private static final List<Blueprint> CATALOGUE = List.of(
             new Blueprint("sentinel", "Sentinel", OperatingSystem.LINUX, Difficulty.VERY_EASY, "10.10.10.11",
                     "Un serveur web de démonstration laissé en place après une recette. Énumération, "
-                            + "identifiants par défaut et une tâche planifiée trop permissive.", 60),
+                            + "identifiants par défaut et une tâche planifiée trop permissive.", 60, false),
             new Blueprint("northwind", "Northwind", OperatingSystem.WINDOWS, Difficulty.EASY, "10.10.10.12",
                     "Partage SMB ouvert en lecture sur un contrôleur de domaine de test. Le chemin vers "
-                            + "l'administration passe par une délégation mal configurée.", 48),
+                            + "l'administration passe par une délégation mal configurée.", 48, false),
             new Blueprint("cobalt", "Cobalt", OperatingSystem.LINUX, Difficulty.EASY, "10.10.10.13",
                     "API REST exposant un point d'entrée de téléversement. Le conteneur qui l'héberge "
-                            + "monte le socket de l'hôte.", 35),
+                            + "monte le socket de l'hôte.", 35, true),
             new Blueprint("mirage", "Mirage", OperatingSystem.LINUX, Difficulty.MEDIUM, "10.10.10.14",
                     "Portail interne derrière un proxy inverse. Une injection de modèle côté serveur "
-                            + "ouvre la première porte ; la seconde est une binaire setuid maison.", 21),
+                            + "ouvre la première porte ; la seconde est une binaire setuid maison.", 21, true),
             new Blueprint("blackice", "BlackIce", OperatingSystem.WINDOWS, Difficulty.HARD, "10.10.10.15",
                     "Serveur applicatif d'une chaîne de production. Désérialisation .NET, puis "
-                            + "récupération de tickets Kerberos pour rebondir vers l'administration.", 14),
+                            + "récupération de tickets Kerberos pour rebondir vers l'administration.", 14, true),
             new Blueprint("obsidian", "Obsidian", OperatingSystem.LINUX, Difficulty.INSANE, "10.10.10.16",
                     "Machine de fin de parcours : évasion d'un bac à sable applicatif, chaîne de "
-                            + "rebonds sur le réseau interne et élévation par un pilote noyau vulnérable.", 7));
+                            + "rebonds sur le réseau interne et élévation par un pilote noyau vulnérable.", 7, true));
 
     private final BoxRepositoryPort boxes;
     private final SecretGeneratorPort secrets;
@@ -86,7 +86,7 @@ public class BoxCatalogSeeder implements ApplicationRunner {
         String rootSecret = secrets.hexToken();
         boxes.save(Box.create(blueprint.slug(), blueprint.name(), blueprint.operatingSystem(),
                 blueprint.difficulty(), blueprint.synopsis(), blueprint.ipAddress(), "cyberMans",
-                now.minus(Duration.ofDays(blueprint.releasedDaysAgo())),
+                now.minus(Duration.ofDays(blueprint.releasedDaysAgo())), false, blueprint.proOnly(),
                 Flag.ofSecret(userSecret), Flag.ofSecret(rootSecret)));
 
         if (properties.getBoxes().isLogSeededFlags()) {
@@ -94,7 +94,13 @@ public class BoxCatalogSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * @param proOnly machine réservée aux abonnés. Les deux premières du
+     *                catalogue sont ouvertes à tous : sans rien à se mettre
+     *                sous la dent, un compte gratuit ne saurait pas ce qu'il
+     *                achèterait.
+     */
     private record Blueprint(String slug, String name, OperatingSystem operatingSystem, Difficulty difficulty,
-                             String ipAddress, String synopsis, int releasedDaysAgo) {
+                             String ipAddress, String synopsis, int releasedDaysAgo, boolean proOnly) {
     }
 }

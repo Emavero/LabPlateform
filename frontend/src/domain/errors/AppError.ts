@@ -1,6 +1,8 @@
 export type AppErrorKind =
   | 'validation'
   | 'unauthorized'
+  /** Authentifié, mais la ressource demande un abonnement (HTTP 402). */
+  | 'payment_required'
   | 'not_found'
   | 'conflict'
   | 'network'

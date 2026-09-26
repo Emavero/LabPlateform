@@ -68,9 +68,9 @@ class BoxInstanceServiceTest {
         boxes.save(box("mirage", "10.10.10.14"));
         ScoreboardService scoreboard = new ScoreboardService(boxes, new InMemoryOwns());
         catalogue = new BoxService(boxes, new InMemoryOwns(), new InMemoryRatings(), instances, scoreboard,
-                Fakes.NO_TRANSACTION, clock);
-        spawns = new BoxInstanceService(boxes, instances, hypervisor, catalogue, Fakes.NO_TRANSACTION, clock,
-                LIFETIME);
+                Fakes.PRO_PLAN, Fakes.NO_TRANSACTION, clock);
+        spawns = new BoxInstanceService(boxes, instances, hypervisor, catalogue, Fakes.PRO_PLAN,
+                Fakes.NO_TRANSACTION, clock, LIFETIME);
     }
 
     private static Box box(String slug, String ip) {

@@ -1,11 +1,13 @@
 package com.labplatform.application.fakes;
 
 import com.labplatform.application.port.in.auth.UserSummary;
+import com.labplatform.application.port.in.billing.GetEffectivePlanUseCase;
 import com.labplatform.application.port.out.AccessTokenIssuerPort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
+import com.labplatform.domain.billing.Plan;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.VirtualMachine;
@@ -40,6 +42,15 @@ public final class Fakes {
     };
 
     public static final AccessTokenIssuerPort TOKEN_ISSUER = (UserSummary user) -> "token-for-" + user.id();
+
+    /**
+     * Formule accordée à tous : sert aux tests qui ne portent pas sur
+     * l'abonnement et qui ne doivent pas se retrouver devant un mur payant.
+     */
+    public static final GetEffectivePlanUseCase PRO_PLAN = actor -> Plan.PRO;
+
+    /** Formule gratuite, pour éprouver la réserve aux abonnés. */
+    public static final GetEffectivePlanUseCase FREE_PLAN = actor -> Plan.FREE;
 
     /** Générateur déterministe : c'est le test qui décide de la valeur des secrets tirés. */
     public static SecretGeneratorPort secretGenerator(Supplier<String> urlSafeToken) {

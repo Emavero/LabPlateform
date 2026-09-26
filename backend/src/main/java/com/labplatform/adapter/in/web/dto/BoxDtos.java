@@ -54,8 +54,16 @@ public final class BoxDtos {
             String myRating,
             String instanceStatus,
             String instanceAddress,
-            Instant instanceExpiresAt) {
+            Instant instanceExpiresAt,
+            boolean proOnly,
+            boolean locked) {
 
+        /**
+         * Sur une machine verrouillée, l'adresse et le synopsis ne sortent pas :
+         * ils font partie de ce qui s'achète. Le reste — nom, système,
+         * difficulté, barème — reste visible pour que le compte gratuit sache
+         * ce qu'il obtiendrait.
+         */
         public static BoxResponse from(BoxView view) {
             Box box = view.box();
             return new BoxResponse(
@@ -68,8 +76,8 @@ public final class BoxDtos {
                     box.pointsFor(FlagKind.USER),
                     box.pointsFor(FlagKind.ROOT),
                     box.totalPoints(),
-                    box.getSynopsis(),
-                    box.getIpAddress(),
+                    view.locked() ? "" : box.getSynopsis(),
+                    view.locked() ? null : box.getIpAddress(),
                     box.getMaker(),
                     box.getReleasedAt(),
                     box.isRetired(),
@@ -86,7 +94,9 @@ public final class BoxDtos {
                     view.myVote() == null ? null : view.myVote().name(),
                     view.instance() == null ? "STOPPED" : view.instance().getStatus().name(),
                     view.instance() == null ? null : view.instance().getAddress().orElse(null),
-                    view.instance() == null ? null : view.instance().getExpiresAt().orElse(null));
+                    view.instance() == null ? null : view.instance().getExpiresAt().orElse(null),
+                    box.isProOnly(),
+                    view.locked());
         }
     }
 

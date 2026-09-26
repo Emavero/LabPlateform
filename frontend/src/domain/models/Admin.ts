@@ -94,6 +94,8 @@ export interface BoxDraft {
   readonly ipAddress: string;
   readonly maker: string;
   readonly retired: boolean;
+  /** Réservée aux abonnés Pro. Vraie par défaut : une machine ne s'ouvre pas par oubli. */
+  readonly proOnly: boolean;
   /** Laissé vide : tiré au hasard à la création, inchangé à la modification. */
   readonly userFlag: string;
   readonly rootFlag: string;
@@ -118,6 +120,7 @@ export interface PublishedBox {
   readonly maker: string;
   readonly releasedAt: Date;
   readonly retired: boolean;
+  readonly proOnly: boolean;
   readonly userFlagOnce: string | null;
   readonly rootFlagOnce: string | null;
 }
@@ -130,6 +133,7 @@ export const EMPTY_BOX_DRAFT: BoxDraft = {
   ipAddress: '10.10.10.',
   maker: 'cyberMans',
   retired: false,
+  proOnly: true,
   userFlag: '',
   rootFlag: '',
 };

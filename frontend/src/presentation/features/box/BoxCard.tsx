@@ -9,7 +9,12 @@ import { FlagChip } from './FlagChip';
 export function BoxCard({ box }: { box: Box }) {
   const titleId = `box-${box.slug}-title`;
   return (
-    <article className={['box-card', box.pwned && 'box-card--pwned'].filter(Boolean).join(' ')} aria-labelledby={titleId}>
+    <article
+      className={['box-card', box.pwned && 'box-card--pwned', box.locked && 'box-card--locked']
+        .filter(Boolean)
+        .join(' ')}
+      aria-labelledby={titleId}
+    >
       <header className="box-card__header">
         <span className={`box-card__os box-card__os--${box.os.toLowerCase()}`}>
           <Icon name={box.os === 'WINDOWS' ? 'windows' : 'linux'} size={24} />
@@ -31,11 +36,18 @@ export function BoxCard({ box }: { box: Box }) {
               <Icon name="crown" size={13} /> First blood
             </span>
           )}
+          {box.locked && (
+            <span className="badge badge--locked">
+              <Icon name="lock" size={13} /> Pro
+            </span>
+          )}
           {box.retired && <span className="badge">Retirée</span>}
         </div>
       </header>
 
-      <p className="box-card__synopsis">{box.synopsis}</p>
+      <p className="box-card__synopsis">
+        {box.locked ? 'Réservée aux abonnés Pro : adresse, cible à la demande et flags.' : box.synopsis}
+      </p>
 
       <div className="box-card__meta">
         <DifficultyMeter difficulty={box.difficulty} label={box.difficultyName} />
@@ -50,9 +62,15 @@ export function BoxCard({ box }: { box: Box }) {
       </div>
 
       <footer className="box-card__footer">
-        <code className="box-card__ip">{box.ipAddress}</code>
+        {box.locked ? (
+          <span className="box-card__ip box-card__ip--hidden">
+            <Icon name="lock" size={13} /> Adresse masquée
+          </span>
+        ) : (
+          <code className="box-card__ip">{box.ipAddress}</code>
+        )}
         <Link className="text-link" to={`/machines/${box.slug}`}>
-          Attaquer <Icon name="chevronRight" size={14} />
+          {box.locked ? 'Débloquer' : 'Attaquer'} <Icon name="chevronRight" size={14} />
         </Link>
       </footer>
     </article>

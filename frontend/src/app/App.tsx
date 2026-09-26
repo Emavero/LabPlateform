@@ -15,14 +15,16 @@ import { LoginPage } from '@/presentation/pages/LoginPage';
 import { MachinesPage } from '@/presentation/pages/MachinesPage';
 import { ModulePlaceholderPage } from '@/presentation/pages/ModulePlaceholderPage';
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
+import { PaymentReturnPage } from '@/presentation/pages/PaymentReturnPage';
 import { RegisterPage } from '@/presentation/pages/RegisterPage';
 import { ProfilePage } from '@/presentation/pages/ProfilePage';
 import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
 import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
+import { SubscriptionPage } from '@/presentation/pages/SubscriptionPage';
 import { VmDetailPage } from '@/presentation/pages/VmDetailPage';
 import { VpnPage } from '@/presentation/pages/VpnPage';
-import { AdminRoute, GuestRoute, ProtectedRoute } from '@/presentation/routing/guards';
+import { AdminRoute, GuestRoute, PlayerRoute, ProtectedRoute } from '@/presentation/routing/guards';
 import { AuthProvider } from '@/presentation/state/AuthContext';
 import { DependenciesProvider } from '@/presentation/state/DependenciesContext';
 
@@ -42,25 +44,34 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                <Route path="/machines" element={<MachinesPage />} />
-                <Route path="/machines/:slug" element={<BoxDetailPage />} />
-                <Route path="/scoreboard" element={<ScoreboardPage />} />
-                <Route path="/cours/:track" element={<CoursesPage />} />
-                <Route path="/cours/:track/:slug" element={<CourseDetailPage />} />
-                <Route path="/profil" element={<ProfilePage />} />
+                {/* Réglages du compte : communs aux deux rôles. */}
+                <Route path="/settings" element={<SettingsPage />} />
+
+                {/* Pages de joueur : un administrateur y est renvoyé vers /admin. */}
+                <Route element={<PlayerRoute />}>
+                  <Route index element={<DashboardPage />} />
+                  <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                  <Route path="/machines" element={<MachinesPage />} />
+                  <Route path="/machines/:slug" element={<BoxDetailPage />} />
+                  <Route path="/scoreboard" element={<ScoreboardPage />} />
+                  <Route path="/cours/:track" element={<CoursesPage />} />
+                  <Route path="/cours/:track/:slug" element={<CourseDetailPage />} />
+                  <Route path="/profil" element={<ProfilePage />} />
+                  <Route path="/abonnement" element={<SubscriptionPage />} />
+                  <Route path="/abonnement/retour" element={<PaymentReturnPage />} />
+                  <Route path="/labs" element={<LabsPage />} />
+                  <Route path="/labs/:id" element={<VmDetailPage />} />
+                  <Route path="/vpn" element={<VpnPage />} />
+                  <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
+                </Route>
+
                 <Route element={<AdminRoute />}>
                   <Route path="/admin" element={<AdminDashboardPage />} />
                   <Route path="/admin/cours" element={<AdminCoursesPage />} />
                   <Route path="/admin/machines" element={<AdminBoxesPage />} />
                   <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
                 </Route>
-                <Route path="/labs" element={<LabsPage />} />
-                <Route path="/labs/:id" element={<VmDetailPage />} />
-                <Route path="/vpn" element={<VpnPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
+
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Route>

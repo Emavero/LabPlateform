@@ -6,12 +6,15 @@ import com.labplatform.application.port.in.box.GetBoxUseCase;
 import com.labplatform.application.port.in.box.ListBoxesUseCase;
 import com.labplatform.application.port.in.box.RateBoxUseCase;
 import com.labplatform.application.port.in.box.SubmitFlagUseCase;
+import com.labplatform.application.port.in.billing.GetEffectivePlanUseCase;
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
 import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
+import com.labplatform.domain.billing.Plan;
+import com.labplatform.domain.billing.ProAccessPolicy;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.box.BoxInstance;
 import com.labplatform.domain.box.BoxRating;
@@ -39,6 +42,12 @@ import java.util.Map;
  * de l'application (la machine existe, le joueur n'a pas déjà validé ce
  * flag, personne ne l'avait validé avant lui) et laisse l'agrégat
  * {@link Box} juger la soumission et fixer les points.
+ * <p>
+ * C'est aussi ici que se joue la réserve aux abonnés. Le catalogue reste
+ * visible de tous — on ne vend pas ce qu'on cache — mais une machine réservée
+ * se présente verrouillée, et toute action dessus (soumettre un flag, lancer
+ * la cible, noter) est refusée : la règle est appliquée sur l'action, pas
+ * seulement sur l'affichage.
  */
 public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUseCase, RateBoxUseCase {
 
@@ -51,17 +60,19 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
     private final BoxRatingRepositoryPort ratings;
     private final BoxInstanceRepositoryPort instances;
     private final GetPlayerProgressUseCase progress;
+    private final GetEffectivePlanUseCase plans;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public BoxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
                       BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
-                      TransactionPort transactions, Clock clock) {
+                      GetEffectivePlanUseCase plans, TransactionPort transactions, Clock clock) {
         this.boxes = boxes;
         this.owns = owns;
         this.ratings = ratings;
         this.instances = instances;
         this.progress = progress;
+        this.plans = plans;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -70,28 +81,31 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
     public List<BoxView> listBoxes(Actor actor) {
         List<Own> mine = owns.findByUser(actor.userId());
         Map<Long, CommunityRating> perceived = perceivedDifficulties();
+        // Une seule lecture de la formule pour toute la liste.
+        Plan plan = plans.planOf(actor);
         return boxes.findAll().stream()
                 .sorted(DISPLAY_ORDER)
-                .map(box -> view(actor, box, mine, perceived))
+                .map(box -> view(actor, box, mine, perceived, plan))
                 .toList();
     }
 
     @Override
     public BoxView getBox(Actor actor, String slug) {
         Box box = require(slug);
-        return view(actor, box, owns.findByUser(actor.userId()), perceivedDifficulties());
+        return view(actor, box, owns.findByUser(actor.userId()), perceivedDifficulties(), plans.planOf(actor));
     }
 
     @Override
     public BoxView rateBox(Actor actor, String slug, Difficulty difficulty) {
         Box box = require(slug);
+        requireAccess(actor, box);
         List<Own> mine = owns.findByUser(actor.userId());
         boolean pwned = BoxView.of(box, mine).isPwned();
 
         transactions.inTransaction(() -> ratings.save(
                 BoxRating.cast(actor.userId(), box.getId(), difficulty, pwned, clock.instant())));
 
-        return view(actor, box, mine, perceivedDifficulties());
+        return view(actor, box, mine, perceivedDifficulties(), plans.planOf(actor));
     }
 
     @Override
@@ -99,6 +113,7 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
         // Format vérifié avant toute lecture en base : une saisie absurde ne déclenche aucune requête.
         Flag.requireWellFormed(flag);
         Box box = require(slug);
+        requireAccess(actor, box);
 
         Own saved = transactions.inTransaction(() -> {
             if (owns.exists(actor.userId(), box.getId(), kind)) {
@@ -116,10 +131,26 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
                 pwned, progress.progressOf(actor));
     }
 
-    private BoxView view(Actor actor, Box box, List<Own> mine, Map<Long, CommunityRating> perceived) {
+    private BoxView view(Actor actor, Box box, List<Own> mine, Map<Long, CommunityRating> perceived, Plan plan) {
+        boolean locked = isLocked(actor, box, plan);
         Difficulty myVote = ratings.find(actor.userId(), box.getId()).map(BoxRating::difficulty).orElse(null);
         return BoxView.of(box, mine, perceived.getOrDefault(box.getId(), CommunityRating.NONE), myVote,
-                instanceOf(actor, box));
+                locked ? null : instanceOf(actor, box), locked);
+    }
+
+    private static boolean isLocked(Actor actor, Box box, Plan plan) {
+        return box.isProOnly() && !ProAccessPolicy.granted(actor, plan);
+    }
+
+    /**
+     * Refuse l'action sur une machine réservée. Levé avant toute écriture :
+     * un non-abonné ne doit pas pouvoir deviner un flag par tâtonnement, ni
+     * occuper un emplacement de cible.
+     */
+    private void requireAccess(Actor actor, Box box) {
+        if (box.isProOnly()) {
+            ProAccessPolicy.requirePro(actor, plans.planOf(actor));
+        }
     }
 
     /**
