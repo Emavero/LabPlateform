@@ -286,6 +286,11 @@ Pour viser un autre backend : `VITE_API_PROXY_TARGET=http://hote:8080 npm run de
 
 ## Architecture du backend : hexagonale
 
+> Une documentation d'architecture complète, pensée pour l'accueil d'un
+> nouvel arrivant et pour faire évoluer la plateforme, est dans
+> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (et sa version imprimable
+> `docs/ARCHITECTURE.pdf`). Ce qui suit en est le résumé.
+
 Le cœur métier ne dépend d'aucun framework. Spring n'apparaît que dans les
 adaptateurs et dans la configuration.
 
