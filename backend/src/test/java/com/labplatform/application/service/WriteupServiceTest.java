@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
@@ -35,6 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteupServiceTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
     private static final String USER_FLAG = "11111111111111111111111111111111";
     private static final String ROOT_FLAG = "22222222222222222222222222222222";
@@ -60,8 +64,8 @@ class WriteupServiceTest {
 
         ScoreboardService scoreboard = new ScoreboardService(boxes, owns);
         catalogue = new BoxService(boxes, owns, new InMemoryRatings(), new InMemoryInstances(), scoreboard,
-                Fakes.PRO_PLAN, Fakes.NO_TRANSACTION, clock);
-        writeups = new WriteupService(boxes, owns, new InMemoryWriteups(), users, Fakes.NO_TRANSACTION, clock);
+                Fakes.PRO_PLAN, journal, Fakes.NO_TRANSACTION, clock);
+        writeups = new WriteupService(boxes, owns, new InMemoryWriteups(), users, journal, Fakes.NO_TRANSACTION, clock);
     }
 
     private static Actor actor(InMemoryUsers users, String email) {

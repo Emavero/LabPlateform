@@ -1898,3 +1898,144 @@ button.back-link {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 }
+
+/* ── Journal d'activité ─────────────────────────────────────────────────── */
+
+.journal {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.journal__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.journal__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--step--1);
+  cursor: pointer;
+}
+
+.journal__filter--active {
+  border-color: var(--line-strong);
+  background: var(--violet-soft);
+  color: var(--text);
+}
+
+.journal__day {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.journal__date {
+  margin: 0;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.journal__list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal__line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm, 0.4rem);
+}
+
+.journal__line:hover {
+  background: var(--surface-hover);
+}
+
+.journal__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: rgba(139, 124, 255, 0.1);
+  color: var(--violet);
+}
+
+/* Une couleur par famille : on repère d'un coup d'œil ce qui relève du jeu,
+   de l'apprentissage ou de la caisse. */
+.journal__icon--academy {
+  background: rgba(76, 141, 255, 0.12);
+  color: var(--blue);
+}
+
+.journal__icon--billing {
+  background: rgba(255, 181, 71, 0.12);
+  color: var(--warning);
+}
+
+.journal__icon--lab {
+  background: rgba(52, 224, 161, 0.12);
+  color: var(--running);
+}
+
+.journal__icon--support {
+  background: rgba(255, 92, 122, 0.1);
+  color: var(--danger);
+}
+
+.journal__text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.journal__kind {
+  color: var(--text);
+}
+
+.journal__subject {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+.journal__detail {
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.journal__author,
+.journal__time {
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 40rem) {
+  .journal__line {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .journal__author {
+    display: none;
+  }
+}

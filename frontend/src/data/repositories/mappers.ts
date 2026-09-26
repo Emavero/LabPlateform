@@ -8,6 +8,7 @@ import type {
   SubscriptionStatus,
 } from '@/domain/models/Billing';
 import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
+import type { JournalFamily, JournalLine } from '@/domain/models/Journal';
 import type {
   Course,
   CourseLevel,
@@ -111,6 +112,17 @@ export interface PaymentDto {
 export interface CheckoutDto {
   reference: string;
   redirectUrl: string;
+}
+
+export interface JournalLineDto {
+  kind: string;
+  kindName: string;
+  family: JournalFamily;
+  familyName: string;
+  handle: string;
+  subject: string | null;
+  detail: string | null;
+  at: string;
 }
 
 export interface CourseSummaryDto {
@@ -274,6 +286,10 @@ export function toBilling(dto: BillingDto): Billing {
       settledAt: payment.settledAt ? new Date(payment.settledAt) : null,
     })),
   };
+}
+
+export function toJournalLine(dto: JournalLineDto): JournalLine {
+  return { ...dto, at: new Date(dto.at) };
 }
 
 export function toProgress(dto: ProgressDto): PlayerProgress {

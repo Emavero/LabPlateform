@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
 
+    long countByCreatedAtAfter(java.time.Instant since);
+
     Optional<UserJpaEntity> findByEmail(String email);
 
     Optional<UserJpaEntity> findByResetTokenHash(String resetTokenHash);

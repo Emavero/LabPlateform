@@ -5,7 +5,10 @@ import com.labplatform.domain.user.Email;
 import com.labplatform.domain.user.PasswordResetToken;
 import com.labplatform.domain.user.User;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,5 +50,15 @@ public class InMemoryUsers implements UserRepositoryPort {
     @Override
     public long count() {
         return store.size();
+    }
+
+    @Override
+    public List<User> findAll() {
+        return store.values().stream().sorted(Comparator.comparing(User::getId)).toList();
+    }
+
+    @Override
+    public long countCreatedSince(Instant since) {
+        return store.values().stream().filter(user -> user.getCreatedAt().isAfter(since)).count();
     }
 }

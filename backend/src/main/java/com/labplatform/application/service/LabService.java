@@ -7,8 +7,11 @@ import com.labplatform.application.port.in.lab.ProvisionDefaultLabUseCase;
 import com.labplatform.application.port.in.lab.StartVmUseCase;
 import com.labplatform.application.port.in.lab.StopVmUseCase;
 import com.labplatform.application.port.out.HypervisorPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.LabTemplate;
 import com.labplatform.domain.lab.OperatingSystem;
@@ -38,13 +41,15 @@ public class LabService implements ListVmsUseCase, GetVmInfoUseCase, StartVmUseC
 
     private final VirtualMachineRepositoryPort machines;
     private final HypervisorPort hypervisor;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
 
-    public LabService(VirtualMachineRepositoryPort machines, HypervisorPort hypervisor,
+    public LabService(VirtualMachineRepositoryPort machines, HypervisorPort hypervisor, JournalPort journal,
                       TransactionPort transactions, Clock clock) {
         this.machines = machines;
         this.hypervisor = hypervisor;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -80,11 +85,14 @@ public class LabService implements ListVmsUseCase, GetVmInfoUseCase, StartVmUseC
 
         ConnectionInfo connection = hypervisor.powerOn(vm);
 
-        return transactions.inTransaction(() -> {
+        VirtualMachine started = transactions.inTransaction(() -> {
             VirtualMachine current = requireAccessible(actor, vmId);
             current.markStarted(connection, clock.instant());
             return machines.save(current);
         });
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.VM_STARTED,
+                vm.getOperatingSystem().name(), clock.instant()));
+        return started;
     }
 
     @Override

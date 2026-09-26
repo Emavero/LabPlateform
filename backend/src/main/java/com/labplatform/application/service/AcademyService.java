@@ -8,6 +8,7 @@ import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.application.port.in.academy.ListCoursesUseCase;
 import com.labplatform.application.port.in.academy.TrackSectionProgressUseCase;
 import com.labplatform.application.port.out.CourseRepositoryPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.QuizRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
@@ -17,6 +18,8 @@ import com.labplatform.domain.academy.Quiz;
 import com.labplatform.domain.academy.QuizResult;
 import com.labplatform.domain.academy.SectionCompletion;
 import com.labplatform.domain.academy.Track;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.NotFoundException;
 import com.labplatform.domain.user.Actor;
 
@@ -45,14 +48,16 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
     private final CourseRepositoryPort courses;
     private final SectionCompletionRepositoryPort completions;
     private final QuizRepositoryPort quizzes;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public AcademyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
-                          QuizRepositoryPort quizzes, TransactionPort transactions, Clock clock) {
+                          QuizRepositoryPort quizzes, JournalPort journal, TransactionPort transactions, Clock clock) {
         this.courses = courses;
         this.completions = completions;
         this.quizzes = quizzes;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -66,7 +71,12 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
 
     @Override
     public CourseView getCourse(Actor actor, String slug) {
-        return view(require(slug), completedSectionIds(actor));
+        Course course = require(slug);
+        // Consultation inscrite : c'est ce qui dit quelles filières intéressent,
+        // y compris celles dont personne ne termine les sections.
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.COURSE_VIEWED, course.getSlug(),
+                course.getTrack().name(), clock.instant()));
+        return view(course, completedSectionIds(actor));
     }
 
     @Override
@@ -74,12 +84,18 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
         Course course = require(courseSlug);
         CourseSection section = course.requireSection(sectionSlug);
 
-        transactions.inTransaction(() -> {
-            if (!completions.exists(actor.userId(), section.id())) {
-                completions.save(SectionCompletion.record(actor.userId(), course.getId(), section.id(),
-                        clock.instant()));
+        boolean first = transactions.inTransaction(() -> {
+            if (completions.exists(actor.userId(), section.id())) {
+                return false;
             }
+            completions.save(SectionCompletion.record(actor.userId(), course.getId(), section.id(), clock.instant()));
+            return true;
         });
+        // Recocher une section déjà faite n'est pas un nouvel achèvement.
+        if (first) {
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.SECTION_COMPLETED, course.getSlug(),
+                    section.slug(), clock.instant()));
+        }
         return view(course, completedSectionIds(actor));
     }
 
@@ -125,6 +141,11 @@ public class AcademyService implements ListCoursesUseCase, GetCourseUseCase, Tra
         CourseSection section = course.requireSection(sectionSlug);
 
         QuizResult result = quizzes.findBySection(section.id()).grade(answers);
+        // Réussite et échec sont inscrits : un quiz massivement manqué signale
+        // une section à reprendre, ce qu'aucun autre chiffre ne dit.
+        journal.record(JournalEvent.of(actor.userId(),
+                result.isPassed() ? JournalKind.QUIZ_PASSED : JournalKind.QUIZ_FAILED, course.getSlug(),
+                section.slug() + " " + result.correct() + "/" + result.questions(), clock.instant()));
         // Réussir le quiz vaut validation de la section : la cocher en plus n'aurait pas de sens.
         if (result.isPassed()) {
             completeSection(actor, courseSlug, sectionSlug);

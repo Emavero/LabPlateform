@@ -8,6 +8,8 @@ import com.labplatform.domain.user.PasswordResetToken;
 import com.labplatform.domain.user.User;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -72,5 +74,15 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     @Override
     public long count() {
         return repository.count();
+    }
+
+    @Override
+    public List<User> findAll() {
+        return repository.findAll().stream().map(UserPersistenceAdapter::toDomain).toList();
+    }
+
+    @Override
+    public long countCreatedSince(Instant since) {
+        return repository.countByCreatedAtAfter(since);
     }
 }

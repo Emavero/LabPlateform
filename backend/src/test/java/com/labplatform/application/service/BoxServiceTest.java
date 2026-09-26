@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
@@ -12,6 +13,7 @@ import com.labplatform.domain.box.CommunityRating;
 import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.Flag;
 import com.labplatform.domain.box.FlagKind;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.lab.OperatingSystem;
 import com.labplatform.domain.scoring.Rank;
 import com.labplatform.domain.shared.ConflictException;
@@ -44,6 +46,8 @@ class BoxServiceTest {
     private static final String NORTHWIND_USER = "cccccccccccccccccccccccccccccccc";
     private static final String NORTHWIND_ROOT = "dddddddddddddddddddddddddddddddd";
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
     private InMemoryBoxes boxes;
     private InMemoryOwns owns;
     private InMemoryRatings ratings;
@@ -59,7 +63,7 @@ class BoxServiceTest {
         boxes.save(newBox("sentinel", "Sentinel", Difficulty.VERY_EASY, SENTINEL_USER, SENTINEL_ROOT, 2));
         boxes.save(newBox("northwind", "Northwind", Difficulty.EASY, NORTHWIND_USER, NORTHWIND_ROOT, 1));
         scoreboard = new ScoreboardService(boxes, owns);
-        service = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN,
+        service = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN, journal,
                 Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -212,5 +216,36 @@ class BoxServiceTest {
     private void pwn(Actor actor, String slug, String userFlag, String rootFlag) {
         service.submitFlag(actor, slug, FlagKind.USER, userFlag);
         service.submitFlag(actor, slug, FlagKind.ROOT, rootFlag);
+    }
+
+    /**
+     * Le journal sert les indicateurs d'administration : ce qu'il inscrit — et
+     * ce qu'il n'inscrit pas — décide de ce qu'on saura de l'usage.
+     */
+    @Test
+    void recordsWhatHappensOnAMachine() {
+        service.submitFlag(ALICE, "sentinel", FlagKind.USER, SENTINEL_USER);
+        service.submitFlag(ALICE, "sentinel", FlagKind.ROOT, SENTINEL_ROOT);
+
+        assertEquals(List.of(JournalKind.FLAG_VALIDATED, JournalKind.FLAG_VALIDATED, JournalKind.BOX_PWNED),
+                journal.kindsOf(ALICE.userId()));
+    }
+
+    /** Les refus disent où les joueurs butent : c'est ce qui fait de la donnée utile. */
+    @Test
+    void recordsARefusedFlagToo() {
+        assertThrows(InvalidInputException.class,
+                () -> service.submitFlag(ALICE, "sentinel", FlagKind.USER, NORTHWIND_USER));
+
+        assertEquals(List.of(JournalKind.FLAG_REFUSED), journal.kindsOf(ALICE.userId()));
+    }
+
+    /** Lire une fiche n'est pas un acte : c'est l'adaptateur HTTP qui compte les visites. */
+    @Test
+    void doesNotRecordAnythingWhenSimplyReadingTheCatalogue() {
+        service.listBoxes(ALICE);
+        service.getBox(ALICE, "sentinel");
+
+        assertTrue(journal.events.isEmpty());
     }
 }

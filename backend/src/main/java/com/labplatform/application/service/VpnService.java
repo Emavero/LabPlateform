@@ -6,11 +6,14 @@ import com.labplatform.application.port.in.vpn.GetVpnRevocationListUseCase;
 import com.labplatform.application.port.in.vpn.RegenerateVpnProfileUseCase;
 import com.labplatform.application.port.in.vpn.VpnAccess;
 import com.labplatform.application.port.in.vpn.VpnProfileFile;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort;
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort.ClientCredentials;
 import com.labplatform.application.port.out.VpnProfileRepositoryPort;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.user.Actor;
@@ -37,6 +40,7 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     private final VpnProfileRepositoryPort profiles;
     private final VpnCertificateAuthorityPort authority;
     private final SecretGeneratorPort secrets;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
     private final VpnSettings settings;
@@ -45,10 +49,12 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     private final ConcurrentMap<Long, Object> userLocks = new ConcurrentHashMap<>();
 
     public VpnService(VpnProfileRepositoryPort profiles, VpnCertificateAuthorityPort authority,
-                      SecretGeneratorPort secrets, TransactionPort transactions, Clock clock, VpnSettings settings) {
+                      SecretGeneratorPort secrets, JournalPort journal, TransactionPort transactions, Clock clock,
+                      VpnSettings settings) {
         this.profiles = profiles;
         this.authority = authority;
         this.secrets = secrets;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
         this.settings = settings;
@@ -111,7 +117,9 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
         String commonName = VpnProfile.commonNameFor(userId, randomSuffix());
         authority.issueClient(commonName);
         VpnProfile profile = VpnProfile.issued(userId, commonName, clock.instant());
-        return transactions.inTransaction(() -> profiles.save(profile));
+        VpnProfile saved = transactions.inTransaction(() -> profiles.save(profile));
+        journal.record(JournalEvent.of(userId, JournalKind.VPN_PROFILE_ISSUED, null, clock.instant()));
+        return saved;
     }
 
     private String randomSuffix() {

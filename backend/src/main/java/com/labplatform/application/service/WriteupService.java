@@ -4,11 +4,14 @@ import com.labplatform.application.port.in.writeup.ListWriteupsUseCase;
 import com.labplatform.application.port.in.writeup.WriteWriteupUseCase;
 import com.labplatform.application.port.in.writeup.WriteupView;
 import com.labplatform.application.port.out.BoxRepositoryPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.box.FlagKind;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.scoring.Handle;
 import com.labplatform.domain.shared.NotFoundException;
 import com.labplatform.domain.user.Actor;
@@ -40,15 +43,17 @@ public class WriteupService implements ListWriteupsUseCase, WriteWriteupUseCase 
     private final OwnRepositoryPort owns;
     private final WriteupRepositoryPort writeups;
     private final UserRepositoryPort users;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public WriteupService(BoxRepositoryPort boxes, OwnRepositoryPort owns, WriteupRepositoryPort writeups,
-                          UserRepositoryPort users, TransactionPort transactions, Clock clock) {
+                          UserRepositoryPort users, JournalPort journal, TransactionPort transactions, Clock clock) {
         this.boxes = boxes;
         this.owns = owns;
         this.writeups = writeups;
         this.users = users;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -77,6 +82,10 @@ public class WriteupService implements ListWriteupsUseCase, WriteWriteupUseCase 
                         })
                         .orElseGet(() -> Writeup.write(actor.userId(), box.getId(), title, content, published,
                                 pwned, clock.instant()))));
+        if (saved.isPublished()) {
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.WRITEUP_PUBLISHED, box.getSlug(),
+                    clock.instant()));
+        }
         return view(saved, actor);
     }
 

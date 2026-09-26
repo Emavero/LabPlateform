@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryPayments;
 import com.labplatform.application.fakes.InMemorySubscriptions;
 import com.labplatform.application.fakes.ScriptedPaymentGateway;
@@ -44,6 +45,7 @@ class BillingServiceTest {
     private static final Actor ADMIN = new Actor(9L, Role.ADMIN);
     private static final String REFERENCE = "aaaabbbbccccddddeeeeffff00001111";
 
+    private final InMemoryJournal journal = new InMemoryJournal();
     private InMemorySubscriptions subscriptions;
     private InMemoryPayments payments;
     private ScriptedPaymentGateway gateway;
@@ -59,7 +61,7 @@ class BillingServiceTest {
 
     private BillingService service(BillingSettings settings) {
         return new BillingService(subscriptions, payments, gateway, Fakes.secretGenerator(() -> "inutilisé",
-                () -> REFERENCE), Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC), settings);
+                () -> REFERENCE), journal, Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC), settings);
     }
 
     private static BillingSettings settings(boolean enabled) {

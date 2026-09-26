@@ -3,6 +3,7 @@ import { HttpAccountRepository } from '@/data/repositories/HttpAccountRepository
 import { HttpAdminRepository } from '@/data/repositories/HttpAdminRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
 import { HttpBillingRepository } from '@/data/repositories/HttpBillingRepository';
+import { HttpJournalRepository } from '@/data/repositories/HttpJournalRepository';
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
@@ -59,6 +60,7 @@ import {
   ListTracksUseCase,
   ToggleSectionUseCase,
 } from '@/domain/usecases/course';
+import { GetMyJournalUseCase, GetPlatformJournalUseCase } from '@/domain/usecases/journal';
 import { GetAchievementsUseCase, GetActivityUseCase } from '@/domain/usecases/profile';
 import { GetLeaderboardUseCase, GetProgressUseCase } from '@/domain/usecases/scoreboard';
 import { DownloadVpnProfileUseCase, GetVpnAccessUseCase, RegenerateVpnProfileUseCase } from '@/domain/usecases/vpn';
@@ -106,6 +108,11 @@ export interface Dependencies {
     readonly progress: GetLearningProgressUseCase;
     readonly toggleSection: ToggleSectionUseCase;
     readonly gradeQuiz: GradeQuizUseCase;
+  };
+  /** Journal d'activité : le sien, ou celui de la plateforme pour l'administration. */
+  readonly journal: {
+    readonly mine: GetMyJournalUseCase;
+    readonly platform: GetPlatformJournalUseCase;
   };
   readonly profile: {
     readonly achievements: GetAchievementsUseCase;
@@ -157,6 +164,7 @@ export function createContainer(): Dependencies {
   const profileRepository = new HttpProfileRepository(http);
   const adminRepository = new HttpAdminRepository(http);
   const billingRepository = new HttpBillingRepository(http);
+  const journalRepository = new HttpJournalRepository(http);
 
   return {
     sessionMonitor,
@@ -198,6 +206,10 @@ export function createContainer(): Dependencies {
       progress: new GetLearningProgressUseCase(courseRepository),
       toggleSection: new ToggleSectionUseCase(courseRepository),
       gradeQuiz: new GradeQuizUseCase(courseRepository),
+    },
+    journal: {
+      mine: new GetMyJournalUseCase(journalRepository),
+      platform: new GetPlatformJournalUseCase(journalRepository),
     },
     profile: {
       achievements: new GetAchievementsUseCase(profileRepository),

@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
@@ -29,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScoreboardServiceTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Actor BOB = new Actor(2L, Role.USER);
     private static final Instant NOW = Instant.parse("2026-09-25T12:00:00Z");
@@ -51,7 +55,7 @@ class ScoreboardServiceTest {
         boxes.save(box(boxes, "cobalt", Difficulty.EASY, EASY_USER, EASY_ROOT));
         boxes.save(box(boxes, "blackice", Difficulty.HARD, HARD_USER, HARD_ROOT));
         scoreboard = new ScoreboardService(boxes, owns);
-        catalogue = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN,
+        catalogue = new BoxService(boxes, owns, ratings, new InMemoryInstances(), scoreboard, Fakes.PRO_PLAN, journal,
                 Fakes.NO_TRANSACTION, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 

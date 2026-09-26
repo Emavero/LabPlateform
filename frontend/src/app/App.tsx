@@ -9,6 +9,7 @@ import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
 import { CourseDetailPage } from '@/presentation/pages/CourseDetailPage';
 import { CoursesPage } from '@/presentation/pages/CoursesPage';
 import { DashboardPage } from '@/presentation/pages/DashboardPage';
+import { EventsPage } from '@/presentation/pages/EventsPage';
 import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
 import { LabsPage } from '@/presentation/pages/LabsPage';
 import { LoginPage } from '@/presentation/pages/LoginPage';
@@ -62,6 +63,8 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                   <Route path="/labs" element={<LabsPage />} />
                   <Route path="/labs/:id" element={<VmDetailPage />} />
                   <Route path="/vpn" element={<VpnPage />} />
+                  {/* Modules livrés : la route explicite prime sur la page d'attente. */}
+                  <Route path="/modules/events" element={<EventsPage />} />
                   <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
                 </Route>
 

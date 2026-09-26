@@ -11,6 +11,7 @@ import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
 import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.billing.Plan;
@@ -23,8 +24,12 @@ import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.Flag;
 import com.labplatform.domain.box.FlagKind;
 import com.labplatform.domain.box.Own;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.ConflictException;
+import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.NotFoundException;
+import com.labplatform.domain.shared.PaymentRequiredException;
 import com.labplatform.domain.user.Actor;
 
 import java.time.Clock;
@@ -61,18 +66,21 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
     private final BoxInstanceRepositoryPort instances;
     private final GetPlayerProgressUseCase progress;
     private final GetEffectivePlanUseCase plans;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
 
     public BoxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
                       BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
-                      GetEffectivePlanUseCase plans, TransactionPort transactions, Clock clock) {
+                      GetEffectivePlanUseCase plans, JournalPort journal, TransactionPort transactions,
+                      Clock clock) {
         this.boxes = boxes;
         this.owns = owns;
         this.ratings = ratings;
         this.instances = instances;
         this.progress = progress;
         this.plans = plans;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -89,6 +97,13 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
                 .toList();
     }
 
+    /**
+     * Fiche d'une machine. La consultation n'est pas inscrite ici : ce cas
+     * d'usage sert aussi à rendre l'état après un lancement de cible ou une
+     * note, et compter ces appels comme des visites faussait le classement des
+     * machines les plus regardées. C'est l'adaptateur HTTP, qui sait qu'une
+     * requête est bien une consultation, qui l'inscrit.
+     */
     @Override
     public BoxView getBox(Actor actor, String slug) {
         Box box = require(slug);
@@ -104,6 +119,8 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
 
         transactions.inTransaction(() -> ratings.save(
                 BoxRating.cast(actor.userId(), box.getId(), difficulty, pwned, clock.instant())));
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_RATED, box.getSlug(), difficulty.name(),
+                clock.instant()));
 
         return view(actor, box, mine, perceivedDifficulties(), plans.planOf(actor));
     }
@@ -115,17 +132,32 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
         Box box = require(slug);
         requireAccess(actor, box);
 
-        Own saved = transactions.inTransaction(() -> {
-            if (owns.exists(actor.userId(), box.getId(), kind)) {
-                throw new ConflictException("Vous avez déjà validé ce flag");
-            }
-            boolean firstBlood = owns.noneYet(box.getId(), kind);
-            return owns.save(box.claim(actor.userId(), kind, flag, firstBlood, clock.instant()));
-        });
+        Own saved;
+        try {
+            saved = transactions.inTransaction(() -> {
+                if (owns.exists(actor.userId(), box.getId(), kind)) {
+                    throw new ConflictException("Vous avez déjà validé ce flag");
+                }
+                boolean firstBlood = owns.noneYet(box.getId(), kind);
+                return owns.save(box.claim(actor.userId(), kind, flag, firstBlood, clock.instant()));
+            });
+        } catch (InvalidInputException wrongFlag) {
+            // Les refus sont inscrits eux aussi : c'est ce qui permet de voir
+            // où les joueurs butent, et donc quelle machine mérite un indice.
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.FLAG_REFUSED, box.getSlug(), kind.name(),
+                    clock.instant()));
+            throw wrongFlag;
+        }
 
         boolean pwned = kind == FlagKind.ROOT
                 ? owns.exists(actor.userId(), box.getId(), FlagKind.USER)
                 : owns.exists(actor.userId(), box.getId(), FlagKind.ROOT);
+
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.FLAG_VALIDATED, box.getSlug(), kind.name(),
+                clock.instant()));
+        if (pwned) {
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_PWNED, box.getSlug(), clock.instant()));
+        }
 
         return new FlagSubmissionResult(box.getSlug(), box.getName(), kind, saved.points(), saved.firstBlood(),
                 pwned, progress.progressOf(actor));
@@ -148,8 +180,16 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
      * occuper un emplacement de cible.
      */
     private void requireAccess(Actor actor, Box box) {
-        if (box.isProOnly()) {
+        if (!box.isProOnly()) {
+            return;
+        }
+        try {
             ProAccessPolicy.requirePro(actor, plans.planOf(actor));
+        } catch (PaymentRequiredException locked) {
+            // Une envie non servie : le tableau de bord en fait un indicateur.
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_LOCKED_OUT, box.getSlug(),
+                    clock.instant()));
+            throw locked;
         }
     }
 

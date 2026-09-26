@@ -16,6 +16,7 @@ import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.DomainEventPublisherPort;
 import com.labplatform.application.port.out.HypervisorPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
 import com.labplatform.application.port.out.PasswordResetNotifierPort;
 import com.labplatform.application.port.out.PaymentGatewayPort;
@@ -26,6 +27,7 @@ import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AcademyService;
+import com.labplatform.application.service.JournalService;
 import com.labplatform.application.service.BillingService;
 import com.labplatform.application.service.BillingSettings;
 import com.labplatform.application.service.AccountService;
@@ -97,8 +99,8 @@ public class UseCaseConfig {
 
     @Bean
     public LabService labService(VirtualMachineRepositoryPort machines, HypervisorPort hypervisor,
-                                 TransactionPort transactions, Clock clock) {
-        return new LabService(machines, hypervisor, transactions, clock);
+                                 JournalPort journal, TransactionPort transactions, Clock clock) {
+        return new LabService(machines, hypervisor, journal, transactions, clock);
     }
 
     @Bean
@@ -109,30 +111,34 @@ public class UseCaseConfig {
     @Bean
     public BillingService billingService(SubscriptionRepositoryPort subscriptions, PaymentRepositoryPort payments,
                                          PaymentGatewayPort gateway, SecretGeneratorPort secrets,
-                                         TransactionPort transactions, Clock clock, BillingSettings settings) {
-        return new BillingService(subscriptions, payments, gateway, secrets, transactions, clock, settings);
+                                         JournalPort journal, TransactionPort transactions, Clock clock,
+                                         BillingSettings settings) {
+        return new BillingService(subscriptions, payments, gateway, secrets, journal, transactions, clock, settings);
     }
 
     @Bean
     public BoxService boxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
                                  BoxInstanceRepositoryPort instances, GetPlayerProgressUseCase progress,
-                                 GetEffectivePlanUseCase plans, TransactionPort transactions, Clock clock) {
-        return new BoxService(boxes, owns, ratings, instances, progress, plans, transactions, clock);
+                                 GetEffectivePlanUseCase plans, JournalPort journal, TransactionPort transactions,
+                                 Clock clock) {
+        return new BoxService(boxes, owns, ratings, instances, progress, plans, journal, transactions, clock);
     }
 
     @Bean
     public BoxInstanceService boxInstanceService(BoxRepositoryPort boxes, BoxInstanceRepositoryPort instances,
                                                  HypervisorPort hypervisor, GetBoxUseCase boxView,
-                                                 GetEffectivePlanUseCase plans, TransactionPort transactions,
-                                                 Clock clock, AppProperties properties) {
-        return new BoxInstanceService(boxes, instances, hypervisor, boxView, plans, transactions, clock,
+                                                 GetEffectivePlanUseCase plans, JournalPort journal,
+                                                 TransactionPort transactions, Clock clock,
+                                                 AppProperties properties) {
+        return new BoxInstanceService(boxes, instances, hypervisor, boxView, plans, journal, transactions, clock,
                 properties.getBoxes().getInstanceLifetime());
     }
 
     @Bean
     public AcademyService academyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
-                                         QuizRepositoryPort quizzes, TransactionPort transactions, Clock clock) {
-        return new AcademyService(courses, completions, quizzes, transactions, clock);
+                                         QuizRepositoryPort quizzes, JournalPort journal,
+                                         TransactionPort transactions, Clock clock) {
+        return new AcademyService(courses, completions, quizzes, journal, transactions, clock);
     }
 
     @Bean
@@ -161,8 +167,13 @@ public class UseCaseConfig {
     @Bean
     public WriteupService writeupService(BoxRepositoryPort boxes, OwnRepositoryPort owns,
                                          WriteupRepositoryPort writeups, UserRepositoryPort users,
-                                         TransactionPort transactions, Clock clock) {
-        return new WriteupService(boxes, owns, writeups, users, transactions, clock);
+                                         JournalPort journal, TransactionPort transactions, Clock clock) {
+        return new WriteupService(boxes, owns, writeups, users, journal, transactions, clock);
+    }
+
+    @Bean
+    public JournalService journalService(JournalPort journal, UserRepositoryPort users) {
+        return new JournalService(journal, users);
     }
 
     @Bean
@@ -183,8 +194,8 @@ public class UseCaseConfig {
 
     @Bean
     public VpnService vpnService(VpnProfileRepositoryPort profiles, VpnCertificateAuthorityPort authority,
-                                 SecretGeneratorPort secrets, TransactionPort transactions, Clock clock,
-                                 AppProperties properties) {
+                                 SecretGeneratorPort secrets, JournalPort journal, TransactionPort transactions,
+                                 Clock clock, AppProperties properties) {
         AppProperties.Vpn vpn = properties.getVpn();
         List<VpnEndpoint> endpoints = new ArrayList<>();
         if (!vpn.getUdpHost().isBlank()) {
@@ -193,7 +204,7 @@ public class UseCaseConfig {
         if (!vpn.getTcpHost().isBlank()) {
             endpoints.add(new VpnEndpoint(VpnProtocol.TCP, vpn.getTcpHost().trim(), vpn.getTcpPort()));
         }
-        return new VpnService(profiles, authority, secrets, transactions, clock,
+        return new VpnService(profiles, authority, secrets, journal, transactions, clock,
                 new VpnSettings(vpn.isEnabled(), endpoints, vpn.getLabNetwork()));
     }
 }

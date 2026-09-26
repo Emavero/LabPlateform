@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
 import com.labplatform.application.fakes.InMemoryQuizzes;
@@ -34,6 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Correction d'un quiz : le barème, et ce que la réussite déclenche. */
 class QuizTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
 
@@ -46,7 +50,7 @@ class QuizTest {
         InMemoryCourses courses = new InMemoryCourses();
         InMemoryCompletions completions = new InMemoryCompletions();
         quizzes = new InMemoryQuizzes();
-        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION,
+        academy = new AcademyService(courses, completions, quizzes, journal, Fakes.NO_TRANSACTION,
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         Course saved = courses.save(Course.create("traces", "Traces", Track.FORENSICS, CourseLevel.FUNDAMENTAL,

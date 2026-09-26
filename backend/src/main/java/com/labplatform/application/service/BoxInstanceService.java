@@ -7,10 +7,13 @@ import com.labplatform.application.port.in.box.SpawnBoxUseCase;
 import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.HypervisorPort;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.billing.ProAccessPolicy;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.box.BoxInstance;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.NotFoundException;
 import com.labplatform.domain.user.Actor;
@@ -40,18 +43,20 @@ public class BoxInstanceService implements SpawnBoxUseCase {
     private final HypervisorPort hypervisor;
     private final GetBoxUseCase boxView;
     private final GetEffectivePlanUseCase plans;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
     private final Duration lifetime;
 
     public BoxInstanceService(BoxRepositoryPort boxes, BoxInstanceRepositoryPort instances, HypervisorPort hypervisor,
-                              GetBoxUseCase boxView, GetEffectivePlanUseCase plans, TransactionPort transactions,
-                              Clock clock, Duration lifetime) {
+                              GetBoxUseCase boxView, GetEffectivePlanUseCase plans, JournalPort journal,
+                              TransactionPort transactions, Clock clock, Duration lifetime) {
         this.boxes = boxes;
         this.instances = instances;
         this.hypervisor = hypervisor;
         this.boxView = boxView;
         this.plans = plans;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
         this.lifetime = lifetime;
@@ -83,6 +88,7 @@ public class BoxInstanceService implements SpawnBoxUseCase {
             instance.markStarted(address, clock.instant(), lifetime);
             return instances.save(instance);
         });
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_SPAWNED, box.getSlug(), clock.instant()));
         return boxView.getBox(actor, slug);
     }
 
@@ -99,6 +105,7 @@ public class BoxInstanceService implements SpawnBoxUseCase {
                 current.markStopped();
                 return instances.save(current);
             });
+            journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_STOPPED, box.getSlug(), clock.instant()));
         }
         return boxView.getBox(actor, slug);
     }

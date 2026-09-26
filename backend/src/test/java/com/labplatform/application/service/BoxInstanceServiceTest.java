@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryInstances;
 import com.labplatform.application.fakes.InMemoryOwns;
@@ -28,6 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BoxInstanceServiceTest {
+
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
 
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Actor BOB = new Actor(2L, Role.USER);
@@ -68,8 +72,8 @@ class BoxInstanceServiceTest {
         boxes.save(box("mirage", "10.10.10.14"));
         ScoreboardService scoreboard = new ScoreboardService(boxes, new InMemoryOwns());
         catalogue = new BoxService(boxes, new InMemoryOwns(), new InMemoryRatings(), instances, scoreboard,
-                Fakes.PRO_PLAN, Fakes.NO_TRANSACTION, clock);
-        spawns = new BoxInstanceService(boxes, instances, hypervisor, catalogue, Fakes.PRO_PLAN,
+                Fakes.PRO_PLAN, journal, Fakes.NO_TRANSACTION, clock);
+        spawns = new BoxInstanceService(boxes, instances, hypervisor, catalogue, Fakes.PRO_PLAN, journal,
                 Fakes.NO_TRANSACTION, clock, LIFETIME);
     }
 

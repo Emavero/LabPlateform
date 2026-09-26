@@ -227,6 +227,29 @@ tirés au hasard et **affichés une seule fois** — le temps de les déposer su
 la cible, car seule leur empreinte est conservée. À la modification, un champ
 de flag vide veut dire « ne change rien ».
 
+## Journal d'activité (module Events)
+
+Le menu **Events** montre le journal du compte : validations de flags, cibles
+lancées, cours consultés, quiz, abonnement — groupé par journée et filtrable par
+famille. L'administration lit le même journal pour toute la plateforme, avec
+les auteurs désignés par leur **pseudonyme**, jamais par leur adresse e-mail.
+
+Deux choix comptent ici :
+
+- **Rien n'est mesuré dans le navigateur.** Aucun pixel, aucune balise de suivi,
+  aucune position de souris : une ligne du journal correspond à une action
+  réellement demandée au serveur. Ce que la plateforme sait d'un compte est donc
+  exactement ce que ce compte lui a demandé.
+- **Les refus sont inscrits comme les réussites** — un flag incorrect, une
+  machine réservée atteinte sans abonnement, un quiz manqué. C'est ce qui permet
+  de voir où les gens butent, et c'est ce qui alimente les recommandations du
+  tableau de bord.
+
+Le journal est en ajout seul : une ligne ne se corrige pas, il s'en ajoute une
+autre. La ressource concernée y est désignée par son lien et non par une clé
+étrangère, si bien qu'une machine retirée du catalogue n'efface pas l'histoire
+de ceux qui l'ont faite.
+
 ## Profil, hauts faits et activité
 
 La page **Profil** rassemble le rang, les hauts faits et l'activité récente.
@@ -453,6 +476,8 @@ Principes appliqués :
 | POST    | `/api/billing/confirm`         | Relit l'état du paiement au retour du payeur |
 | DELETE  | `/api/billing`                 | Résilie (l'accès court jusqu'à l'échéance payée) |
 | POST    | `/api/billing/webhooks/{method}` | Notification du prestataire, authentifiée par signature |
+| GET     | `/api/journal?limit=50`        | Journal d'activité du compte connecté |
+| GET     | `/api/admin/journal?limit=100` | Journal de toute la plateforme (administration) |
 | GET     | `/api/boxes/{slug}/writeups`   | Comptes rendus lisibles par l'appelant |
 | PUT     | `/api/boxes/{slug}/writeups/mine` | Écrit ou révise le sien (409 si non possédée) |
 | DELETE  | `/api/boxes/{slug}/writeups/mine` | Supprime le sien (204) |

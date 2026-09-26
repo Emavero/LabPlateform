@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
@@ -38,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProfileServiceTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
 
@@ -66,8 +70,8 @@ class ProfileServiceTest {
 
         ScoreboardService scoreboard = new ScoreboardService(boxes, owns);
         catalogue = new BoxService(boxes, owns, new InMemoryRatings(), new InMemoryInstances(), scoreboard,
-                Fakes.PRO_PLAN, Fakes.NO_TRANSACTION, clock);
-        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION, clock);
+                Fakes.PRO_PLAN, journal, Fakes.NO_TRANSACTION, clock);
+        academy = new AcademyService(courses, completions, quizzes, journal, Fakes.NO_TRANSACTION, clock);
         profile = new ProfileService(boxes, owns, courses, completions);
     }
 

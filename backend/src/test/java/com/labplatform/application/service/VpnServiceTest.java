@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.port.in.vpn.VpnAccess;
 import com.labplatform.application.port.in.vpn.VpnProfileFile;
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort;
@@ -31,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VpnServiceTest {
 
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Actor BOB = new Actor(2L, Role.USER);
     private static final VpnEndpoint UDP = new VpnEndpoint(VpnProtocol.UDP, "vpn.example.org", 1194);
@@ -49,7 +52,8 @@ class VpnServiceTest {
     }
 
     private VpnService service(VpnSettings settings) {
-        return new VpnService(profiles, authority, Fakes.secretGenerator(() -> "Tok_en-" + (++tokenCounter) + "abcdefghijkl"),
+        return new VpnService(profiles, authority,
+                Fakes.secretGenerator(() -> "Tok_en-" + (++tokenCounter) + "abcdefghijkl"), journal,
                 Fakes.NO_TRANSACTION, Clock.fixed(Instant.parse("2026-09-25T10:00:00Z"), ZoneOffset.UTC), settings);
     }
 

@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryMachines;
 import com.labplatform.domain.lab.AccessProtocol;
 import com.labplatform.domain.lab.ConnectionInfo;
@@ -24,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LabServiceTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ALICE = new Actor(1L, Role.USER);
     private static final Actor BOB = new Actor(2L, Role.USER);
 
@@ -36,7 +40,7 @@ class LabServiceTest {
         machines = new InMemoryMachines();
         hypervisor = new Fakes.RecordingHypervisor();
         Clock clock = Clock.fixed(Instant.parse("2026-09-24T10:00:00Z"), ZoneOffset.UTC);
-        lab = new LabService(machines, hypervisor, Fakes.NO_TRANSACTION, clock);
+        lab = new LabService(machines, hypervisor, journal, Fakes.NO_TRANSACTION, clock);
     }
 
     @Test

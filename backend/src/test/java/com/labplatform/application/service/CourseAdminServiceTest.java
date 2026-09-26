@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryCompletions;
 import com.labplatform.application.fakes.InMemoryCourses;
@@ -37,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CourseAdminServiceTest {
 
+    /** Journal d'activité : inspecté par les tests qui vérifient ce qui est inscrit. */
+    private final InMemoryJournal journal = new InMemoryJournal();
+
     private static final Actor ADMIN = new Actor(1L, Role.ADMIN);
     private static final Actor LEARNER = new Actor(2L, Role.USER);
     private static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
@@ -55,7 +59,7 @@ class CourseAdminServiceTest {
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         admin = new CourseAdminService(courses, completions, quizzes, new InMemoryUsers(), new InMemoryBoxes(),
                 new InMemoryOwns(), Fakes.NO_TRANSACTION, clock);
-        academy = new AcademyService(courses, completions, quizzes, Fakes.NO_TRANSACTION, clock);
+        academy = new AcademyService(courses, completions, quizzes, journal, Fakes.NO_TRANSACTION, clock);
     }
 
     private static CourseDraft draft(String title, SectionDraft... sections) {

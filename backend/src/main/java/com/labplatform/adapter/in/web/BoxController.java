@@ -10,6 +10,9 @@ import com.labplatform.application.port.in.box.ListBoxesUseCase;
 import com.labplatform.application.port.in.box.RateBoxUseCase;
 import com.labplatform.application.port.in.box.SpawnBoxUseCase;
 import com.labplatform.application.port.in.box.SubmitFlagUseCase;
+import com.labplatform.application.port.out.JournalPort;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Clock;
 import java.util.List;
 
 @RestController
@@ -32,14 +36,18 @@ public class BoxController {
     private final SubmitFlagUseCase submitFlag;
     private final RateBoxUseCase rateBox;
     private final SpawnBoxUseCase spawnBox;
+    private final JournalPort journal;
+    private final Clock clock;
 
     public BoxController(ListBoxesUseCase listBoxes, GetBoxUseCase getBox, SubmitFlagUseCase submitFlag,
-                         RateBoxUseCase rateBox, SpawnBoxUseCase spawnBox) {
+                         RateBoxUseCase rateBox, SpawnBoxUseCase spawnBox, JournalPort journal, Clock clock) {
         this.listBoxes = listBoxes;
         this.getBox = getBox;
         this.submitFlag = submitFlag;
         this.rateBox = rateBox;
         this.spawnBox = spawnBox;
+        this.journal = journal;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -47,9 +55,19 @@ public class BoxController {
         return listBoxes.listBoxes(user.toActor()).stream().map(BoxResponse::from).toList();
     }
 
+    /**
+     * Fiche d'une machine, et seule visite comptée : le cas d'usage est aussi
+     * appelé pour rendre l'état après un lancement de cible ou une note, et
+     * compter ces appels comme des visites faussait le classement des machines
+     * les plus regardées. C'est donc ici, où l'on sait qu'une requête est bien
+     * une consultation, que le journal est écrit.
+     */
     @GetMapping("/{slug}")
     public BoxResponse get(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable String slug) {
-        return BoxResponse.from(getBox.getBox(user.toActor(), slug));
+        var view = getBox.getBox(user.toActor(), slug);
+        journal.record(JournalEvent.of(user.toActor().userId(), JournalKind.BOX_VIEWED, view.box().getSlug(),
+                clock.instant()));
+        return BoxResponse.from(view);
     }
 
     /** Lance la cible de cette machine pour l'appelant. */

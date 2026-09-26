@@ -9,6 +9,7 @@ import com.labplatform.application.port.in.billing.GetEffectivePlanUseCase;
 import com.labplatform.application.port.in.billing.PaymentSummary;
 import com.labplatform.application.port.in.billing.PlanOffer;
 import com.labplatform.application.port.in.billing.StartCheckoutUseCase;
+import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.PaymentGatewayPort;
 import com.labplatform.application.port.out.PaymentRepositoryPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
@@ -22,6 +23,8 @@ import com.labplatform.domain.billing.PaymentStatus;
 import com.labplatform.domain.billing.Plan;
 import com.labplatform.domain.billing.Subscription;
 import com.labplatform.domain.billing.SubscriptionStatus;
+import com.labplatform.domain.journal.JournalEvent;
+import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.NotFoundException;
@@ -64,17 +67,19 @@ public class BillingService implements GetBillingUseCase, GetEffectivePlanUseCas
     private final PaymentRepositoryPort payments;
     private final PaymentGatewayPort gateway;
     private final SecretGeneratorPort secrets;
+    private final JournalPort journal;
     private final TransactionPort transactions;
     private final Clock clock;
     private final BillingSettings settings;
 
     public BillingService(SubscriptionRepositoryPort subscriptions, PaymentRepositoryPort payments,
-                          PaymentGatewayPort gateway, SecretGeneratorPort secrets, TransactionPort transactions,
-                          Clock clock, BillingSettings settings) {
+                          PaymentGatewayPort gateway, SecretGeneratorPort secrets, JournalPort journal,
+                          TransactionPort transactions, Clock clock, BillingSettings settings) {
         this.subscriptions = subscriptions;
         this.payments = payments;
         this.gateway = gateway;
         this.secrets = secrets;
+        this.journal = journal;
         this.transactions = transactions;
         this.clock = clock;
         this.settings = settings;
@@ -143,6 +148,8 @@ public class BillingService implements GetBillingUseCase, GetEffectivePlanUseCas
             return payments.save(reloaded);
         });
 
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.CHECKOUT_STARTED, method.name(),
+                period.name(), clock.instant()));
         return new CheckoutTicket(pending.getReference(), checkout.redirectUrl());
     }
 
@@ -197,6 +204,7 @@ public class BillingService implements GetBillingUseCase, GetEffectivePlanUseCas
             subscription.cancel(now);
             return subscriptions.save(subscription);
         });
+        journal.record(JournalEvent.of(actor.userId(), JournalKind.SUBSCRIPTION_CANCELLED, null, now));
         return billingOf(actor);
     }
 
@@ -207,26 +215,49 @@ public class BillingService implements GetBillingUseCase, GetEffectivePlanUseCas
      */
     private void settle(String reference, PaymentStatus observed, String reason) {
         Instant now = clock.instant();
-        transactions.inTransaction(() -> {
+        // Le journal est écrit après la transaction, jamais dedans : un
+        // enregistrement qui survivrait à un rollback annoncerait un
+        // abonnement que personne n'a.
+        Settlement settlement = transactions.inTransaction(() -> {
             Payment payment = require(reference);
             switch (observed) {
                 case SUCCEEDED -> {
-                    if (payment.succeed(now)) {
-                        Subscription subscription = subscriptions.findByUser(payment.getUserId())
-                                .orElseGet(() -> Subscription.free(payment.getUserId()));
-                        subscription.extend(payment.getPeriod(), now);
-                        subscriptions.save(subscription);
+                    if (!payment.succeed(now)) {
+                        // Notification répétée : déjà réglé, rien à créditer.
+                        return new Settlement(payment, false);
                     }
+                    Subscription subscription = subscriptions.findByUser(payment.getUserId())
+                            .orElseGet(() -> Subscription.free(payment.getUserId()));
+                    subscription.extend(payment.getPeriod(), now);
+                    subscriptions.save(subscription);
                 }
                 case FAILED -> payment.fail(reason, now);
                 case CANCELLED -> payment.cancel(now);
                 // Toujours en attente chez le prestataire : rien à écrire.
                 case PENDING -> {
-                    return payment;
+                    return new Settlement(payment, false);
                 }
             }
-            return payments.save(payment);
+            return new Settlement(payments.save(payment), true);
         });
+
+        if (!settlement.applied()) {
+            return;
+        }
+        Payment settled = settlement.payment();
+        switch (observed) {
+            case SUCCEEDED -> journal.record(JournalEvent.of(settled.getUserId(), JournalKind.SUBSCRIPTION_STARTED,
+                    settled.getMethod().name(), settled.getPeriod().name(), now));
+            case FAILED -> journal.record(JournalEvent.of(settled.getUserId(), JournalKind.PAYMENT_FAILED,
+                    settled.getMethod().name(), reason, now));
+            case PENDING, CANCELLED -> {
+                // Un abandon ou une attente ne disent rien d'utile sur l'usage.
+            }
+        }
+    }
+
+    /** Ce que la transaction de règlement rapporte : l'état, et s'il a changé. */
+    private record Settlement(Payment payment, boolean applied) {
     }
 
     /**
