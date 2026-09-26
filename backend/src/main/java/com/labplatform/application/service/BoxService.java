@@ -4,12 +4,17 @@ import com.labplatform.application.port.in.box.BoxView;
 import com.labplatform.application.port.in.box.FlagSubmissionResult;
 import com.labplatform.application.port.in.box.GetBoxUseCase;
 import com.labplatform.application.port.in.box.ListBoxesUseCase;
+import com.labplatform.application.port.in.box.RateBoxUseCase;
 import com.labplatform.application.port.in.box.SubmitFlagUseCase;
 import com.labplatform.application.port.in.scoring.GetPlayerProgressUseCase;
+import com.labplatform.application.port.out.BoxRatingRepositoryPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.BoxRating;
+import com.labplatform.domain.box.CommunityRating;
+import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.Flag;
 import com.labplatform.domain.box.FlagKind;
 import com.labplatform.domain.box.Own;
@@ -19,8 +24,11 @@ import com.labplatform.domain.user.Actor;
 
 import java.time.Clock;
 import java.util.Comparator;
-import java.util.Locale;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Catalogue de machines et validation des flags.
@@ -30,7 +38,7 @@ import java.util.List;
  * flag, personne ne l'avait validé avant lui) et laisse l'agrégat
  * {@link Box} juger la soumission et fixer les points.
  */
-public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUseCase {
+public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUseCase, RateBoxUseCase {
 
     /** Les plus récentes d'abord, comme sur la page d'accueil d'une plateforme de challenges. */
     private static final Comparator<Box> DISPLAY_ORDER =
@@ -38,14 +46,16 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
 
     private final BoxRepositoryPort boxes;
     private final OwnRepositoryPort owns;
+    private final BoxRatingRepositoryPort ratings;
     private final GetPlayerProgressUseCase progress;
     private final TransactionPort transactions;
     private final Clock clock;
 
-    public BoxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, GetPlayerProgressUseCase progress,
-                      TransactionPort transactions, Clock clock) {
+    public BoxService(BoxRepositoryPort boxes, OwnRepositoryPort owns, BoxRatingRepositoryPort ratings,
+                      GetPlayerProgressUseCase progress, TransactionPort transactions, Clock clock) {
         this.boxes = boxes;
         this.owns = owns;
+        this.ratings = ratings;
         this.progress = progress;
         this.transactions = transactions;
         this.clock = clock;
@@ -54,15 +64,29 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
     @Override
     public List<BoxView> listBoxes(Actor actor) {
         List<Own> mine = owns.findByUser(actor.userId());
+        Map<Long, CommunityRating> perceived = perceivedDifficulties();
         return boxes.findAll().stream()
                 .sorted(DISPLAY_ORDER)
-                .map(box -> BoxView.of(box, mine))
+                .map(box -> view(actor, box, mine, perceived))
                 .toList();
     }
 
     @Override
     public BoxView getBox(Actor actor, String slug) {
-        return BoxView.of(require(slug), owns.findByUser(actor.userId()));
+        Box box = require(slug);
+        return view(actor, box, owns.findByUser(actor.userId()), perceivedDifficulties());
+    }
+
+    @Override
+    public BoxView rateBox(Actor actor, String slug, Difficulty difficulty) {
+        Box box = require(slug);
+        List<Own> mine = owns.findByUser(actor.userId());
+        boolean pwned = BoxView.of(box, mine).isPwned();
+
+        transactions.inTransaction(() -> ratings.save(
+                BoxRating.cast(actor.userId(), box.getId(), difficulty, pwned, clock.instant())));
+
+        return view(actor, box, mine, perceivedDifficulties());
     }
 
     @Override
@@ -85,6 +109,23 @@ public class BoxService implements ListBoxesUseCase, GetBoxUseCase, SubmitFlagUs
 
         return new FlagSubmissionResult(box.getSlug(), box.getName(), kind, saved.points(), saved.firstBlood(),
                 pwned, progress.progressOf(actor));
+    }
+
+    private BoxView view(Actor actor, Box box, List<Own> mine, Map<Long, CommunityRating> perceived) {
+        Difficulty myVote = ratings.find(actor.userId(), box.getId()).map(BoxRating::difficulty).orElse(null);
+        return BoxView.of(box, mine, perceived.getOrDefault(box.getId(), CommunityRating.NONE), myVote);
+    }
+
+    /** Dépouillement en une requête, puis une moyenne par machine. */
+    private Map<Long, CommunityRating> perceivedDifficulties() {
+        Map<Long, Map<Difficulty, Integer>> byBox = new HashMap<>();
+        for (BoxRatingRepositoryPort.Tally tally : ratings.tallies()) {
+            byBox.computeIfAbsent(tally.boxId(), id -> new EnumMap<>(Difficulty.class))
+                    .merge(tally.difficulty(), tally.votes(), Integer::sum);
+        }
+        Map<Long, CommunityRating> perceived = new HashMap<>();
+        byBox.forEach((boxId, votes) -> perceived.put(boxId, CommunityRating.of(votes)));
+        return perceived;
     }
 
     private Box require(String slug) {

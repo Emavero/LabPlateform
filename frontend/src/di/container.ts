@@ -2,7 +2,9 @@ import { createHttpClient } from '@/data/http/httpClient';
 import { HttpAccountRepository } from '@/data/repositories/HttpAccountRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
+import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
+import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
 import { HttpScoreboardRepository } from '@/data/repositories/HttpScoreboardRepository';
 import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
@@ -23,7 +25,15 @@ import {
   StartVmUseCase,
   StopVmUseCase,
 } from '@/domain/usecases/lab';
-import { GetBoxUseCase, ListBoxesUseCase, SubmitFlagUseCase } from '@/domain/usecases/box';
+import { GetBoxUseCase, ListBoxesUseCase, RateBoxUseCase, SubmitFlagUseCase } from '@/domain/usecases/box';
+import {
+  GetCourseUseCase,
+  GetLearningProgressUseCase,
+  ListCoursesUseCase,
+  ListTracksUseCase,
+  ToggleSectionUseCase,
+} from '@/domain/usecases/course';
+import { GetAchievementsUseCase, GetActivityUseCase } from '@/domain/usecases/profile';
 import { GetLeaderboardUseCase, GetProgressUseCase } from '@/domain/usecases/scoreboard';
 import { DownloadVpnProfileUseCase, GetVpnAccessUseCase, RegenerateVpnProfileUseCase } from '@/domain/usecases/vpn';
 
@@ -52,6 +62,18 @@ export interface Dependencies {
     readonly list: ListBoxesUseCase;
     readonly get: GetBoxUseCase;
     readonly submitFlag: SubmitFlagUseCase;
+    readonly rate: RateBoxUseCase;
+  };
+  readonly courses: {
+    readonly tracks: ListTracksUseCase;
+    readonly list: ListCoursesUseCase;
+    readonly get: GetCourseUseCase;
+    readonly progress: GetLearningProgressUseCase;
+    readonly toggleSection: ToggleSectionUseCase;
+  };
+  readonly profile: {
+    readonly achievements: GetAchievementsUseCase;
+    readonly activity: GetActivityUseCase;
   };
   readonly scoreboard: {
     readonly progress: GetProgressUseCase;
@@ -78,6 +100,8 @@ export function createContainer(): Dependencies {
   const vpnRepository = new HttpVpnRepository(http);
   const boxRepository = new HttpBoxRepository(http);
   const scoreboardRepository = new HttpScoreboardRepository(http);
+  const courseRepository = new HttpCourseRepository(http);
+  const profileRepository = new HttpProfileRepository(http);
 
   return {
     sessionMonitor,
@@ -103,6 +127,18 @@ export function createContainer(): Dependencies {
       list: new ListBoxesUseCase(boxRepository),
       get: new GetBoxUseCase(boxRepository),
       submitFlag: new SubmitFlagUseCase(boxRepository),
+      rate: new RateBoxUseCase(boxRepository),
+    },
+    courses: {
+      tracks: new ListTracksUseCase(courseRepository),
+      list: new ListCoursesUseCase(courseRepository),
+      get: new GetCourseUseCase(courseRepository),
+      progress: new GetLearningProgressUseCase(courseRepository),
+      toggleSection: new ToggleSectionUseCase(courseRepository),
+    },
+    profile: {
+      achievements: new GetAchievementsUseCase(profileRepository),
+      activity: new GetActivityUseCase(profileRepository),
     },
     scoreboard: {
       progress: new GetProgressUseCase(scoreboardRepository),

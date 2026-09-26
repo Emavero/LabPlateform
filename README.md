@@ -2,9 +2,9 @@
 
 Plateforme d'entraînement à la cybersécurité, dans l'esprit de Hack The Box :
 un catalogue de machines à compromettre, deux flags par machine, des points,
-un rang et un classement. Chaque utilisateur dispose en plus de ses deux
-machines d'attaque personnelles, une Windows (RDP) et une Linux (SSH), et d'un
-profil VPN pour joindre le réseau du lab.
+un rang, un classement et des cours. Chaque utilisateur dispose en plus de ses
+deux machines d'attaque personnelles, une Windows (RDP) et une Linux (SSH), et
+d'un profil VPN pour joindre le réseau du lab.
 
 ```
 LabPlateform/
@@ -73,6 +73,10 @@ qui rapporte le plus. Une machine dont les deux flags sont validés est
 - **Classement.** Les joueurs sont triés aux points ; à égalité, le premier
   arrivé passe devant. Il n'y figure qu'un pseudonyme dérivé du compte,
   jamais l'adresse e-mail.
+- **Difficulté ressentie.** Une fois la machine possédée, on note la
+  difficulté qu'on lui a trouvée. La fiche affiche la moyenne des votes à côté
+  de la difficulté annoncée, et signale l'écart. Voter avant d'avoir validé
+  les deux flags répond 409 : on n'a pas vu la moitié du travail.
 
 ### Essayer le parcours
 
@@ -90,6 +94,36 @@ Sur une infrastructure réelle, les flags sont déposés sur la machine cible à
 sa construction et cette option reste à `false` (`APP_BOXES_LOG_SEEDED_FLAGS`).
 Le catalogue est semé une seule fois, au premier démarrage : la table `box`
 déjà peuplée n'est plus touchée.
+
+## Cours : forensique et défense
+
+Le menu **Cours** ouvre deux filières, chacune avec sa propre page :
+
+| Filière | Ce qu'on y apprend | Cours |
+|---------|--------------------|-------|
+| **Forensique** (`/cours/forensique`) | Collecte de traces, mémoire, chronologie d'incident | Bases de l'investigation numérique, Analyse de la mémoire vive, Reconstituer la chronologie |
+| **Défense** (`/cours/defense`) | Durcissement, détection, réponse à incident | Durcir un système exposé, Détecter : journaux et règles, Répondre à un incident |
+
+Chaque cours est découpé en sections — du cours, des ateliers à jouer sur les
+machines du lab, et un quiz — que l'on coche au fur et à mesure. L'avancement
+se calcule par cours et par filière, et il est réversible : rouvrir une
+section la décompte.
+
+Les ateliers renvoient aux machines du catalogue : on durcit sa propre machine
+Linux, puis on reconstitue depuis la défense ce que l'on vient de faire en
+attaque. Ajouter une filière revient à ajouter une constante dans
+`domain/academy/Track` et une entrée de menu.
+
+## Profil, hauts faits et activité
+
+La page **Profil** rassemble le rang, les hauts faits et l'activité récente.
+
+- **Hauts faits.** Dix distinctions, du premier flag validé à la machine
+  insane possédée, en passant par les cours terminés. Ils se déduisent
+  entièrement du palmarès : rien n'est stocké, donc rien ne peut manquer ni se
+  décerner deux fois. Ceux qui manquent restent affichés, avec leur condition.
+- **Activité.** Flags validés et sections terminées, du plus récent au plus
+  ancien, avec les points gagnés et les first bloods.
 
 ## Machines Linux réelles (mode Docker)
 
@@ -227,18 +261,21 @@ com.labplatform
 │   ├── box/           Box (machine à compromettre), Flag, Difficulty,
 │   │                  FlagKind, Own
 │   ├── scoring/       Rank, PlayerProgress, PlayerScore, Handle
+│   ├── academy/       Course (agrégat), CourseSection, Track, CourseProgress
+│   ├── achievement/   Achievement (règles), PlayerRecord
 │   └── shared/        Exceptions métier (validation, conflit, introuvable…)
 ├── application/
 │   ├── port/in/       Cas d'usage : RegisterUser, AuthenticateUser, StartVm,
 │   │                  StopVm, ListBoxes, SubmitFlag, GetPlayerProgress,
-│   │                  GetLeaderboard, ChangePassword…
+│   │                  GetLeaderboard, ListCourses, TrackSectionProgress,
+│   │                  RateBox, GetAchievements, GetActivity…
 │   ├── port/out/      Besoins du métier : UserRepositoryPort, HypervisorPort,
-│   │                  BoxRepositoryPort, OwnRepositoryPort…
+│   │                  BoxRepositoryPort, OwnRepositoryPort, CourseRepositoryPort…
 │   └── service/       Implémentations des cas d'usage
 ├── adapter/
 │   ├── in/web/        Contrôleurs REST, filtre de session, gestion d'erreurs
 │   ├── in/event/      Provisionnement des machines à l'inscription
-│   ├── in/startup/    Semis du catalogue au premier démarrage
+│   ├── in/startup/    Semis du catalogue et des cours au premier démarrage
 │   └── out/           JPA/PostgreSQL, JWT, BCrypt, hyperviseur simulé…
 └── config/            Racine de composition (câblage des cas d'usage)
 ```
@@ -250,6 +287,9 @@ Principes appliqués :
   si elle tourne. La même contrainte est doublée en base (`ck_vm_state`).
 - Un utilisateur ne voit que ses machines. Une machine d'un autre compte
   répond 404, pas 403, pour ne pas révéler son existence.
+- Les hauts faits ne sont pas stockés : ils se déduisent du palmarès à chaque
+  lecture, donc ils ne peuvent pas se désynchroniser, et en ajouter un
+  n'exige aucune migration.
 - Un flag n'est comparé que par l'agrégat `Box`, seul détenteur des
   empreintes, et le barème découle de la seule difficulté : aucun nombre de
   points n'est écrit dans un service ou un contrôleur. Les points sont figés
@@ -289,6 +329,15 @@ Principes appliqués :
 | POST    | `/api/boxes/{slug}/flags`      | Soumission d'un flag (400 incorrect, 409 déjà validé) |
 | GET     | `/api/scoreboard/me`           | Progression : points, rang, machines possédées |
 | GET     | `/api/scoreboard?limit=20`     | Classement public |
+| PUT     | `/api/boxes/{slug}/rating`     | Note de difficulté (409 si la machine n'est pas possédée) |
+| GET     | `/api/courses/tracks`          | Filières de cours |
+| GET     | `/api/courses?track=forensique` | Cours d'une filière, avec l'avancement |
+| GET     | `/api/courses/{slug}`          | Cours complet : sections et contenu |
+| GET     | `/api/courses/progress`        | Avancement par filière |
+| POST    | `/api/courses/{slug}/sections/{section}/completion` | Marque une section comme terminée |
+| DELETE  | `/api/courses/{slug}/sections/{section}/completion` | Rouvre une section |
+| GET     | `/api/profile/achievements`    | Hauts faits, obtenus ou non |
+| GET     | `/api/profile/activity?limit=20` | Activité récente |
 
 Toutes les erreurs suivent le même format :
 `{ timestamp, status, error, message, path, details }`.
@@ -298,10 +347,10 @@ Toutes les erreurs suivent le même format :
 ```
 src/
 ├── domain/          Aucune dépendance à React ni à HTTP
-│   ├── models/      User, VirtualMachine, Box, Progress
+│   ├── models/      User, VirtualMachine, Box, Progress, Course, Profile
 │   ├── repositories/ Interfaces (AuthRepository, LabRepository, BoxRepository…)
 │   ├── usecases/    Login, Register, StartVm, StopVm, SubmitFlag,
-│   │                GetProgress, GetLeaderboard…
+│   │                GetProgress, GetLeaderboard, ToggleSection…
 │   └── validation/  Règles de saisie (miroir des règles serveur)
 ├── data/            Implémentations HTTP des repositories (axios)
 ├── di/container.ts  Racine de composition : seul fichier qui connaît les implémentations
@@ -310,7 +359,8 @@ src/
 │   ├── layouts/        AppShell, Sidebar, UserMenu, AuthLayout
 │   ├── navigation/     Menu déclaratif
 │   ├── features/lab/   VmCard, ConnectionDetails, guides d'accès par protocole
-│   ├── features/box/   BoxCard, FlagForm, DifficultyMeter, ProgressPanel
+│   ├── features/box/   BoxCard, FlagForm, DifficultyMeter, ProgressPanel, RatingPicker
+│   ├── features/course/ CourseCard, TrackProgress
 │   ├── hooks/ state/   État de session, état du lab, actions asynchrones
 │   ├── pages/          Une page par route
 │   └── styles/         Jetons de design et feuilles de style
@@ -321,7 +371,8 @@ Correspondance avec SOLID :
 
 - **SRP.** Un cas d'usage fait une chose. Un composant du design system ignore
   tout du métier.
-- **OCP.** Une nouvelle entrée de menu s'ajoute dans `navigation.ts`. Un nouveau
+- **OCP.** Une nouvelle entrée de menu s'ajoute dans `navigation.ts`, y compris
+  une filière de cours (le menu accepte des groupes à deux niveaux). Un nouveau
   protocole d'accès (VNC, console web…) s'ajoute dans `accessGuides.ts`. Aucun
   composant n'est modifié.
 - **DIP.** Les pages reçoivent des cas d'usage par injection
@@ -386,5 +437,6 @@ frontend (`npm test`, puis `npm run build`, qui vérifie aussi les types).
 - Provisionner une vraie cible par machine du catalogue (instance à la
   demande) plutôt que des adresses fixes : le point d'extension est le même
   `HypervisorPort`.
-- Notation de la difficulté par les joueurs et écriture de rapports, une fois
-  la machine possédée.
+- Écriture et partage de rapports (« writeups ») une fois la machine possédée.
+- Quiz corrigés automatiquement dans les cours, plutôt que des questions
+  ouvertes à traiter de son côté.

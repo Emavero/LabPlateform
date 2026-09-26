@@ -4,6 +4,8 @@ import com.labplatform.application.port.in.box.BoxView;
 import com.labplatform.application.port.in.box.FlagSubmissionResult;
 import com.labplatform.application.port.in.scoring.LeaderboardEntry;
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.CommunityRating;
+import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.FlagKind;
 import com.labplatform.domain.scoring.PlayerProgress;
 import jakarta.validation.constraints.NotBlank;
@@ -44,7 +46,12 @@ public final class BoxDtos {
             boolean pwned,
             boolean firstBlood,
             int pointsEarned,
-            Instant lastOwnedAt) {
+            Instant lastOwnedAt,
+            int ratingVotes,
+            double ratingAverage,
+            String perceivedDifficulty,
+            String perceivedDifficultyName,
+            String myRating) {
 
         public static BoxResponse from(BoxView view) {
             Box box = view.box();
@@ -68,8 +75,27 @@ public final class BoxDtos {
                     view.isPwned(),
                     view.hasFirstBlood(),
                     view.pointsEarned(),
-                    view.lastOwnedAt());
+                    view.lastOwnedAt(),
+                    view.rating().votes(),
+                    view.rating().averageLevel(),
+                    perceived(view.rating()),
+                    perceivedName(view.rating()),
+                    view.myVote() == null ? null : view.myVote().name());
         }
+    }
+
+    private static String perceived(CommunityRating rating) {
+        Difficulty difficulty = rating.perceived();
+        return difficulty == null ? null : difficulty.name();
+    }
+
+    private static String perceivedName(CommunityRating rating) {
+        Difficulty difficulty = rating.perceived();
+        return difficulty == null ? null : difficulty.displayName();
+    }
+
+    /** Note de difficulté donnée par un joueur. */
+    public record RatingRequest(@NotNull(message = "La difficulté est obligatoire") Difficulty difficulty) {
     }
 
     /** Soumission d'un flag : le type de flag et sa valeur, rien d'autre. */

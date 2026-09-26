@@ -992,3 +992,306 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Cours ---------- */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.course-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(13, 14, 21, 0.75);
+  transition: border-color var(--medium) var(--ease);
+}
+
+.course-card:hover {
+  border-color: var(--line-strong);
+}
+
+.course-card--done {
+  border-color: rgba(52, 224, 161, 0.3);
+}
+
+.course-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.course-card__level {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.course-card__title {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.course-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.course-card__title a:hover {
+  color: var(--violet);
+}
+
+.course-card__summary {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.55;
+}
+
+.course-card__progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.course-card__count {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+.course-card__footer {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.track-progress {
+  display: grid;
+  gap: 1rem;
+}
+
+.track-progress__stats {
+  padding-top: 0;
+  border-top: none;
+}
+
+.course-sections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.course-section--done {
+  border-color: rgba(52, 224, 161, 0.28);
+}
+
+/* Contenu d'une section : du texte préformaté, pour que les commandes restent copiables. */
+.course-section__content {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Difficulté ressentie ---------- */
+.rating {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.rating__summary {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.rating__gap {
+  color: var(--warning);
+}
+
+.rating__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rating__option {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition:
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+
+.rating__option:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+.rating__option--active {
+  color: #fff;
+  border-color: rgba(139, 124, 255, 0.5);
+  background: var(--violet-soft);
+}
+
+.rating__option:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.rating__locked {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+/* ---------- Profil : hauts faits et activité ---------- */
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--text-faint);
+}
+
+.achievement--earned {
+  border-color: rgba(139, 124, 255, 0.35);
+  background: var(--violet-soft);
+  color: var(--text);
+}
+
+.achievement__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(139, 124, 255, 0.12);
+}
+
+.achievement--earned .achievement__icon {
+  color: var(--violet);
+}
+
+.achievement__text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.achievement__name {
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.achievement__requirement {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.activity {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.activity__item:last-child {
+  border-bottom: none;
+}
+
+.activity__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+
+.activity__icon--flag {
+  background: var(--running-soft);
+  color: var(--running);
+}
+
+.activity__text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.activity__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.activity__detail {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.activity__points {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--running);
+}
+
+.activity__date {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .activity__item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .activity__date {
+    grid-column: 2 / -1;
+  }
+}

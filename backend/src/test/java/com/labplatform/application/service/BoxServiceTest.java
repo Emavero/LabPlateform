@@ -3,9 +3,11 @@ package com.labplatform.application.service;
 import com.labplatform.application.fakes.Fakes;
 import com.labplatform.application.fakes.InMemoryBoxes;
 import com.labplatform.application.fakes.InMemoryOwns;
+import com.labplatform.application.fakes.InMemoryRatings;
 import com.labplatform.application.port.in.box.BoxView;
 import com.labplatform.application.port.in.box.FlagSubmissionResult;
 import com.labplatform.domain.box.Box;
+import com.labplatform.domain.box.CommunityRating;
 import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.Flag;
 import com.labplatform.domain.box.FlagKind;
@@ -26,6 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,6 +45,7 @@ class BoxServiceTest {
 
     private InMemoryBoxes boxes;
     private InMemoryOwns owns;
+    private InMemoryRatings ratings;
     private BoxService service;
     private ScoreboardService scoreboard;
 
@@ -49,11 +53,12 @@ class BoxServiceTest {
     void setUp() {
         boxes = new InMemoryBoxes();
         owns = new InMemoryOwns();
+        ratings = new InMemoryRatings();
         // Sentinel : très facile (4 + 6). Northwind : facile (8 + 12). Catalogue = 30 points.
         boxes.save(newBox("sentinel", "Sentinel", Difficulty.VERY_EASY, SENTINEL_USER, SENTINEL_ROOT, 2));
         boxes.save(newBox("northwind", "Northwind", Difficulty.EASY, NORTHWIND_USER, NORTHWIND_ROOT, 1));
         scoreboard = new ScoreboardService(boxes, owns);
-        service = new BoxService(boxes, owns, scoreboard, Fakes.NO_TRANSACTION,
+        service = new BoxService(boxes, owns, ratings, scoreboard, Fakes.NO_TRANSACTION,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -151,5 +156,60 @@ class BoxServiceTest {
     void aMalformedSubmissionIsRefusedBeforeAnyLookup() {
         assertThrows(InvalidInputException.class,
                 () -> service.submitFlag(ALICE, "inexistante", FlagKind.USER, "trop court"));
+    }
+
+    @Test
+    void aMachineIsRatedOnlyOnceItIsPwned() {
+        service.submitFlag(ALICE, "sentinel", FlagKind.USER, SENTINEL_USER);
+
+        assertThrows(ConflictException.class, () -> service.rateBox(ALICE, "sentinel", Difficulty.MEDIUM));
+
+        service.submitFlag(ALICE, "sentinel", FlagKind.ROOT, SENTINEL_ROOT);
+        BoxView rated = service.rateBox(ALICE, "sentinel", Difficulty.MEDIUM);
+
+        assertEquals(Difficulty.MEDIUM, rated.myVote());
+        assertEquals(1, rated.rating().votes());
+    }
+
+    @Test
+    void thePerceivedDifficultyIsTheAverageOfTheVotes() {
+        pwn(ALICE, "sentinel", SENTINEL_USER, SENTINEL_ROOT);
+        pwn(BOB, "sentinel", SENTINEL_USER, SENTINEL_ROOT);
+        service.rateBox(ALICE, "sentinel", Difficulty.EASY);
+        service.rateBox(BOB, "sentinel", Difficulty.HARD);
+
+        CommunityRating rating = service.getBox(ALICE, "sentinel").rating();
+
+        // Facile (2) et Difficile (4) : la moyenne tombe sur Moyenne (3).
+        assertEquals(2, rating.votes());
+        assertEquals(3.0, rating.averageLevel(), 1e-9);
+        assertEquals(Difficulty.MEDIUM, rating.perceived());
+    }
+
+    @Test
+    void votingAgainReplacesThePreviousVote() {
+        pwn(ALICE, "sentinel", SENTINEL_USER, SENTINEL_ROOT);
+        service.rateBox(ALICE, "sentinel", Difficulty.EASY);
+
+        BoxView revised = service.rateBox(ALICE, "sentinel", Difficulty.INSANE);
+
+        assertEquals(1, revised.rating().votes());
+        assertEquals(Difficulty.INSANE, revised.myVote());
+    }
+
+    @Test
+    void anotherPlayersVoteIsNeverPresentedAsMine() {
+        pwn(BOB, "sentinel", SENTINEL_USER, SENTINEL_ROOT);
+        service.rateBox(BOB, "sentinel", Difficulty.HARD);
+
+        BoxView asSeenByAlice = service.getBox(ALICE, "sentinel");
+
+        assertNull(asSeenByAlice.myVote());
+        assertEquals(1, asSeenByAlice.rating().votes());
+    }
+
+    private void pwn(Actor actor, String slug, String userFlag, String rootFlag) {
+        service.submitFlag(actor, slug, FlagKind.USER, userFlag);
+        service.submitFlag(actor, slug, FlagKind.ROOT, rootFlag);
     }
 }

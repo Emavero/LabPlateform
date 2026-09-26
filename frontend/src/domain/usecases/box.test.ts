@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppError } from '../errors/AppError';
-import type { Box, FlagKind } from '../models/Box';
+import type { Box, Difficulty, FlagKind } from '../models/Box';
 import type { BoxRepository, FlagSubmission } from '../repositories/BoxRepository';
 import { SubmitFlagUseCase } from './box';
 
@@ -13,6 +13,10 @@ function repository(calls: string[]): BoxRepository {
     submitFlag: async (slug: string, kind: FlagKind, flag: string) => {
       calls.push(`${slug}:${kind}:${flag}`);
       return {} as FlagSubmission;
+    },
+    rate: async (slug: string, difficulty: Difficulty) => {
+      calls.push(`rate:${slug}:${difficulty}`);
+      return {} as Box;
     },
   };
 }

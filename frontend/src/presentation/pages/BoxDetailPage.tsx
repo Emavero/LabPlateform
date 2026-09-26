@@ -5,6 +5,7 @@ import { Alert, Button, CopyField, Icon, Panel, Spinner } from '../design-system
 import { DifficultyMeter } from '../features/box/DifficultyMeter';
 import { FlagForm, FlagSuccess } from '../features/box/FlagForm';
 import { FlagChip } from '../features/box/FlagChip';
+import { RatingPicker } from '../features/box/RatingPicker';
 import { useBoxDetail } from '../hooks/useBoxDetail';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -100,6 +101,10 @@ export function BoxDetailPage() {
             <FlagChip kind="USER" owned={box.userOwned} points={box.userFlagPoints} />
             <FlagChip kind="ROOT" owned={box.rootOwned} points={box.rootFlagPoints} />
           </div>
+        </Panel>
+
+        <Panel title="Difficulté ressentie" description="Ce qu'en disent les joueurs qui l'ont faite.">
+          <RatingPicker box={box} pending={detail.rating} onRate={(difficulty) => void detail.rate(difficulty)} />
         </Panel>
 
         <Panel

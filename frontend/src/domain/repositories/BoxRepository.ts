@@ -1,4 +1,4 @@
-import type { Box, FlagKind } from '../models/Box';
+import type { Box, Difficulty, FlagKind } from '../models/Box';
 import type { PlayerProgress } from '../models/Progress';
 
 /** Résultat d'une soumission acceptée par le serveur. */
@@ -16,4 +16,6 @@ export interface BoxRepository {
   list(): Promise<Box[]>;
   get(slug: string): Promise<Box>;
   submitFlag(slug: string, kind: FlagKind, flag: string): Promise<FlagSubmission>;
+  /** Note de difficulté ressentie : réservée aux machines possédées. */
+  rate(slug: string, difficulty: Difficulty): Promise<Box>;
 }

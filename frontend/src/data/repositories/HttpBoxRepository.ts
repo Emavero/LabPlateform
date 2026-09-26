@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import type { Box, FlagKind } from '@/domain/models/Box';
+import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
 import type { BoxRepository, FlagSubmission } from '@/domain/repositories/BoxRepository';
 import { toBox, toProgress, type BoxDto, type FlagSubmissionDto } from './mappers';
 
@@ -22,5 +22,10 @@ export class HttpBoxRepository implements BoxRepository {
       flag,
     });
     return { ...data, progress: toProgress(data.progress) };
+  }
+
+  async rate(slug: string, difficulty: Difficulty): Promise<Box> {
+    const { data } = await this.http.put<BoxDto>(`/boxes/${encodeURIComponent(slug)}/rating`, { difficulty });
+    return toBox(data);
   }
 }
