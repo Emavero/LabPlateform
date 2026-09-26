@@ -48,7 +48,7 @@ class AcademyServiceTest {
 
     private static Course course(String slug, String title, Track track, CourseLevel level, int sections) {
         List<CourseSection> content = java.util.stream.IntStream.rangeClosed(1, sections)
-                .mapToObj(i -> new CourseSection(null, "section-" + i, "Section " + i, SectionKind.THEORY, i, 10,
+                .mapToObj(i -> CourseSection.of(null, "section-" + i, "Section " + i, SectionKind.THEORY, i, 10,
                         "Contenu " + i))
                 .toList();
         return Course.create(slug, title, track, level, "Résumé.", NOW.minusSeconds(86_400), content);
@@ -89,7 +89,7 @@ class AcademyServiceTest {
         CourseView view = academy.completeSection(ALICE, "traces", "section-1");
 
         assertEquals(1, view.progress().completedSections());
-        assertEquals(1, completions.count());
+        assertEquals(1L, completions.count());
     }
 
     @Test

@@ -80,13 +80,14 @@ public final class CourseDtos {
         }
     }
 
-    public record SectionResponse(String slug, String title, String kind, String kindName, int position, int minutes,
-                                 String content, boolean completed) {
+    /** L'identifiant sert à l'éditeur d'administration, qui le renvoie tel quel. */
+    public record SectionResponse(Long id, String slug, String title, String kind, String kindName, int position,
+                                  int minutes, String content, String videoUrl, boolean completed) {
 
         static SectionResponse from(CourseSection section, boolean completed) {
-            return new SectionResponse(section.slug(), section.title(), section.kind().name(),
+            return new SectionResponse(section.id(), section.slug(), section.title(), section.kind().name(),
                     section.kind().displayName(), section.position(), section.minutes(), section.content(),
-                    completed);
+                    section.videoUrl(), completed);
         }
     }
 

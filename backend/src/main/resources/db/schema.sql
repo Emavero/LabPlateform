@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS course_section (
     position   INTEGER      NOT NULL,
     minutes    INTEGER      NOT NULL,
     content    TEXT         NOT NULL,
+    video_url  VARCHAR(512),
     CONSTRAINT fk_section_course     FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE,
     CONSTRAINT uk_section_course_slug UNIQUE (course_id, slug),
     CONSTRAINT ck_section_kind       CHECK (kind IN ('THEORY', 'LAB', 'QUIZ')),
@@ -151,3 +152,6 @@ CREATE TABLE IF NOT EXISTS course_section_completion (
 
 CREATE INDEX IF NOT EXISTS ix_course_section_course ON course_section (course_id);
 CREATE INDEX IF NOT EXISTS ix_completion_user       ON course_section_completion (user_id);
+
+-- Ajouts postérieurs à la création des tables, rejoués sans effet.
+ALTER TABLE course_section ADD COLUMN IF NOT EXISTS video_url VARCHAR(512);

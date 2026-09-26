@@ -3,6 +3,7 @@ import { courseRatio, formatDuration, nextSection, type Course, type CourseSecti
 
 function section(position: number, completed: boolean): CourseSection {
   return {
+    id: position,
     slug: `section-${position}`,
     title: `Section ${position}`,
     kind: 'THEORY',
@@ -10,6 +11,7 @@ function section(position: number, completed: boolean): CourseSection {
     position,
     minutes: 15,
     content: 'Contenu',
+    videoUrl: null,
     completed,
   };
 }

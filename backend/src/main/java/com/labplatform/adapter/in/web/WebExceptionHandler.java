@@ -4,6 +4,7 @@ import com.labplatform.adapter.in.web.dto.ApiError;
 import com.labplatform.domain.shared.AuthenticationFailedException;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.DomainException;
+import com.labplatform.domain.shared.ForbiddenException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.shared.NotFoundException;
@@ -35,6 +36,7 @@ public class WebExceptionHandler {
     private static final Map<Class<? extends DomainException>, HttpStatus> STATUS_BY_CATEGORY = Map.of(
             InvalidInputException.class, HttpStatus.BAD_REQUEST,
             AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED,
+            ForbiddenException.class, HttpStatus.FORBIDDEN,
             NotFoundException.class, HttpStatus.NOT_FOUND,
             ConflictException.class, HttpStatus.CONFLICT,
             ServiceUnavailableException.class, HttpStatus.SERVICE_UNAVAILABLE);

@@ -3,7 +3,6 @@ package com.labplatform.adapter.in.startup;
 import com.labplatform.application.port.out.CourseRepositoryPort;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
-import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
 import org.slf4j.Logger;
@@ -12,10 +11,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Component;
 
+import com.labplatform.domain.academy.CourseSection;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Sème les cours au premier démarrage, une seule fois : une table déjà
@@ -35,14 +37,33 @@ public class CourseCatalogSeeder implements ApplicationRunner {
         this.clock = clock;
     }
 
+    /**
+     * Contenu d'une section réduit à un nombre : c'est l'identifiant d'un
+     * « large object » PostgreSQL, laissé par une version où le contenu était
+     * annoté @Lob. Ces lignes sont illisibles ; le catalogue est resemé.
+     */
+    private static final Pattern ORPHAN_LARGE_OBJECT = Pattern.compile("^\\d+$");
+
     @Override
     public void run(ApplicationArguments args) {
         if (courses.count() > 0) {
-            return;
+            if (!isCorrupted()) {
+                return;
+            }
+            log.warn("Contenu des cours illisible (large objects orphelins) : le catalogue est resemé");
+            courses.deleteAll();
         }
         Instant now = clock.instant();
-        catalogue(now).forEach(courses::save);
-        log.info("Cours initialisés : {} cours", catalogue(now).size());
+        List<Course> catalogue = catalogue(now);
+        catalogue.forEach(courses::save);
+        log.info("Cours initialisés : {} cours", catalogue.size());
+    }
+
+    private boolean isCorrupted() {
+        return courses.findAll().stream()
+                .flatMap(course -> course.getSections().stream())
+                .map(CourseSection::content)
+                .anyMatch(content -> ORPHAN_LARGE_OBJECT.matcher(content.trim()).matches());
     }
 
     private static List<Course> catalogue(Instant now) {
@@ -59,7 +80,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "préserver les traces avant de chercher à comprendre.",
                 now.minus(Duration.ofDays(40)),
                 List.of(
-                        new CourseSection(null, "chaine-de-possession", "Chaîne de possession", SectionKind.THEORY, 1, 15,
+                        CourseSection.of(null, "chaine-de-possession", "Chaîne de possession", SectionKind.THEORY, 1, 15,
                                 """
                                 Une preuve n'a de valeur que si l'on peut raconter tout ce qui lui est arrivé.
                                 La chaîne de possession est ce récit : qui a saisi quoi, quand, où, avec quel
@@ -74,7 +95,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Une preuve dont la chaîne est rompue n'est pas une preuve fausse : elle est
                                 inutilisable, ce qui revient au même.
                                 """),
-                        new CourseSection(null, "ordre-de-volatilite", "Ordre de volatilité", SectionKind.THEORY, 2, 20,
+                        CourseSection.of(null, "ordre-de-volatilite", "Ordre de volatilité", SectionKind.THEORY, 2, 20,
                                 """
                                 Les traces ne meurent pas à la même vitesse. On collecte donc du plus fugace au
                                 plus durable : registres et cache du processeur, mémoire vive, état du réseau et
@@ -90,7 +111,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 À l'inverse, s'acharner sur un disque pendant qu'un processus malveillant tourne
                                 laisse l'attaquant agir. L'arbitrage se décide à l'avance, pas dans l'urgence.
                                 """),
-                        new CourseSection(null, "copie-bit-a-bit", "Copie bit à bit d'un support",
+                        CourseSection.of(null, "copie-bit-a-bit", "Copie bit à bit d'un support",
                                 SectionKind.LAB, 3, 25,
                                 """
                                 Objectif : produire une copie vérifiable d'un support, depuis votre machine
@@ -112,7 +133,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 `noatime` évite de réécrire les dates d'accès, `ro` protège la copie, et
                                 `noexec` empêche d'exécuter par accident ce que vous analysez.
                                 """),
-                        new CourseSection(null, "quiz-fondamentaux", "Quiz : réflexes de collecte",
+                        CourseSection.of(null, "quiz-fondamentaux", "Quiz : réflexes de collecte",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. Un poste est soupçonné d'être compromis, il est allumé. Quel est le premier
@@ -133,7 +154,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "et secrets restés en clair.",
                 now.minus(Duration.ofDays(18)),
                 List.of(
-                        new CourseSection(null, "capture", "Capturer sans altérer", SectionKind.THEORY, 1, 15,
+                        CourseSection.of(null, "capture", "Capturer sans altérer", SectionKind.THEORY, 1, 15,
                                 """
                                 Capturer la mémoire d'une machine allumée modifie fatalement cette mémoire :
                                 l'outil de capture s'y trouve lui aussi. L'objectif n'est pas l'absence
@@ -147,7 +168,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Une capture sans son fichier de journalisation vaut beaucoup moins : c'est lui
                                 qui explique ce que l'on voit d'anormal dans l'image.
                                 """),
-                        new CourseSection(null, "processus-et-injections", "Processus et injections",
+                        CourseSection.of(null, "processus-et-injections", "Processus et injections",
                                 SectionKind.THEORY, 2, 25,
                                 """
                                 Dans une image mémoire, on cherche d'abord des incohérences, pas des signatures.
@@ -162,7 +183,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 affichée par le système compromis, puisqu'un rootkit filtre la seconde et
                                 rarement la première.
                                 """),
-                        new CourseSection(null, "atelier-volatility", "Atelier : première passe sur une image",
+                        CourseSection.of(null, "atelier-volatility", "Atelier : première passe sur une image",
                                 SectionKind.LAB, 3, 30,
                                 """
                                 Sur une image de mémoire Linux ou Windows, enchaînez ces quatre questions.
@@ -187,7 +208,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Notez chaque écart entre `pslist` et `psscan` : un processus visible par le
                                 second et pas par le premier est, au minimum, à expliquer.
                                 """),
-                        new CourseSection(null, "quiz-memoire", "Quiz : lecture d'une capture",
+                        CourseSection.of(null, "quiz-memoire", "Quiz : lecture d'une capture",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. `psscan` révèle un processus absent de `pslist`. Quelles hypothèses, et
@@ -208,7 +229,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "passé, dans quel ordre, et par où c'est entré.",
                 now.minus(Duration.ofDays(6)),
                 List.of(
-                        new CourseSection(null, "sources-et-derives", "Sources et dérive des horloges",
+                        CourseSection.of(null, "sources-et-derives", "Sources et dérive des horloges",
                                 SectionKind.THEORY, 1, 20,
                                 """
                                 Une chronologie mélange des sources qui ne partagent ni format, ni fuseau, ni
@@ -224,7 +245,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 elle a été écrite. Un journal envoyé par lots ment sur la seconde, pas sur
                                 l'ordre.
                                 """),
-                        new CourseSection(null, "artefacts-systeme", "Artefacts qui datent une action",
+                        CourseSection.of(null, "artefacts-systeme", "Artefacts qui datent une action",
                                 SectionKind.THEORY, 2, 25,
                                 """
                                 Les quatre horodatages d'un fichier (création, modification du contenu, accès,
@@ -240,7 +261,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Le recoupement fait la preuve : un même fait vu par trois sources
                                 indépendantes n'est plus une hypothèse.
                                 """),
-                        new CourseSection(null, "atelier-chronologie", "Atelier : d'un accès à la persistance",
+                        CourseSection.of(null, "atelier-chronologie", "Atelier : d'un accès à la persistance",
                                 SectionKind.LAB, 3, 35,
                                 """
                                 À partir d'une machine du catalogue que vous avez compromise, reconstituez ce
@@ -266,7 +287,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Rangez vos trouvailles en une seule table (heure UTC, source, fait observé,
                                 certitude) : c'est le livrable, pas les commandes.
                                 """),
-                        new CourseSection(null, "quiz-chronologie", "Quiz : cohérence d'un récit",
+                        CourseSection.of(null, "quiz-chronologie", "Quiz : cohérence d'un récit",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. Le journal du serveur web date le dépôt d'un fichier à 14:02 UTC, mais la
@@ -290,7 +311,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "jour, dans l'ordre où cela paie le plus.",
                 now.minus(Duration.ofDays(35)),
                 List.of(
-                        new CourseSection(null, "surface-d-attaque", "Mesurer la surface d'attaque",
+                        CourseSection.of(null, "surface-d-attaque", "Mesurer la surface d'attaque",
                                 SectionKind.THEORY, 1, 15,
                                 """
                                 On ne durcit pas ce qu'on n'a pas inventorié. La surface d'attaque d'un serveur
@@ -305,7 +326,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 ouvrir une session interactive, ou un compte d'un ancien prestataire, coûtent
                                 plus qu'ils n'apportent.
                                 """),
-                        new CourseSection(null, "atelier-durcissement", "Atelier : durcir votre machine Linux",
+                        CourseSection.of(null, "atelier-durcissement", "Atelier : durcir votre machine Linux",
                                 SectionKind.LAB, 2, 30,
                                 """
                                 Sur votre machine Linux du lab, dressez l'inventaire puis réduisez-le.
@@ -331,7 +352,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 Refaites l'inventaire et comparez : le livrable est l'écart entre les deux.
                                 """),
-                        new CourseSection(null, "moindre-privilege", "Moindre privilège, en pratique",
+                        CourseSection.of(null, "moindre-privilege", "Moindre privilège, en pratique",
                                 SectionKind.THEORY, 3, 20,
                                 """
                                 Le moindre privilège n'est pas « retirer les droits » mais « accorder exactement
@@ -346,7 +367,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 donner root : ces programmes savent lancer un interpréteur. C'est l'erreur la
                                 plus fréquente des chaînes d'élévation de privilèges.
                                 """),
-                        new CourseSection(null, "quiz-durcissement", "Quiz : arbitrages de durcissement",
+                        CourseSection.of(null, "quiz-durcissement", "Quiz : arbitrages de durcissement",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. Un service métier exige d'écouter sur toutes les interfaces. Que proposez-
@@ -366,7 +387,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "mesurer ce qu'elles coûtent en faux positifs.",
                 now.minus(Duration.ofDays(14)),
                 List.of(
-                        new CourseSection(null, "quoi-journaliser", "Ce qui vaut la peine d'être journalisé",
+                        CourseSection.of(null, "quoi-journaliser", "Ce qui vaut la peine d'être journalisé",
                                 SectionKind.THEORY, 1, 20,
                                 """
                                 Tout journaliser revient à ne rien surveiller : le volume rend l'analyse
@@ -382,7 +403,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 local ne peut pas l'effacer : un journal qui reste sur la machine compromise
                                 n'est pas un journal, c'est un brouillon.
                                 """),
-                        new CourseSection(null, "ecrire-une-regle", "Écrire une règle qui tient",
+                        CourseSection.of(null, "ecrire-une-regle", "Écrire une règle qui tient",
                                 SectionKind.THEORY, 2, 25,
                                 """
                                 Une bonne règle décrit un fait, pas un outil. « Un processus du serveur web
@@ -397,7 +418,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Chaque règle porte aussi ce qu'il faut faire quand elle sonne. Sans cela, elle
                                 produit de l'inquiétude, pas de la défense.
                                 """),
-                        new CourseSection(null, "atelier-detection", "Atelier : de la trace à l'alerte",
+                        CourseSection.of(null, "atelier-detection", "Atelier : de la trace à l'alerte",
                                 SectionKind.LAB, 3, 30,
                                 """
                                 Rejouez vos propres actions d'attaque et voyez ce qu'elles laissent.
@@ -418,7 +439,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 Pour chaque trace, écrivez la règle en une phrase, puis estimez à la main
                                 combien de fois elle aurait sonné cette semaine sans incident.
                                 """),
-                        new CourseSection(null, "quiz-detection", "Quiz : qualité d'une détection",
+                        CourseSection.of(null, "quiz-detection", "Quiz : qualité d'une détection",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. Votre règle attrape 9 attaques sur 10 mais sonne 40 fois par jour à vide.
@@ -437,7 +458,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                         + "rétablir en sachant pourquoi cela ne recommencera pas.",
                 now.minus(Duration.ofDays(3)),
                 List.of(
-                        new CourseSection(null, "contenir", "Contenir sans effacer",
+                        CourseSection.of(null, "contenir", "Contenir sans effacer",
                                 SectionKind.THEORY, 1, 20,
                                 """
                                 Contenir, c'est empêcher l'attaquant d'aller plus loin tout en gardant de quoi
@@ -453,7 +474,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 de passe avant d'avoir compris l'entrée initiale prévient l'attaquant et
                                 l'incite à activer ses accès de secours.
                                 """),
-                        new CourseSection(null, "eradiquer", "Éradiquer la cause, pas le symptôme",
+                        CourseSection.of(null, "eradiquer", "Éradiquer la cause, pas le symptôme",
                                 SectionKind.THEORY, 2, 25,
                                 """
                                 Supprimer un fichier malveillant ne répond pas à la question qui compte :
@@ -470,7 +491,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 le nettoyage. Le nettoyage laisse un doute ; le doute coûte plus cher que la
                                 réinstallation.
                                 """),
-                        new CourseSection(null, "atelier-post-mortem", "Atelier : rapport de fin d'incident",
+                        CourseSection.of(null, "atelier-post-mortem", "Atelier : rapport de fin d'incident",
                                 SectionKind.LAB, 3, 30,
                                 """
                                 Rédigez le rapport d'une machine du catalogue que vous avez compromise, vu
@@ -488,7 +509,7 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 pour chacune la détection qui aurait dû sonner. Une mesure qui ne se rattache à
                                 aucun fait est une mesure de confort.
                                 """),
-                        new CourseSection(null, "quiz-reponse", "Quiz : décisions sous pression",
+                        CourseSection.of(null, "quiz-reponse", "Quiz : décisions sous pression",
                                 SectionKind.QUIZ, 4, 10,
                                 """
                                 1. Un serveur de production est compromis, l'activité de l'entreprise en

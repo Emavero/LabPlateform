@@ -105,14 +105,51 @@ Le menu **Cours** ouvre deux filières, chacune avec sa propre page :
 | **Défense** (`/cours/defense`) | Durcissement, détection, réponse à incident | Durcir un système exposé, Détecter : journaux et règles, Répondre à un incident |
 
 Chaque cours est découpé en sections — du cours, des ateliers à jouer sur les
-machines du lab, et un quiz — que l'on coche au fur et à mesure. L'avancement
-se calcule par cours et par filière, et il est réversible : rouvrir une
-section la décompte.
+machines du lab, et un quiz — que l'on coche au fur et à mesure. Une section
+porte un texte, une vidéo, ou les deux. L'avancement se calcule par cours et
+par filière, et il est réversible : rouvrir une section la décompte.
+
+Les six cours livrés sont un point de départ, semé au premier démarrage. La
+suite se publie depuis le tableau de bord d'administration, sans redémarrage.
 
 Les ateliers renvoient aux machines du catalogue : on durcit sa propre machine
 Linux, puis on reconstitue depuis la défense ce que l'on vient de faire en
 attaque. Ajouter une filière revient à ajouter une constante dans
 `domain/academy/Track` et une entrée de menu.
+
+## Administration
+
+Le menu **Administration** n'apparaît que pour les comptes administrateurs.
+Il ouvre un tableau de bord (ce qui est publié, ce qui est utilisé) et
+l'éditeur de cours.
+
+Publier un cours, c'est remplir un formulaire : un titre, une filière, un
+niveau, un résumé, puis les sections dans l'ordre de lecture. Chaque section
+porte un titre, un type, une durée, un texte et, si besoin, l'adresse d'une
+vidéo. Le cours est visible par les apprenants dès l'enregistrement.
+
+- **Vidéos.** YouTube et Vimeo s'affichent dans la page, par leur adresse
+  d'intégration ; un fichier `.mp4`, `.webm` ou `.ogg` est lu directement.
+  Toute autre adresse devient un lien, jamais un cadre : la liste des
+  plateformes intégrées est la même côté application et dans la politique de
+  sécurité de contenu servie par Nginx.
+- **Renommer sans casser.** L'identifiant d'URL d'un cours est dérivé de son
+  titre à la création et ne change plus : les liens partagés restent valides.
+  Une section garde son identifiant tant que l'éditeur le renvoie, donc la
+  retitrer, la déplacer ou lui ajouter une vidéo n'efface l'avancement de
+  personne. La retirer du cours, en revanche, supprime l'avancement qui s'y
+  rapportait.
+- **Devenir administrateur.** Le rôle vient de `APP_ADMIN_EMAILS`, une liste
+  d'adresses séparées par des virgules, et de là seulement : aucune route ne
+  l'accorde, pas même à un administrateur. Les comptes listés sont promus au
+  démarrage s'ils existent déjà, à l'inscription sinon.
+
+```bash
+APP_ADMIN_EMAILS=vous@exemple.fr docker compose up --build
+```
+
+Les machines du catalogue et leurs flags restent semés au démarrage : elles
+ne se gèrent pas encore depuis cette page.
 
 ## Profil, hauts faits et activité
 
@@ -261,21 +298,22 @@ com.labplatform
 │   ├── box/           Box (machine à compromettre), Flag, Difficulty,
 │   │                  FlagKind, Own
 │   ├── scoring/       Rank, PlayerProgress, PlayerScore, Handle
-│   ├── academy/       Course (agrégat), CourseSection, Track, CourseProgress
+│   ├── academy/       Course (agrégat), CourseSection, Track, CourseProgress, Slug
 │   ├── achievement/   Achievement (règles), PlayerRecord
+│   └── user/          … AdminPolicy (qui publie le contenu)
 │   └── shared/        Exceptions métier (validation, conflit, introuvable…)
 ├── application/
 │   ├── port/in/       Cas d'usage : RegisterUser, AuthenticateUser, StartVm,
 │   │                  StopVm, ListBoxes, SubmitFlag, GetPlayerProgress,
 │   │                  GetLeaderboard, ListCourses, TrackSectionProgress,
-│   │                  RateBox, GetAchievements, GetActivity…
+│   │                  RateBox, ManageCourses, GetAdminOverview…
 │   ├── port/out/      Besoins du métier : UserRepositoryPort, HypervisorPort,
 │   │                  BoxRepositoryPort, OwnRepositoryPort, CourseRepositoryPort…
 │   └── service/       Implémentations des cas d'usage
 ├── adapter/
 │   ├── in/web/        Contrôleurs REST, filtre de session, gestion d'erreurs
 │   ├── in/event/      Provisionnement des machines à l'inscription
-│   ├── in/startup/    Semis du catalogue et des cours au premier démarrage
+│   ├── in/startup/    Semis du catalogue et des cours, promotion des administrateurs
 │   └── out/           JPA/PostgreSQL, JWT, BCrypt, hyperviseur simulé…
 └── config/            Racine de composition (câblage des cas d'usage)
 ```
@@ -338,6 +376,10 @@ Principes appliqués :
 | DELETE  | `/api/courses/{slug}/sections/{section}/completion` | Rouvre une section |
 | GET     | `/api/profile/achievements`    | Hauts faits, obtenus ou non |
 | GET     | `/api/profile/activity?limit=20` | Activité récente |
+| GET     | `/api/admin/overview`          | Chiffres du tableau de bord (403 hors administrateur) |
+| POST    | `/api/admin/courses`           | Publication d'un cours (201) |
+| PUT     | `/api/admin/courses/{slug}`    | Refonte d'un cours, avancement préservé |
+| DELETE  | `/api/admin/courses/{slug}`    | Suppression d'un cours (204) |
 
 Toutes les erreurs suivent le même format :
 `{ timestamp, status, error, message, path, details }`.
@@ -347,7 +389,7 @@ Toutes les erreurs suivent le même format :
 ```
 src/
 ├── domain/          Aucune dépendance à React ni à HTTP
-│   ├── models/      User, VirtualMachine, Box, Progress, Course, Profile
+│   ├── models/      User, VirtualMachine, Box, Progress, Course, Profile, Admin, Video
 │   ├── repositories/ Interfaces (AuthRepository, LabRepository, BoxRepository…)
 │   ├── usecases/    Login, Register, StartVm, StopVm, SubmitFlag,
 │   │                GetProgress, GetLeaderboard, ToggleSection…
@@ -360,7 +402,7 @@ src/
 │   ├── navigation/     Menu déclaratif
 │   ├── features/lab/   VmCard, ConnectionDetails, guides d'accès par protocole
 │   ├── features/box/   BoxCard, FlagForm, DifficultyMeter, ProgressPanel, RatingPicker
-│   ├── features/course/ CourseCard, TrackProgress
+│   ├── features/course/ CourseCard, TrackProgress, VideoPlayer
 │   ├── hooks/ state/   État de session, état du lab, actions asynchrones
 │   ├── pages/          Une page par route
 │   └── styles/         Jetons de design et feuilles de style
@@ -372,7 +414,8 @@ Correspondance avec SOLID :
 - **SRP.** Un cas d'usage fait une chose. Un composant du design system ignore
   tout du métier.
 - **OCP.** Une nouvelle entrée de menu s'ajoute dans `navigation.ts`, y compris
-  une filière de cours (le menu accepte des groupes à deux niveaux). Un nouveau
+  une filière de cours (le menu accepte des groupes à deux niveaux) et une
+  entrée réservée à un rôle (`roles: ['ADMIN']`). Un nouveau
   protocole d'accès (VNC, console web…) s'ajoute dans `accessGuides.ts`. Aucun
   composant n'est modifié.
 - **DIP.** Les pages reçoivent des cas d'usage par injection
@@ -408,6 +451,12 @@ prête à être remplacée module par module.
   soumission simultanée.
 - **Classement.** Il n'expose qu'un pseudonyme dérivé de la partie locale de
   l'e-mail, jamais l'adresse complète.
+- **Administration.** `/api/admin/**` exige le rôle ADMIN dans la chaîne de
+  sécurité, et chaque cas d'usage le revérifie : une règle métier ne dépend
+  pas de la configuration d'un framework. Le menu masque ces entrées aux
+  autres comptes, mais ce n'est qu'un confort d'affichage. Une adresse de
+  vidéo doit être en http(s) et n'est intégrée que si elle vient d'une
+  plateforme connue, ce qui ferme `javascript:` et `data:`.
 - **En-têtes.** Nginx ajoute les en-têtes de sécurité (CSP,
   `X-Frame-Options`, `nosniff`…).
 
@@ -421,13 +470,22 @@ prête à être remplacée module par module.
 | `APP_JWT_VALIDITY`         | `8h`               | Durée de session |
 | `APP_COOKIE_SECURE`        | `false`            | Cookie réservé à HTTPS |
 | `APP_EXPOSE_RESET_TOKEN`   | `true`             | Lien de réinitialisation affiché à l'écran |
+| `APP_ADMIN_EMAILS`         | vide               | Comptes administrateurs, séparés par des virgules |
 | `APP_BOXES_LOG_SEEDED_FLAGS` | `true`           | Flags du catalogue écrits dans les journaux au premier démarrage (démo) |
 | `APP_BOXES_LEADERBOARD_SIZE` | `20`             | Nombre de joueurs affichés dans le classement |
 
 ## Intégration continue
 
-`.github/workflows/tests.yml` exécute les tests backend (`mvn test`) et
-frontend (`npm test`, puis `npm run build`, qui vérifie aussi les types).
+`.github/workflows/tests.yml` exécute les tests backend deux fois — sur H2,
+puis sur PostgreSQL, la base de production — et les tests frontend
+(`npm test`, puis `npm run build`, qui vérifie aussi les types).
+
+La seconde exécution n'est pas un luxe : certaines erreurs de correspondance
+objet-relationnel ne se voient que sur PostgreSQL. Un `@Lob` sur une chaîne y
+écrit un « large object » et ne stocke que son identifiant, là où H2 range le
+texte sans broncher. Les tests locaux visent H2 par défaut ; renseigner
+`TEST_DB_URL`, `TEST_DB_USERNAME` et `TEST_DB_PASSWORD` rejoue la même suite
+sur PostgreSQL.
 
 ## Pistes
 
@@ -437,6 +495,8 @@ frontend (`npm test`, puis `npm run build`, qui vérifie aussi les types).
 - Provisionner une vraie cible par machine du catalogue (instance à la
   demande) plutôt que des adresses fixes : le point d'extension est le même
   `HypervisorPort`.
+- Gestion des machines du catalogue depuis le tableau de bord, comme les cours.
+- Téléversement des vidéos sur la plateforme, plutôt qu'une adresse externe.
 - Écriture et partage de rapports (« writeups ») une fois la machine possédée.
 - Quiz corrigés automatiquement dans les cours, plutôt que des questions
   ouvertes à traiter de son côté.

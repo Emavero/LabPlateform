@@ -17,6 +17,7 @@ import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AcademyService;
 import com.labplatform.application.service.AccountService;
+import com.labplatform.application.service.CourseAdminService;
 import com.labplatform.application.service.BoxService;
 import com.labplatform.application.service.ProfileService;
 import com.labplatform.application.service.ScoreboardService;
@@ -39,6 +40,7 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Racine de composition : c'est le seul endroit où les cas d'usage
@@ -56,8 +58,10 @@ public class UseCaseConfig {
     @Bean
     public AuthenticationService authenticationService(UserRepositoryPort users, PasswordHasherPort passwordHasher,
                                                        AccessTokenIssuerPort tokenIssuer, DomainEventPublisherPort events,
-                                                       TransactionPort transactions, Clock clock) {
-        return new AuthenticationService(users, passwordHasher, tokenIssuer, events, transactions, clock);
+                                                       TransactionPort transactions, Clock clock,
+                                                       AppProperties properties) {
+        return new AuthenticationService(users, passwordHasher, tokenIssuer, events, transactions, clock,
+                Set.copyOf(properties.getSecurity().getAdminEmails()));
     }
 
     @Bean
@@ -96,6 +100,14 @@ public class UseCaseConfig {
     public AcademyService academyService(CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
                                          TransactionPort transactions, Clock clock) {
         return new AcademyService(courses, completions, transactions, clock);
+    }
+
+    @Bean
+    public CourseAdminService courseAdminService(CourseRepositoryPort courses,
+                                                 SectionCompletionRepositoryPort completions,
+                                                 UserRepositoryPort users, BoxRepositoryPort boxes,
+                                                 OwnRepositoryPort owns, TransactionPort transactions, Clock clock) {
+        return new CourseAdminService(courses, completions, users, boxes, owns, transactions, clock);
     }
 
     @Bean

@@ -1,6 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Dependencies } from '@/di/container';
 import { AppShell } from '@/presentation/layouts/AppShell';
+import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPage';
+import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
+import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
 import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
 import { CourseDetailPage } from '@/presentation/pages/CourseDetailPage';
 import { CoursesPage } from '@/presentation/pages/CoursesPage';
@@ -18,7 +21,7 @@ import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
 import { VmDetailPage } from '@/presentation/pages/VmDetailPage';
 import { VpnPage } from '@/presentation/pages/VpnPage';
-import { GuestRoute, ProtectedRoute } from '@/presentation/routing/guards';
+import { AdminRoute, GuestRoute, ProtectedRoute } from '@/presentation/routing/guards';
 import { AuthProvider } from '@/presentation/state/AuthContext';
 import { DependenciesProvider } from '@/presentation/state/DependenciesContext';
 
@@ -46,6 +49,11 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                 <Route path="/cours/:track" element={<CoursesPage />} />
                 <Route path="/cours/:track/:slug" element={<CourseDetailPage />} />
                 <Route path="/profil" element={<ProfilePage />} />
+                <Route element={<AdminRoute />}>
+                  <Route path="/admin" element={<AdminDashboardPage />} />
+                  <Route path="/admin/cours" element={<AdminCoursesPage />} />
+                  <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
+                </Route>
                 <Route path="/labs" element={<LabsPage />} />
                 <Route path="/labs/:id" element={<VmDetailPage />} />
                 <Route path="/vpn" element={<VpnPage />} />

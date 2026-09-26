@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Icon, Logo } from '../design-system';
-import { isGroup, PRIMARY_NAV, SECONDARY_NAV, type NavEntry, type NavItem } from '../navigation/navigation';
+import { isGroup, navigationFor, PRIMARY_NAV, SECONDARY_NAV, type NavEntry, type NavItem } from '../navigation/navigation';
+import { useAuth } from '../state/AuthContext';
 import { UserMenu } from './UserMenu';
 
 function NavLinkItem({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: () => void; nested?: boolean }) {
@@ -54,15 +55,21 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onNavigate }: SidebarProps) {
+  const { user } = useAuth();
+  // Un utilisateur ne voit pas les entrées d'administration ; le serveur les
+  // refuse de toute façon, le menu ne fait que ne pas les proposer.
+  const primary = navigationFor(PRIMARY_NAV, user?.role);
+  const secondary = navigationFor(SECONDARY_NAV, user?.role);
+
   return (
     <aside className={['sidebar', open && 'sidebar--open'].filter(Boolean).join(' ')} aria-label="Navigation principale">
       <div className="sidebar__brand">
         <Logo />
       </div>
       <nav className="sidebar__nav">
-        <NavList items={PRIMARY_NAV} onNavigate={onNavigate} />
+        <NavList items={primary} onNavigate={onNavigate} />
         <div className="sidebar__divider" role="separator" />
-        <NavList items={SECONDARY_NAV} onNavigate={onNavigate} />
+        <NavList items={secondary} onNavigate={onNavigate} />
       </nav>
       <div className="sidebar__footer">
         <UserMenu onNavigate={onNavigate} />

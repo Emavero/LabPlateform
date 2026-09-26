@@ -18,6 +18,19 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
+/**
+ * Réservé aux administrateurs. Un utilisateur qui tape l'URL est renvoyé vers
+ * son tableau de bord ; la vraie protection reste côté serveur, qui refuse
+ * /api/admin/** à quiconque n'a pas le rôle.
+ */
+export function AdminRoute() {
+  const { status, user } = useAuth();
+  if (status === 'checking') return <SplashScreen />;
+  if (status === 'anonymous') return <Navigate to="/login" replace />;
+  if (user?.role !== 'ADMIN') return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
 /** Pages d'accueil publiques : un utilisateur déjà connecté part vers le tableau de bord. */
 export function GuestRoute() {
   const { status } = useAuth();

@@ -1,3 +1,4 @@
+import type { Role } from '@/domain/models/User';
 import type { IconName } from '../design-system';
 
 export interface NavItem {
@@ -6,6 +7,8 @@ export interface NavItem {
   readonly icon: IconName;
   /** Correspondance exacte du chemin (pour la racine). */
   readonly end?: boolean;
+  /** Rôles qui voient l'entrée. Absent : tout le monde la voit. */
+  readonly roles?: readonly Role[];
 }
 
 /**
@@ -16,12 +19,27 @@ export interface NavGroup {
   readonly label: string;
   readonly icon: IconName;
   readonly children: readonly NavItem[];
+  readonly roles?: readonly Role[];
 }
 
 export type NavEntry = NavItem | NavGroup;
 
 export function isGroup(entry: NavEntry): entry is NavGroup {
   return 'children' in entry;
+}
+
+/**
+ * Menu tel que ce rôle le voit. Le filtrage est un confort d'affichage, pas
+ * une protection : c'est le serveur qui refuse les routes d'administration.
+ */
+export function navigationFor(entries: readonly NavEntry[], role: Role | undefined): NavEntry[] {
+  const allowed = (roles: readonly Role[] | undefined) => !roles || (role !== undefined && roles.includes(role));
+  return entries
+    .filter((entry) => allowed(entry.roles))
+    .map((entry) =>
+      isGroup(entry) ? { ...entry, children: entry.children.filter((child) => allowed(child.roles)) } : entry,
+    )
+    .filter((entry) => !isGroup(entry) || entry.children.length > 0);
 }
 
 export interface ModuleInfo {
@@ -51,7 +69,15 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
   { label: 'Attack Paths', to: '/modules/attack-paths', icon: 'route' },
   { label: 'Events', to: '/modules/events', icon: 'activity' },
   { label: 'Scenario Designer', to: '/modules/scenario-designer', icon: 'scenario' },
-  { label: 'Administration', to: '/modules/administration', icon: 'admin' },
+  {
+    label: 'Administration',
+    icon: 'admin',
+    roles: ['ADMIN'],
+    children: [
+      { label: 'Tableau de bord', to: '/admin', icon: 'dashboard', end: true },
+      { label: 'Gérer les cours', to: '/admin/cours', icon: 'book' },
+    ],
+  },
   { label: 'Report Center', to: '/modules/report-center', icon: 'report' },
 ];
 
@@ -94,10 +120,6 @@ export const MODULES: Readonly<Record<string, ModuleInfo>> = {
   'scenario-designer': {
     title: 'Scenario Designer',
     description: "Conception de scénarios d'exercice rejouables sur l'infrastructure du lab.",
-  },
-  administration: {
-    title: 'Administration',
-    description: 'Gestion des utilisateurs, des rôles et des modèles de machines.',
   },
   'report-center': {
     title: 'Report Center',

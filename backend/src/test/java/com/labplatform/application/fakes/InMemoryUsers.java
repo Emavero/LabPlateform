@@ -44,4 +44,8 @@ public class InMemoryUsers implements UserRepositoryPort {
         store.put(id, stored);
         return stored;
     }
+    @Override
+    public long count() {
+        return store.size();
+    }
 }

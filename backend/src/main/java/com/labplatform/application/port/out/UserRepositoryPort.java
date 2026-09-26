@@ -16,4 +16,7 @@ public interface UserRepositoryPort {
     boolean existsByEmail(Email email);
 
     User save(User user);
+
+    /** Nombre de comptes, pour le tableau de bord d'administration. */
+    long count();
 }

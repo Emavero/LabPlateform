@@ -40,6 +40,11 @@ public class InMemoryOwns implements OwnRepositoryPort {
         return stored;
     }
 
+    @Override
+    public long count() {
+        return store.size();
+    }
+
     /** Même agrégation que la requête SQL : total décroissant, puis le premier arrivé. */
     @Override
     public List<PlayerScore> topScores(int limit) {

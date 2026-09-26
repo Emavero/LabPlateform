@@ -16,7 +16,7 @@ public class User {
     private final Long id;
     private final Email email;
     private String passwordHash;
-    private final Role role;
+    private Role role;
     private final Instant createdAt;
     private PasswordResetToken resetToken;
 
@@ -31,7 +31,17 @@ public class User {
 
     /** Nouveau compte (pas encore persisté). */
     public static User register(Email email, String passwordHash, Instant now) {
-        return new User(null, email, passwordHash, Role.USER, now, null);
+        return register(email, passwordHash, Role.USER, now);
+    }
+
+    /** Nouveau compte avec un rôle imposé : voir la liste des administrateurs en configuration. */
+    public static User register(Email email, String passwordHash, Role role, Instant now) {
+        return new User(null, email, passwordHash, role, now, null);
+    }
+
+    /** Change le rôle. Sans effet si le compte le porte déjà. */
+    public void assignRole(Role newRole) {
+        this.role = Objects.requireNonNull(newRole, "newRole");
     }
 
     /** Reconstitution depuis la persistance. */

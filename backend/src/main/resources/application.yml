@@ -50,6 +50,9 @@ app:
     # réinitialisation est alors renvoyé dans la réponse HTTP.
     expose-reset-token-in-response: ${APP_EXPOSE_RESET_TOKEN:false}
     reset-token-validity: 15m
+    # Comptes administrateurs, séparés par des virgules. Ils accèdent au
+    # tableau de bord d'administration ; le rôle ne s'obtient pas autrement.
+    admin-emails: ${APP_ADMIN_EMAILS:}
   # Catalogue de machines à compromettre (flags, points, classement).
   boxes:
     # true uniquement pour les démonstrations : les machines étant simulées,

@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -60,9 +61,30 @@ public class CoursePersistenceAdapter implements CourseRepositoryPort {
         List<CourseSection> storedSections = course.getSections().stream()
                 .map(section -> toDomain(sections.save(new CourseSectionJpaEntity(section.id(), saved.getId(),
                         section.slug(), section.title(), section.kind(), section.position(), section.minutes(),
-                        section.content()))))
+                        section.content(), section.videoUrl()))))
                 .toList();
+        // Les sections retirées du cours disparaissent ; celles qui restent gardent
+        // leur identifiant, donc l'avancement des apprenants survit à une refonte.
+        Set<Long> kept = storedSections.stream().map(CourseSection::id).collect(Collectors.toSet());
+        sections.findByCourseIdInOrderByPosition(List.of(saved.getId())).stream()
+                .map(CourseSectionJpaEntity::getId)
+                .filter(id -> !kept.contains(id))
+                .forEach(sections::deleteById);
         return toDomain(saved, storedSections);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Course course) {
+        sections.deleteByCourseId(course.getId());
+        courses.deleteById(course.getId());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        sections.deleteAllInBatch();
+        courses.deleteAllInBatch();
     }
 
     private List<Course> assemble(List<CourseJpaEntity> entities) {
@@ -85,6 +107,6 @@ public class CoursePersistenceAdapter implements CourseRepositoryPort {
 
     private static CourseSection toDomain(CourseSectionJpaEntity e) {
         return new CourseSection(e.getId(), e.getSlug(), e.getTitle(), e.getKind(), e.getPosition(), e.getMinutes(),
-                e.getContent());
+                e.getContent(), e.getVideoUrl());
     }
 }

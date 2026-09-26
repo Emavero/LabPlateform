@@ -17,6 +17,9 @@ public interface OwnRepositoryPort {
 
     Own save(Own own);
 
+    /** Nombre total de flags validés, tous joueurs confondus. */
+    long count();
+
     /** Totaux par joueur, les meilleurs d'abord. */
     List<PlayerScore> topScores(int limit);
 }

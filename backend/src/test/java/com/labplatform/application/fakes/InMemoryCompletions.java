@@ -34,7 +34,8 @@ public class InMemoryCompletions implements SectionCompletionRepositoryPort {
         return store.stream().anyMatch(done -> done.userId().equals(userId) && done.sectionId().equals(sectionId));
     }
 
-    public int count() {
+    @Override
+    public long count() {
         return store.size();
     }
 }

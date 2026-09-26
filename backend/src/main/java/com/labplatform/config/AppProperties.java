@@ -121,6 +121,20 @@ public class AppProperties {
     public static class Security {
         private boolean exposeResetTokenInResponse = false;
         private Duration resetTokenValidity = Duration.ofMinutes(15);
+        /**
+         * Comptes administrateurs, par adresse e-mail. Ils sont promus au
+         * démarrage s'ils existent déjà, et à l'inscription sinon : c'est la
+         * seule façon d'obtenir le rôle, qu'aucune route n'accorde.
+         */
+        private List<String> adminEmails = new ArrayList<>();
+
+        public List<String> getAdminEmails() {
+            return adminEmails;
+        }
+
+        public void setAdminEmails(List<String> adminEmails) {
+            this.adminEmails = adminEmails;
+        }
 
         public boolean isExposeResetTokenInResponse() {
             return exposeResetTokenInResponse;

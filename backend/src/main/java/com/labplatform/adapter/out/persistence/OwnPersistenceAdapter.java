@@ -41,6 +41,11 @@ public class OwnPersistenceAdapter implements OwnRepositoryPort {
     }
 
     @Override
+    public long count() {
+        return repository.count();
+    }
+
+    @Override
     public List<PlayerScore> topScores(int limit) {
         return repository.topScores(PageRequest.of(0, limit));
     }

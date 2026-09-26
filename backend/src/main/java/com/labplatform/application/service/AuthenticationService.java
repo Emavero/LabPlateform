@@ -14,11 +14,15 @@ import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.user.Email;
 import com.labplatform.domain.user.PasswordPolicy;
+import com.labplatform.domain.user.Role;
 import com.labplatform.domain.user.User;
 import com.labplatform.domain.user.UserRegistered;
 
 import java.time.Clock;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Cas d'usage d'inscription et de connexion. */
 public class AuthenticationService implements RegisterUserUseCase, AuthenticateUserUseCase {
@@ -29,6 +33,7 @@ public class AuthenticationService implements RegisterUserUseCase, AuthenticateU
     private final DomainEventPublisherPort events;
     private final TransactionPort transactions;
     private final Clock clock;
+    private final Set<String> adminEmails;
 
     /**
      * Empreinte factice comparée lorsque l'e-mail est inconnu : la connexion
@@ -40,6 +45,21 @@ public class AuthenticationService implements RegisterUserUseCase, AuthenticateU
     public AuthenticationService(UserRepositoryPort users, PasswordHasherPort passwordHasher,
                                  AccessTokenIssuerPort tokenIssuer, DomainEventPublisherPort events,
                                  TransactionPort transactions, Clock clock) {
+        this(users, passwordHasher, tokenIssuer, events, transactions, clock, Set.of());
+    }
+
+    /**
+     * @param adminEmails adresses promues administrateur à l'inscription.
+     *                    Aucune route n'accorde ce rôle : il vient de la
+     *                    configuration du serveur, et de là seulement.
+     */
+    public AuthenticationService(UserRepositoryPort users, PasswordHasherPort passwordHasher,
+                                 AccessTokenIssuerPort tokenIssuer, DomainEventPublisherPort events,
+                                 TransactionPort transactions, Clock clock, Set<String> adminEmails) {
+        this.adminEmails = adminEmails.stream()
+                .filter(email -> email != null && !email.isBlank())
+                .map(email -> email.trim().toLowerCase(Locale.ROOT))
+                .collect(Collectors.toUnmodifiableSet());
         this.users = users;
         this.passwordHasher = passwordHasher;
         this.tokenIssuer = tokenIssuer;
@@ -59,13 +79,17 @@ public class AuthenticationService implements RegisterUserUseCase, AuthenticateU
             if (users.existsByEmail(email)) {
                 throw new ConflictException("Un compte existe déjà avec cette adresse e-mail");
             }
-            User user = users.save(User.register(email, passwordHash, clock.instant()));
+            User user = users.save(User.register(email, passwordHash, roleFor(email), clock.instant()));
             // Publié dans la transaction : le lab est provisionné atomiquement avec le compte.
             events.publish(new UserRegistered(user.getId(), user.getEmail()));
             return user;
         });
 
         return openSession(saved);
+    }
+
+    private Role roleFor(Email email) {
+        return adminEmails.contains(email.value()) ? Role.ADMIN : Role.USER;
     }
 
     @Override

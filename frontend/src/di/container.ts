@@ -1,5 +1,6 @@
 import { createHttpClient } from '@/data/http/httpClient';
 import { HttpAccountRepository } from '@/data/repositories/HttpAccountRepository';
+import { HttpAdminRepository } from '@/data/repositories/HttpAdminRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
@@ -25,6 +26,7 @@ import {
   StartVmUseCase,
   StopVmUseCase,
 } from '@/domain/usecases/lab';
+import { DeleteCourseUseCase, GetAdminOverviewUseCase, SaveCourseUseCase } from '@/domain/usecases/admin';
 import { GetBoxUseCase, ListBoxesUseCase, RateBoxUseCase, SubmitFlagUseCase } from '@/domain/usecases/box';
 import {
   GetCourseUseCase,
@@ -75,6 +77,12 @@ export interface Dependencies {
     readonly achievements: GetAchievementsUseCase;
     readonly activity: GetActivityUseCase;
   };
+  /** Réservé aux administrateurs : le serveur refuse ces appels aux autres. */
+  readonly admin: {
+    readonly overview: GetAdminOverviewUseCase;
+    readonly saveCourse: SaveCourseUseCase;
+    readonly deleteCourse: DeleteCourseUseCase;
+  };
   readonly scoreboard: {
     readonly progress: GetProgressUseCase;
     readonly leaderboard: GetLeaderboardUseCase;
@@ -102,6 +110,7 @@ export function createContainer(): Dependencies {
   const scoreboardRepository = new HttpScoreboardRepository(http);
   const courseRepository = new HttpCourseRepository(http);
   const profileRepository = new HttpProfileRepository(http);
+  const adminRepository = new HttpAdminRepository(http);
 
   return {
     sessionMonitor,
@@ -139,6 +148,11 @@ export function createContainer(): Dependencies {
     profile: {
       achievements: new GetAchievementsUseCase(profileRepository),
       activity: new GetActivityUseCase(profileRepository),
+    },
+    admin: {
+      overview: new GetAdminOverviewUseCase(adminRepository),
+      saveCourse: new SaveCourseUseCase(adminRepository),
+      deleteCourse: new DeleteCourseUseCase(adminRepository),
     },
     scoreboard: {
       progress: new GetProgressUseCase(scoreboardRepository),

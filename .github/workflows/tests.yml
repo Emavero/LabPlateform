@@ -35,6 +35,44 @@ jobs:
         working-directory: backend
         run: mvn -B test
 
+  # La même suite, sur PostgreSQL : c'est la base de production, et certaines
+  # erreurs de correspondance objet-relationnel n'apparaissent pas sur H2.
+  tests-backend-postgres:
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: labplatform
+          POSTGRES_USER: labplatform
+          POSTGRES_PASSWORD: labplatform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U labplatform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Setup Java
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run Maven Tests
+        working-directory: backend
+        env:
+          TEST_DB_URL: jdbc:postgresql://localhost:5432/labplatform
+          TEST_DB_USERNAME: labplatform
+          TEST_DB_PASSWORD: labplatform
+        run: mvn -B test
+
   tests-frontend:
     runs-on: ubuntu-24.04
 

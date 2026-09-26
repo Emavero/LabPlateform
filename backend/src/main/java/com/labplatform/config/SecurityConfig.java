@@ -52,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/vpn/crl.pem").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Le contenu que tout le monde consulte n'est modifiable que par un administrateur.
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint))
                 .addFilterBefore(new SessionCookieAuthenticationFilter(cookies, tokenVerifier),

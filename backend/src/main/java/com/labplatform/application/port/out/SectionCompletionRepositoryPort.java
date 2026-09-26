@@ -14,4 +14,7 @@ public interface SectionCompletionRepositoryPort {
     void delete(Long userId, Long sectionId);
 
     boolean exists(Long userId, Long sectionId);
+
+    /** Nombre total de sections terminées, tous apprenants confondus. */
+    long count();
 }

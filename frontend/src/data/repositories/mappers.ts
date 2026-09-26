@@ -103,6 +103,7 @@ export interface CourseDto {
   completed: boolean;
   publishedAt: string;
   sections: {
+    id: number;
     slug: string;
     title: string;
     kind: SectionKind;
@@ -110,6 +111,7 @@ export interface CourseDto {
     position: number;
     minutes: number;
     content: string;
+    videoUrl: string | null;
     completed: boolean;
   }[];
 }

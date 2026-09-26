@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { formatDuration, nextSection, type CourseSection } from '@/domain/models/Course';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { VideoPlayer } from '../features/course/VideoPlayer';
 import { useCourse } from '../hooks/useCourse';
 import { TRACK_PAGES } from '../navigation/navigation';
 import { NotFoundPage } from './NotFoundPage';
@@ -111,8 +112,9 @@ function SectionPanel({
         </Button>
       }
     >
+      {section.videoUrl && <VideoPlayer url={section.videoUrl} title={section.title} />}
       {/* Le contenu est du texte préformaté : les commandes doivent rester lisibles telles quelles. */}
-      <pre className="course-section__content">{section.content}</pre>
+      {section.content.trim() && <pre className="course-section__content">{section.content}</pre>}
     </Panel>
   );
 }

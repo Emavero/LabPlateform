@@ -17,4 +17,9 @@ public interface CourseRepositoryPort {
     long count();
 
     Course save(Course course);
+
+    void delete(Course course);
+
+    /** Remet le catalogue à zéro. Réservé à la réparation d'un semis corrompu. */
+    void deleteAll();
 }

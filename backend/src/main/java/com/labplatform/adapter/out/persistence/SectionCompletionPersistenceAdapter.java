@@ -38,6 +38,11 @@ public class SectionCompletionPersistenceAdapter implements SectionCompletionRep
         return repository.existsByUserIdAndSectionId(userId, sectionId);
     }
 
+    @Override
+    public long count() {
+        return repository.count();
+    }
+
     private static SectionCompletion toDomain(SectionCompletionJpaEntity e) {
         return SectionCompletion.restore(e.getId(), e.getUserId(), e.getCourseId(), e.getSectionId(),
                 e.getCompletedAt());

@@ -74,7 +74,7 @@ class ProfileServiceTest {
 
     private static Course course(String slug, Track track) {
         return Course.create(slug, slug, track, CourseLevel.FUNDAMENTAL, "Résumé.", NOW.minusSeconds(86_400),
-                List.of(new CourseSection(null, "section-1", "Section 1", SectionKind.THEORY, 1, 10, "Contenu")));
+                List.of(CourseSection.of(null, "section-1", "Section 1", SectionKind.THEORY, 1, 10, "Contenu")));
     }
 
     private Map<Achievement, Boolean> earnedByAlice() {

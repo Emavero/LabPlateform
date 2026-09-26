@@ -1,8 +1,12 @@
+# H2 par défaut, pour des tests sans dépendance externe. L'intégration
+# continue rejoue la même suite sur PostgreSQL en renseignant TEST_DB_* :
+# certaines erreurs de correspondance objet-relationnel ne se voient que là
+# (un @Lob écrit un « large object » sur PostgreSQL, pas sur H2).
 spring:
   datasource:
-    url: jdbc:h2:mem:labplatform-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
-    username: sa
-    password: ""
+    url: ${TEST_DB_URL:jdbc:h2:mem:labplatform-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1}
+    username: ${TEST_DB_USERNAME:sa}
+    password: ${TEST_DB_PASSWORD:}
   sql:
     init:
       mode: always
@@ -10,6 +14,8 @@ spring:
 app:
   security:
     expose-reset-token-in-response: true
+    admin-emails:
+      - admin@example.com
   hypervisor:
     simulated-boot-delay: 0ms
     simulated-shutdown-delay: 0ms

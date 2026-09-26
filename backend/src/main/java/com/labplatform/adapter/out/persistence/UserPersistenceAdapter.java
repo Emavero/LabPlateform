@@ -68,4 +68,9 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
                 entity.getCreatedAt(),
                 token);
     }
+
+    @Override
+    public long count() {
+        return repository.count();
+    }
 }

@@ -37,6 +37,16 @@ public class InMemoryCourses implements CourseRepositoryPort {
         return store.size();
     }
 
+    @Override
+    public void delete(Course course) {
+        store.remove(course.getId());
+    }
+
+    @Override
+    public void deleteAll() {
+        store.clear();
+    }
+
     /** Attribue un identifiant au cours et à chacune de ses sections, comme la base. */
     @Override
     public Course save(Course course) {
@@ -45,7 +55,7 @@ public class InMemoryCourses implements CourseRepositoryPort {
         for (CourseSection section : course.getSections()) {
             Long sectionId = section.id() != null ? section.id() : ++sectionSequence;
             sections.add(new CourseSection(sectionId, section.slug(), section.title(), section.kind(),
-                    section.position(), section.minutes(), section.content()));
+                    section.position(), section.minutes(), section.content(), section.videoUrl()));
         }
         Course stored = Course.restore(id, course.getSlug(), course.getTitle(), course.getTrack(), course.getLevel(),
                 course.getSummary(), course.getPublishedAt(), sections);

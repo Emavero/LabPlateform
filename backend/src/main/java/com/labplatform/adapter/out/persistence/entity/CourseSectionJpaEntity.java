@@ -8,7 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 /** Section d'un cours. Le contenu est du texte long, rendu tel quel côté client. */
@@ -39,16 +38,24 @@ public class CourseSectionJpaEntity {
     @Column(name = "minutes", nullable = false)
     private int minutes;
 
-    @Lob
-    @Column(name = "content", nullable = false)
+    /*
+     * Surtout pas @Lob : sur PostgreSQL, Hibernate écrirait alors un « large
+     * object » et ne stockerait ici que son identifiant, illisible hors
+     * transaction (« Large Objects may not be used in auto-commit mode »).
+     * La colonne est du TEXT ordinaire, des deux côtés.
+     */
+    @Column(name = "content", nullable = false, columnDefinition = "text")
     private String content;
+
+    @Column(name = "video_url", length = 512)
+    private String videoUrl;
 
     protected CourseSectionJpaEntity() {
         // requis par JPA
     }
 
     public CourseSectionJpaEntity(Long id, Long courseId, String slug, String title, SectionKind kind, int position,
-                                  int minutes, String content) {
+                                  int minutes, String content, String videoUrl) {
         this.id = id;
         this.courseId = courseId;
         this.slug = slug;
@@ -57,6 +64,7 @@ public class CourseSectionJpaEntity {
         this.position = position;
         this.minutes = minutes;
         this.content = content;
+        this.videoUrl = videoUrl;
     }
 
     public Long getId() {
@@ -89,5 +97,9 @@ public class CourseSectionJpaEntity {
 
     public String getContent() {
         return content;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
     }
 }

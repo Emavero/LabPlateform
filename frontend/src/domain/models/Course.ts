@@ -29,6 +29,8 @@ export interface CourseSummary {
 }
 
 export interface CourseSection {
+  /** Identifiant renvoyé tel quel par l'éditeur d'administration. */
+  readonly id: number;
   readonly slug: string;
   readonly title: string;
   readonly kind: SectionKind;
@@ -36,6 +38,7 @@ export interface CourseSection {
   readonly position: number;
   readonly minutes: number;
   readonly content: string;
+  readonly videoUrl: string | null;
   readonly completed: boolean;
 }
 
