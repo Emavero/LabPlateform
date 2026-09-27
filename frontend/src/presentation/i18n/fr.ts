@@ -624,6 +624,7 @@ export const fr = {
   'lab.sinceTime': 'à {time}',
   'lab.sinceDate': 'le {date}',
   'difficulty.aria': 'Difficulté : {label}',
+  'a11y.switchLanguage': 'Passer en {language}',
   'a11y.skipToContent': 'Aller au contenu',
   'a11y.openMenu': 'Ouvrir le menu',
   'a11y.closeMenu': 'Fermer le menu',

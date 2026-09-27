@@ -606,6 +606,7 @@ export const en: Record<keyof typeof fr, string> = {
   'lab.sinceTime': 'at {time}',
   'lab.sinceDate': 'on {date}',
   'difficulty.aria': 'Difficulty: {label}',
+  'a11y.switchLanguage': 'Switch to {language}',
   'a11y.skipToContent': 'Skip to content',
   'a11y.openMenu': 'Open the menu',
   'a11y.closeMenu': 'Close the menu',

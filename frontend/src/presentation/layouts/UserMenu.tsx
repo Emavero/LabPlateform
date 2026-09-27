@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { displayNameOf, initialsOf } from '@/domain/models/User';
 import { Avatar, Icon } from '../design-system';
 import { useI18n } from '../i18n/I18nContext';
-import { LanguagePicker } from '../i18n/LanguagePicker';
 import { useAuth } from '../state/AuthContext';
 
 /** Profil ancré en bas de la sidebar, avec menu déroulant (s'ouvre vers le haut). */
@@ -54,10 +53,6 @@ export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
       {open && (
         <div className="user-menu__popover" id={menuId} role="menu">
           <p className="user-menu__email">{user.email}</p>
-          <div className="user-menu__language">
-            <span className="user-menu__language-label">{t('common.language')}</span>
-            <LanguagePicker compact />
-          </div>
           <button type="button" role="menuitem" className="user-menu__item" onClick={() => go('/settings')}>
             <Icon name="user" size={16} />
             {t('nav.settings')}

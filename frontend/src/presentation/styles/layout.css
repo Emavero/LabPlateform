@@ -366,3 +366,46 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
 }
+
+/* ---------- Bascule de langue ----------
+   Ancrée en haut à droite, à l'opposé du logo. Fixe, donc au même endroit quel
+   que soit le défilement : sur grand écran elle occupe la marge au-dessus du
+   contenu, sur mobile elle tombe au bout de la barre du haut.
+   Le sélecteur est doublé de `.icon-btn` pour l'emporter sur la taille fixe
+   des boutons-icônes : celui-ci porte un mot en plus de son icône. */
+.icon-btn.language-toggle {
+  position: fixed;
+  top: 0.5rem;
+  right: clamp(1rem, 4vw, 3rem);
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  height: auto;
+  padding: 0.3rem 0.6rem;
+  border-color: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+}
+
+.icon-btn.language-toggle:hover {
+  border-color: var(--line-strong);
+}
+
+/* Le code de la langue cible accompagne le globe : deux langues se
+   reconnaissent plus vite à « EN » qu'à un pictogramme seul. */
+.language-toggle__code {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 960px) {
+  .icon-btn.language-toggle {
+    /* Centrée dans la barre du haut, haute de 60 px. */
+    top: 13px;
+    right: 1rem;
+  }
+}

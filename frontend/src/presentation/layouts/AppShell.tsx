@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Icon, Logo } from '../design-system';
+import { LanguageToggle } from '../i18n/LanguageToggle';
 import { useI18n } from '../i18n/I18nContext';
 import { Sidebar } from './Sidebar';
 
@@ -36,6 +37,10 @@ export function AppShell() {
         </button>
         <Logo />
       </header>
+      {/* À l'opposé du logo, et au même endroit sur toutes les tailles d'écran :
+          sur mobile il tombe au bout de la barre du haut, sur grand écran dans
+          la marge qui la remplace. */}
+      <LanguageToggle />
       <Sidebar open={drawerOpen} onNavigate={() => setDrawerOpen(false)} />
       {drawerOpen && <div className="shell__scrim" onClick={() => setDrawerOpen(false)} aria-hidden="true" />}
       <main id="main" className="shell__main" tabIndex={-1}>
