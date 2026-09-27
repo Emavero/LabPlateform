@@ -28,6 +28,7 @@ const EXACT: Readonly<Record<string, string>> = {
 
   // Cours
   'Le titre est obligatoire.': 'A title is required.',
+  'Le sujet est obligatoire.': 'A subject is required.',
   'Le titre de la section est obligatoire.': 'The section title is required.',
   'La vidéo doit être une adresse https:// ou un fichier téléversé.':
     'The video must be an https:// address or an uploaded file.',
@@ -37,6 +38,9 @@ const EXACT: Readonly<Record<string, string>> = {
 
   // Comptes rendus
   'Le compte rendu est vide.': 'The write-up is empty.',
+
+  // Assistance
+  'Le message est vide.': 'The message is empty.',
 
   // Téléversement
   'Format non pris en charge. Attendu : MP4, WebM ou Ogg.': 'Unsupported format. Expected: MP4, WebM or Ogg.',
@@ -64,6 +68,8 @@ const PATTERNS: readonly (readonly [RegExp, string])[] = [
   [/^Le titre est limité à (\d+) caractères\.$/, 'The title is limited to $1 characters.'],
   [/^Le résumé est limité à (\d+) caractères\.$/, 'The summary is limited to $1 characters.'],
   [/^Le compte rendu est limité à (\d+) caractères\.$/, 'The write-up is limited to $1 characters.'],
+  [/^Le sujet est limité à (\d+) caractères\.$/, 'The subject is limited to $1 characters.'],
+  [/^Le message est limité à (\d+) caractères\.$/, 'The message is limited to $1 characters.'],
   [/^La durée va de 0 à (\d+) minutes\.$/, 'The length ranges from 0 to $1 minutes.'],
   [/^Un flag est une suite de (\d+) caractères hexadécimaux\.$/, 'A flag is a string of $1 hexadecimal characters.'],
   [/^Fichier trop lourd : (\d+) Mo au plus\.$/, 'File too large: $1 MB at most.'],

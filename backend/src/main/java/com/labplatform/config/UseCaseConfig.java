@@ -23,6 +23,7 @@ import com.labplatform.application.port.out.PaymentGatewayPort;
 import com.labplatform.application.port.out.PaymentRepositoryPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.SubscriptionRepositoryPort;
+import com.labplatform.application.port.out.TicketRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
@@ -40,6 +41,7 @@ import com.labplatform.application.service.BoxInstanceService;
 import com.labplatform.application.service.BoxService;
 import com.labplatform.application.service.ProfileService;
 import com.labplatform.application.service.ScoreboardService;
+import com.labplatform.application.service.SupportService;
 import com.labplatform.application.service.AuthenticationService;
 import com.labplatform.application.service.LabService;
 import com.labplatform.application.service.PasswordResetService;
@@ -184,6 +186,12 @@ public class UseCaseConfig {
     @Bean
     public JournalService journalService(JournalPort journal, UserRepositoryPort users) {
         return new JournalService(journal, users);
+    }
+
+    @Bean
+    public SupportService supportService(TicketRepositoryPort tickets, UserRepositoryPort users, JournalPort journal,
+                                         TransactionPort transactions, Clock clock) {
+        return new SupportService(tickets, users, journal, transactions, clock);
     }
 
     @Bean

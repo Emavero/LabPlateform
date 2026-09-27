@@ -11,6 +11,12 @@ import { validateEmail, validateNewPassword } from '@/domain/validation/credenti
 import { validateFlag } from '@/domain/validation/flag';
 import { EMPTY_BOX_DRAFT, EMPTY_DRAFT, type CourseDraft, type SectionDraft } from '@/domain/models/Admin';
 import { AppError } from '@/domain/errors/AppError';
+import {
+  BODY_MAX_LENGTH,
+  EMPTY_TICKET_DRAFT,
+  SUBJECT_MAX_LENGTH,
+  validateTicketDraft,
+} from '@/domain/models/Support';
 
 /**
  * Garde-fou contre la dérive : un message que le domaine sait produire et que
@@ -100,6 +106,21 @@ describe('catalogue des messages', () => {
     // test ne vérifierait rien.
     expect(messages.length).toBeGreaterThanOrEqual(drafts.length);
     messages.forEach(assertTranslated);
+  });
+
+  it('traduit les messages d’une demande d’assistance', () => {
+    Object.values(validateTicketDraft(EMPTY_TICKET_DRAFT))
+      .filter((value): value is string => typeof value === 'string')
+      .forEach(assertTranslated);
+    Object.values(
+      validateTicketDraft({
+        category: 'OTHER',
+        subject: 's'.repeat(SUBJECT_MAX_LENGTH + 1),
+        body: 'b'.repeat(BODY_MAX_LENGTH + 1),
+      }),
+    )
+      .filter((value): value is string => typeof value === 'string')
+      .forEach(assertTranslated);
   });
 
   it('traduit les erreurs transverses', () => {

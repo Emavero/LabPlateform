@@ -114,7 +114,6 @@
     "Cette ressource existe déjà": "This resource already exists",
     "Une erreur inattendue est survenue": "Something went wrong",
     "Données invalides": "Invalid data",
-
     "Très facile": "Very easy",
     "Facile": "Easy",
     "Moyenne": "Medium",
@@ -203,25 +202,93 @@
     "Rien depuis l'inscription : une relance ou un premier pas guidé.": "Nothing since signing up: a nudge, or a guided first step.",
     "À corriger": "To fix",
     "À saisir": "To seize",
-    "Bon à savoir": "Worth knowing"
+    "Bon à savoir": "Worth knowing",
+    "Ouverte": "Open",
+    "Répondu": "Answered",
+    "Résolue": "Resolved",
+    "Infrastructure du lab": "Lab infrastructure",
+    "Autre": "Other",
+    "Le sujet est obligatoire": "A subject is required",
+    "Le sujet de la demande est obligatoire": "The subject of the request is required",
+    "Le message est vide": "The message is empty",
+    "Demande introuvable": "Request not found"
   },
   "patterns": [
-    ["^Le titre est limité à (\\d+) caractères$", "The title is limited to $1 characters"],
-    ["^Le nom est limité à (\\d+) caractères$", "The name is limited to $1 characters"],
-    ["^Le synopsis est limité à (\\d+) caractères$", "The synopsis is limited to $1 characters"],
-    ["^Le résumé est limité à (\\d+) caractères$", "The summary is limited to $1 characters"],
-    ["^L'énoncé est limité à (\\d+) caractères$", "The wording is limited to $1 characters"],
-    ["^Une proposition est limitée à (\\d+) caractères$", "An answer option is limited to $1 characters"],
-    ["^Le compte rendu est limité à ([\\d\\s ]+) caractères$", "The write-up is limited to $1 characters"],
-    ["^Le mot de passe doit contenir au moins (\\d+) caractères$", "The password must be at least $1 characters long"],
-    ["^Le mot de passe ne doit pas dépasser (\\d+) caractères$", "The password must not exceed $1 characters"],
-    ["^Un cours ne peut pas dépasser (\\d+) sections$", "A course cannot have more than $1 sections"],
-    ["^Une question compte de (\\d+) à (\\d+) propositions$", "A question has between $1 and $2 answer options"],
-    ["^Le champ (\\w+) du journal est limité à (\\d+) caractères$", "The journal field $1 is limited to $2 characters"],
-    ["^Fichier trop lourd : (.+)$", "File too large: $1"],
-    ["^Devise inconnue : (.+)$", "Unknown currency: $1"],
-    ["^Le montant (.+) est plus précis que la devise (.+)$", "The amount $1 is more precise than the $2 currency"],
-    ["^Impossible d'additionner des (\\w+) et des (\\w+)$", "Cannot add $1 and $2 together"],
-    ["^Impossible de lancer cette machine\\. (.+)$", "This machine could not be started. $1"]
+    [
+      "^Le titre est limité à (\\d+) caractères$",
+      "The title is limited to $1 characters"
+    ],
+    [
+      "^Le nom est limité à (\\d+) caractères$",
+      "The name is limited to $1 characters"
+    ],
+    [
+      "^Le synopsis est limité à (\\d+) caractères$",
+      "The synopsis is limited to $1 characters"
+    ],
+    [
+      "^Le résumé est limité à (\\d+) caractères$",
+      "The summary is limited to $1 characters"
+    ],
+    [
+      "^L'énoncé est limité à (\\d+) caractères$",
+      "The wording is limited to $1 characters"
+    ],
+    [
+      "^Une proposition est limitée à (\\d+) caractères$",
+      "An answer option is limited to $1 characters"
+    ],
+    [
+      "^Le compte rendu est limité à ([\\d\\s ]+) caractères$",
+      "The write-up is limited to $1 characters"
+    ],
+    [
+      "^Le mot de passe doit contenir au moins (\\d+) caractères$",
+      "The password must be at least $1 characters long"
+    ],
+    [
+      "^Le mot de passe ne doit pas dépasser (\\d+) caractères$",
+      "The password must not exceed $1 characters"
+    ],
+    [
+      "^Un cours ne peut pas dépasser (\\d+) sections$",
+      "A course cannot have more than $1 sections"
+    ],
+    [
+      "^Une question compte de (\\d+) à (\\d+) propositions$",
+      "A question has between $1 and $2 answer options"
+    ],
+    [
+      "^Le champ (\\w+) du journal est limité à (\\d+) caractères$",
+      "The journal field $1 is limited to $2 characters"
+    ],
+    [
+      "^Fichier trop lourd : (.+)$",
+      "File too large: $1"
+    ],
+    [
+      "^Devise inconnue : (.+)$",
+      "Unknown currency: $1"
+    ],
+    [
+      "^Le montant (.+) est plus précis que la devise (.+)$",
+      "The amount $1 is more precise than the $2 currency"
+    ],
+    [
+      "^Impossible d'additionner des (\\w+) et des (\\w+)$",
+      "Cannot add $1 and $2 together"
+    ],
+    [
+      "^Impossible de lancer cette machine\\. (.+)$",
+      "This machine could not be started. $1"
+    ],
+    [
+      "^Le sujet est limité à (\\d+) caractères$",
+      "The subject is limited to $1 characters"
+    ],
+    [
+      "^Le message est limité à ([\\d\\s ]+) caractères$",
+      "The message is limited to $1 characters"
+    ]
   ]
 }

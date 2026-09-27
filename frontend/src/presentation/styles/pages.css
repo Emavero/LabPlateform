@@ -2406,3 +2406,187 @@ button.back-link {
   color: var(--text-faint);
   font-size: var(--step--1);
 }
+
+/* ── Assistance ─────────────────────────────────────────────────────────────
+   Le statut d'une demande n'est jamais porté par la seule couleur : chaque
+   pastille associe une icône et un mot, de sorte que la file se lise aussi
+   sans distinguer le vert du rouge. */
+.tickets {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticket {
+  display: grid;
+  width: 100%;
+  gap: 0.3rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+.ticket:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+.ticket--active {
+  border-color: var(--violet);
+  box-shadow: var(--glow);
+}
+
+.ticket__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.ticket__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--step--1);
+}
+
+.ticket__status--open {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.ticket__status--answered {
+  background: rgba(255, 181, 71, 0.12);
+  color: var(--warning);
+}
+
+.ticket__status--resolved {
+  background: var(--running-soft);
+  color: var(--running);
+}
+
+.ticket__category {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.ticket__subject {
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+}
+
+.ticket__excerpt {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.support-detail {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.thread__state {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.thread {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* Le fil est une conversation : le message du lecteur est aligné à droite,
+   celui de son interlocuteur à gauche — la position dit qui parle avant que
+   l'étiquette ne soit lue. */
+.thread__item {
+  max-width: min(46rem, 88%);
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.5);
+}
+
+.thread__item--mine {
+  margin-left: auto;
+  border-color: var(--line-strong);
+  background: var(--violet-soft);
+}
+
+.thread__author {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.thread__author time {
+  margin-left: auto;
+  color: var(--text-faint);
+}
+
+.thread__body {
+  margin: 0;
+  /* Les messages d'erreur collés dans une demande gardent leurs retours à la
+     ligne : les reformater les rendrait illisibles. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.thread__reply {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.tally {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tally__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.tally__count {
+  font-family: var(--font-mono);
+  font-size: var(--step-0);
+}

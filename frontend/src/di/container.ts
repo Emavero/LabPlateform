@@ -10,6 +10,7 @@ import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
 import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
 import { HttpScoreboardRepository } from '@/data/repositories/HttpScoreboardRepository';
+import { HttpSupportRepository } from '@/data/repositories/HttpSupportRepository';
 import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
 import { HttpWriteupRepository } from '@/data/repositories/HttpWriteupRepository';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
@@ -66,6 +67,14 @@ import { GetMyJournalUseCase, GetPlatformJournalUseCase } from '@/domain/usecase
 import { GetAchievementsUseCase, GetActivityUseCase } from '@/domain/usecases/profile';
 import { GetLeaderboardUseCase, GetProgressUseCase } from '@/domain/usecases/scoreboard';
 import { DownloadVpnProfileUseCase, GetVpnAccessUseCase, RegenerateVpnProfileUseCase } from '@/domain/usecases/vpn';
+import {
+  GetSupportQueueUseCase,
+  GetTicketUseCase,
+  ListMyTicketsUseCase,
+  OpenTicketUseCase,
+  ReplyToTicketUseCase,
+  ResolveTicketUseCase,
+} from '@/domain/usecases/support';
 import { DeleteWriteupUseCase, ListWriteupsUseCase, SaveWriteupUseCase } from '@/domain/usecases/writeup';
 
 /** Tout ce que la présentation peut appeler : des cas d'usage, jamais des détails HTTP. */
@@ -133,6 +142,15 @@ export interface Dependencies {
     /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
     readonly analytics: GetAnalyticsUseCase;
   };
+  /** Assistance : les demandes du compte, et la file pour l'administration. */
+  readonly support: {
+    readonly listMine: ListMyTicketsUseCase;
+    readonly get: GetTicketUseCase;
+    readonly open: OpenTicketUseCase;
+    readonly reply: ReplyToTicketUseCase;
+    readonly resolve: ResolveTicketUseCase;
+    readonly queue: GetSupportQueueUseCase;
+  };
   readonly writeups: {
     readonly list: ListWriteupsUseCase;
     readonly save: SaveWriteupUseCase;
@@ -170,6 +188,7 @@ export function createContainer(): Dependencies {
   const billingRepository = new HttpBillingRepository(http);
   const journalRepository = new HttpJournalRepository(http);
   const analyticsRepository = new HttpAnalyticsRepository(http);
+  const supportRepository = new HttpSupportRepository(http);
 
   return {
     sessionMonitor,
@@ -230,6 +249,14 @@ export function createContainer(): Dependencies {
       uploadMedia: new UploadMediaUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
       analytics: new GetAnalyticsUseCase(analyticsRepository),
+    },
+    support: {
+      listMine: new ListMyTicketsUseCase(supportRepository),
+      get: new GetTicketUseCase(supportRepository),
+      open: new OpenTicketUseCase(supportRepository),
+      reply: new ReplyToTicketUseCase(supportRepository),
+      resolve: new ResolveTicketUseCase(supportRepository),
+      queue: new GetSupportQueueUseCase(supportRepository),
     },
     writeups: {
       list: new ListWriteupsUseCase(writeupRepository),

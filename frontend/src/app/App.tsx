@@ -4,6 +4,7 @@ import { AppShell } from '@/presentation/layouts/AppShell';
 import { AdminBoxesPage } from '@/presentation/pages/AdminBoxesPage';
 import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPage';
 import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
+import { AdminSupportPage } from '@/presentation/pages/AdminSupportPage';
 import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
 import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
 import { CourseDetailPage } from '@/presentation/pages/CourseDetailPage';
@@ -23,6 +24,7 @@ import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
 import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
 import { SubscriptionPage } from '@/presentation/pages/SubscriptionPage';
+import { SupportPage } from '@/presentation/pages/SupportPage';
 import { VmDetailPage } from '@/presentation/pages/VmDetailPage';
 import { VpnPage } from '@/presentation/pages/VpnPage';
 import { I18nProvider } from '@/presentation/i18n/I18nContext';
@@ -69,6 +71,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     <Route path="/vpn" element={<VpnPage />} />
                     {/* Modules livrés : la route explicite prime sur la page d'attente. */}
                     <Route path="/modules/events" element={<EventsPage />} />
+                    <Route path="/modules/support" element={<SupportPage />} />
                     <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
                   </Route>
 
@@ -77,6 +80,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     <Route path="/admin/cours" element={<AdminCoursesPage />} />
                     <Route path="/admin/machines" element={<AdminBoxesPage />} />
                     <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
+                    <Route path="/admin/support" element={<AdminSupportPage />} />
                   </Route>
 
                   <Route path="*" element={<NotFoundPage />} />

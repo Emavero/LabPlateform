@@ -32,7 +32,7 @@ describe('navigationFor', () => {
 
     expect(isGroup(admin)).toBe(true);
     if (isGroup(admin)) {
-      expect(admin.children.map((child) => child.to)).toEqual(['/admin', '/admin/cours', '/admin/machines']);
+      expect(admin.children.map((child) => child.to)).toEqual(['/admin', '/admin/cours', '/admin/machines', '/admin/support']);
     }
   });
 

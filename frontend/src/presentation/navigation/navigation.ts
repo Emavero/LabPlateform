@@ -92,6 +92,7 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
       { label: 'nav.dashboard', to: '/admin', icon: 'dashboard', end: true },
       { label: 'nav.adminCourses', to: '/admin/cours', icon: 'book' },
       { label: 'nav.adminMachines', to: '/admin/machines', icon: 'target' },
+      { label: 'nav.support', to: '/admin/support', icon: 'support' },
     ],
   },
 ];
@@ -120,11 +121,9 @@ export const MODULES: Readonly<Record<string, ModuleInfo>> = {
     description: 'module.exposure-analysis.description',
   },
   'attack-paths': { title: 'module.attack-paths.title', description: 'module.attack-paths.description' },
-  events: { title: 'module.events.title', description: 'module.events.description' },
   'scenario-designer': {
     title: 'module.scenario-designer.title',
     description: 'module.scenario-designer.description',
   },
   'report-center': { title: 'module.report-center.title', description: 'module.report-center.description' },
-  support: { title: 'module.support.title', description: 'module.support.description' },
 };
