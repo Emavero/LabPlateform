@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { myWriteup, type Writeup, type WriteupDraft } from '@/domain/models/Writeup';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface WriteupsState {
@@ -37,6 +38,7 @@ export function useWriteups(slug: string): WriteupsState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const save = useCallback(
     async (draft: WriteupDraft) => {

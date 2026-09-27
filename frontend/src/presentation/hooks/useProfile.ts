@@ -3,6 +3,7 @@ import type { LearningProgress } from '@/domain/models/Course';
 import type { Achievement, ActivityEntry } from '@/domain/models/Profile';
 import { EMPTY_PROGRESS, type PlayerProgress } from '@/domain/models/Progress';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface ProfileState {
@@ -49,6 +50,7 @@ export function useProfile(): ProfileState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { progress, achievements, activity, learning, loading, error, reload };
 }

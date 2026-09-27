@@ -51,6 +51,11 @@ export function ReportCenterPage() {
   };
 
   const studied = report ? hoursAndMinutes(report.totals.minutesStudied) : null;
+  // Les minutes sont complétées à deux chiffres : « 3 h 05 » et non « 3 h 5 ».
+  const studiedLabel =
+    report && studied && report.totals.minutesStudied > 0
+      ? t('report.duration', { hours: studied.hours, minutes: String(studied.minutes).padStart(2, '0') })
+      : undefined;
 
   return (
     <div className="page">
@@ -139,7 +144,7 @@ export function ReportCenterPage() {
                 </div>
 
                 <div className="page__grid">
-                  <Panel title={t('report.families')} description={t('report.duration', studied)}>
+                  <Panel title={t('report.families')} description={studiedLabel}>
                     {report.families.length === 0 ? (
                       <p className="empty">{t('report.none')}</p>
                     ) : (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { FlagSubmission } from '@/domain/repositories/BoxRepository';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface BoxDetailState {
@@ -48,6 +49,7 @@ export function useBoxDetail(slug: string): BoxDetailState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const submit = useCallback(
     async (kind: FlagKind, flag: string) => {

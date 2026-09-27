@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Course, CourseSection, QuizAnswers, QuizResult } from '@/domain/models/Course';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface CourseState {
@@ -41,6 +42,7 @@ export function useCourse(slug: string): CourseState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const toggle = useCallback(
     async (section: CourseSection) => {

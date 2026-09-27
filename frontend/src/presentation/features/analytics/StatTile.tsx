@@ -30,6 +30,10 @@ export function StatTile({ label, value, previous, unit, hint, upIsGood = true }
   const { t } = useI18n();
   const delta = previous === undefined || value === null ? null : deltaPercent(value, previous);
   const good = delta === null || delta === 0 ? null : (delta > 0) === upIsGood;
+  // Rien sur l'une et l'autre période : il n'y a pas de variation à annoncer.
+  // « 0 % » avec sa flèche se lirait comme une stabilité mesurée, alors qu'il
+  // ne s'est rien passé des deux côtés.
+  const comparable = previous !== undefined && !(value === 0 && previous === 0);
 
   return (
     <article className="stat-tile">
@@ -38,7 +42,7 @@ export function StatTile({ label, value, previous, unit, hint, upIsGood = true }
         {value === null ? '—' : compact(value)}
         {value !== null && unit && <span className="stat-tile__unit">{unit}</span>}
       </p>
-      {value !== null && previous !== undefined && (
+      {value !== null && comparable && (
         <p
           className={['stat-tile__delta', good === null ? '' : good ? 'stat-tile__delta--good' : 'stat-tile__delta--bad']
             .filter(Boolean)

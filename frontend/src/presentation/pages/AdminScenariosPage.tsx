@@ -214,7 +214,7 @@ export function AdminScenariosPage() {
                     <span className="admin-list__title">
                       {scenario.title}{' '}
                       {scenario.published ? (
-                        <span className="badge">{t('scenario.publishedLabel')}</span>
+                        <span className="badge">{t('scenario.publishedShort')}</span>
                       ) : (
                         <span className="badge badge--locked">{t('scenario.draftLabel')}</span>
                       )}

@@ -71,7 +71,10 @@ export function AdminSupportPage() {
             </div>
 
             <div className="page__grid">
-              <Panel title={t('support.queue')} description={t('support.messages', { count: queueSize(support.queue) })}>
+              <Panel
+                title={t('support.queue')}
+                description={t('support.ticketCount', { count: queueSize(support.queue) })}
+              >
                 <div className="tabs" role="tablist" aria-label={t('support.queue')}>
                   {(['waiting', 'answered', 'resolved'] as const).map((key) => (
                     <button

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { VpnAccess } from '@/domain/models/Vpn';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 /** État de l'accès VPN de l'utilisateur connecté. */
@@ -25,6 +26,7 @@ export function useVpnAccess() {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { access, setAccess, loading, loadError, reload };
 }

@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom';
-import { Alert, Button, Panel, Spinner } from '../design-system';
+import { Link, useParams } from 'react-router-dom';
+import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { ScenarioCard } from '../features/scenario/ScenarioCard';
 import { ScenarioSteps } from '../features/scenario/ScenarioSteps';
 import { useI18n } from '../i18n/I18nContext';
@@ -23,6 +23,11 @@ export function ScenariosPage() {
 
   return (
     <div className="page">
+      {opened && (
+        <Link className="back-link" to="/modules/scenario-designer">
+          <Icon name="chevronRight" size={14} /> {t('scenario.title')}
+        </Link>
+      )}
       <header className="page__header">
         <div>
           <p className="page__eyebrow">{t('nav.scenarios')}</p>

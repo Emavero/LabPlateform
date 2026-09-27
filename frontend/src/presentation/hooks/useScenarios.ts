@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { Scenario, ScenarioDraft } from '@/domain/models/Scenario';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface ScenariosState {
@@ -32,6 +33,7 @@ export function useScenarios(): ScenariosState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { scenarios, loading, error, reload };
 }
@@ -75,6 +77,7 @@ export function useAdminScenarios(): AdminScenariosState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const save = useCallback(
     async (draft: ScenarioDraft, slug?: string) => {

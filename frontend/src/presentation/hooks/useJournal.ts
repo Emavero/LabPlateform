@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { JournalLine } from '@/domain/models/Journal';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface JournalState {
@@ -37,6 +38,7 @@ export function useJournal(scope: 'mine' | 'platform' = 'mine', limit = 100): Jo
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { lines, loading, error, reload };
 }

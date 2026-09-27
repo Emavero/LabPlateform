@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { en } from './en';
 import { fr } from './fr';
-import { browserLanguage, readStoredLanguage, storeLanguage } from '@/data/storage/languagePreference';
-import { LOCALES, type Language } from '@/domain/models/Language';
+import { readStoredLanguage, storeLanguage } from '@/data/storage/languagePreference';
+import { DEFAULT_LANGUAGE, LOCALES, type Language } from '@/domain/models/Language';
 import { translateMessage } from './messages';
 import { interpolate, type Vars } from './types';
 import type { CatalogueKey as Key } from './fr';
@@ -30,11 +30,17 @@ interface I18nState {
 const I18nContext = createContext<I18nState | null>(null);
 
 /**
- * Langue de départ : celle qui a été choisie sur cet appareil, sinon celle du
- * navigateur si nous la servons, sinon le français — la langue de référence.
+ * Langue de départ : celle qui a été choisie sur cet appareil, sinon le
+ * français.
+ * <p>
+ * La langue du navigateur n'est volontairement pas consultée : le français est
+ * la langue par défaut de la plateforme, et beaucoup de ses lecteurs
+ * francophones utilisent un navigateur configuré en anglais — les suivre les
+ * enverrait dans la mauvaise langue. Passer à l'anglais reste à un clic, et ce
+ * choix-là est retenu.
  */
 function initialLanguage(): Language {
-  return readStoredLanguage() ?? browserLanguage() ?? 'fr';
+  return readStoredLanguage() ?? DEFAULT_LANGUAGE;
 }
 
 /**

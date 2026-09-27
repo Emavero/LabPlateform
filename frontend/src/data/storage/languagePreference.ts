@@ -30,9 +30,3 @@ export function storeLanguage(language: Language): void {
     // Stockage refusé : la langue vaut pour cette session, ce qui suffit.
   }
 }
-
-/** Langue du navigateur, si nous la servons. */
-export function browserLanguage(): Language | null {
-  const preferred = typeof navigator === 'undefined' ? '' : navigator.language.slice(0, 2).toLowerCase();
-  return isLanguage(preferred) ? preferred : null;
-}

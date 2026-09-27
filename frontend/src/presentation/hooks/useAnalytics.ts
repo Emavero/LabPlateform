@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Analytics } from '@/domain/models/Analytics';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface AnalyticsState {
@@ -35,6 +36,7 @@ export function useAnalytics(initialWindow = 30): AnalyticsState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { analytics, windowDays, loading, error, setWindow: setWindowDays, reload };
 }

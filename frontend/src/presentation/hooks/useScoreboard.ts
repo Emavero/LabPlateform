@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { EMPTY_PROGRESS, type LeaderboardEntry, type PlayerProgress } from '@/domain/models/Progress';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface ScoreboardState {
@@ -39,6 +40,7 @@ export function useScoreboard(): ScoreboardState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { progress, entries, loading, error, reload };
 }

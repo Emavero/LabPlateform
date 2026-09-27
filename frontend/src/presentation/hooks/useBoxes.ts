@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { matchesFilter, type Box, type BoxFilter } from '@/domain/models/Box';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface BoxesState {
@@ -36,6 +37,7 @@ export function useBoxes(): BoxesState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const visible = useMemo(() => boxes.filter((box) => matchesFilter(box, filter)), [boxes, filter]);
 

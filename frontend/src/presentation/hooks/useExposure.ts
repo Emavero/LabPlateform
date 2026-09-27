@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { LabExposure } from '@/domain/models/Exposure';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface ExposureState {
@@ -37,6 +38,7 @@ export function useExposure(): ExposureState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   return { exposure, loading, error, reload };
 }

@@ -8,6 +8,15 @@ export const LANGUAGES = ['fr', 'en'] as const;
 
 export type Language = (typeof LANGUAGES)[number];
 
+/**
+ * Langue servie tant que rien n'a été choisi sur cet appareil.
+ * <p>
+ * Déclarée ici, et non dans chaque module qui en a besoin : l'interface et
+ * l'en-tête `Accept-Language` doivent annoncer la même, sans quoi une page
+ * française afficherait des libellés venus du serveur en anglais.
+ */
+export const DEFAULT_LANGUAGE: Language = 'fr';
+
 export const LANGUAGE_NAMES: Record<Language, string> = {
   fr: 'Français',
   en: 'English',

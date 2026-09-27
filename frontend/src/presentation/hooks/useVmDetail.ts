@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { availableAction, type VirtualMachine, type VmAction } from '@/domain/models/VirtualMachine';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export function useVmDetail(id: number) {
@@ -28,6 +29,7 @@ export function useVmDetail(id: number) {
   useEffect(() => {
     void load();
   }, [load]);
+  useLanguageRefresh(load);
 
   const toggle = useCallback(async () => {
     if (!vm) return;

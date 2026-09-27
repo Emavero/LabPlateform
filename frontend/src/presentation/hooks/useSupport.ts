@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { SupportQueue, Ticket, TicketDraft, TicketSummary } from '@/domain/models/Support';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface MyTicketsState {
@@ -48,6 +49,7 @@ export function useMyTickets(): MyTicketsState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const select = useCallback(
     async (id: number | null) => {
@@ -158,6 +160,7 @@ export function useSupportQueue(): SupportQueueState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const select = useCallback(
     async (id: number | null) => {

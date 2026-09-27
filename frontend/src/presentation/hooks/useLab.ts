@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { availableAction, type VirtualMachine, type VmAction } from '@/domain/models/VirtualMachine';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface LabState {
@@ -37,6 +38,7 @@ export function useLab(): LabState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const toggle = useCallback(
     async (vm: VirtualMachine) => {

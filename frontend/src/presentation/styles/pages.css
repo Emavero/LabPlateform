@@ -3014,3 +3014,9 @@ button.back-link {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* Le bouton de retrait d'une étape suit son texte : dans une grille, il
+   s'étirerait sur toute la largeur du groupe. */
+.step-editor > button {
+  justify-self: start;
+}

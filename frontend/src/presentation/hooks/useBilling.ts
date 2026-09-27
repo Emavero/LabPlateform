@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Billing, BillingPeriod, PaymentMethod } from '@/domain/models/Billing';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface BillingState {
@@ -44,6 +45,7 @@ export function useBilling(): BillingState {
   useEffect(() => {
     void reload();
   }, [reload]);
+  useLanguageRefresh(reload);
 
   const subscribe = useCallback(
     async (method: PaymentMethod, period: BillingPeriod) => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import type { ActivityReport } from '@/domain/models/Report';
+import { useLanguageRefresh } from './useLanguageRefresh';
 import { useDependencies } from '../state/DependenciesContext';
 
 export interface ReportState {
@@ -44,6 +45,8 @@ export function useReport(initialDays = 30): ReportState {
   useEffect(() => {
     void load(days);
   }, [load, days]);
+
+  useLanguageRefresh(useCallback(() => load(days), [load, days]));
 
   return { report, days, loading, error, setDays, reload: () => load(days) };
 }

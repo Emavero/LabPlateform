@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import { AppError, type AppErrorKind } from '@/domain/errors/AppError';
 import { readStoredLanguage } from '@/data/storage/languagePreference';
+import { DEFAULT_LANGUAGE } from '@/domain/models/Language';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
 
 interface ApiErrorBody {
@@ -37,11 +38,14 @@ export function createHttpClient(): { http: AxiosInstance; sessionMonitor: Sessi
   // La langue voyage à chaque requête plutôt qu'à la création du client : elle
   // peut changer en cours de session, et une instance figée renverrait encore
   // des messages dans l'ancienne.
+  //
+  // Elle est toujours envoyée, même quand rien n'a été choisi : sans en-tête de
+  // notre part, le navigateur envoie la sienne — souvent l'anglais — et le
+  // serveur répondrait alors dans une autre langue que celle affichée. Les
+  // libellés venus du serveur se retrouveraient en anglais au milieu d'une page
+  // française.
   http.interceptors.request.use((config) => {
-    const language = readStoredLanguage();
-    if (language) {
-      config.headers.set('Accept-Language', language);
-    }
+    config.headers.set('Accept-Language', readStoredLanguage() ?? DEFAULT_LANGUAGE);
     return config;
   });
 
