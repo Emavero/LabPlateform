@@ -5,12 +5,14 @@ import { AdminBoxesPage } from '@/presentation/pages/AdminBoxesPage';
 import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPage';
 import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
 import { AdminSupportPage } from '@/presentation/pages/AdminSupportPage';
+import { AttackPathsPage } from '@/presentation/pages/AttackPathsPage';
 import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
 import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
 import { CourseDetailPage } from '@/presentation/pages/CourseDetailPage';
 import { CoursesPage } from '@/presentation/pages/CoursesPage';
 import { DashboardPage } from '@/presentation/pages/DashboardPage';
 import { EventsPage } from '@/presentation/pages/EventsPage';
+import { ExposurePage } from '@/presentation/pages/ExposurePage';
 import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
 import { LabsPage } from '@/presentation/pages/LabsPage';
 import { LoginPage } from '@/presentation/pages/LoginPage';
@@ -72,6 +74,8 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     {/* Modules livrés : la route explicite prime sur la page d'attente. */}
                     <Route path="/modules/events" element={<EventsPage />} />
                     <Route path="/modules/support" element={<SupportPage />} />
+                    <Route path="/modules/exposure-analysis" element={<ExposurePage />} />
+                    <Route path="/modules/attack-paths" element={<AttackPathsPage />} />
                     <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
                   </Route>
 

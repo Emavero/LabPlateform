@@ -4,6 +4,7 @@ import { HttpAdminRepository } from '@/data/repositories/HttpAdminRepository';
 import { HttpAnalyticsRepository } from '@/data/repositories/HttpAnalyticsRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
 import { HttpBillingRepository } from '@/data/repositories/HttpBillingRepository';
+import { HttpExposureRepository } from '@/data/repositories/HttpExposureRepository';
 import { HttpJournalRepository } from '@/data/repositories/HttpJournalRepository';
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
@@ -38,6 +39,7 @@ import {
   StopVmUseCase,
 } from '@/domain/usecases/lab';
 import { GetAnalyticsUseCase } from '@/domain/usecases/analytics';
+import { GetLabExposureUseCase } from '@/domain/usecases/exposure';
 import {
   DeleteBoxUseCase,
   DeleteCourseUseCase,
@@ -142,6 +144,10 @@ export interface Dependencies {
     /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
     readonly analytics: GetAnalyticsUseCase;
   };
+  /** Surface d'attaque du lab : exposition des cibles et chemins de progression. */
+  readonly exposure: {
+    readonly get: GetLabExposureUseCase;
+  };
   /** Assistance : les demandes du compte, et la file pour l'administration. */
   readonly support: {
     readonly listMine: ListMyTicketsUseCase;
@@ -189,6 +195,7 @@ export function createContainer(): Dependencies {
   const journalRepository = new HttpJournalRepository(http);
   const analyticsRepository = new HttpAnalyticsRepository(http);
   const supportRepository = new HttpSupportRepository(http);
+  const exposureRepository = new HttpExposureRepository(http);
 
   return {
     sessionMonitor,
@@ -249,6 +256,9 @@ export function createContainer(): Dependencies {
       uploadMedia: new UploadMediaUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
       analytics: new GetAnalyticsUseCase(analyticsRepository),
+    },
+    exposure: {
+      get: new GetLabExposureUseCase(exposureRepository),
     },
     support: {
       listMine: new ListMyTicketsUseCase(supportRepository),

@@ -1,6 +1,7 @@
 package com.labplatform.adapter.out.persistence.repository;
 
 import com.labplatform.adapter.out.persistence.entity.BoxOwnJpaEntity;
+import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.domain.box.FlagKind;
 import com.labplatform.domain.scoring.PlayerScore;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +37,13 @@ public interface SpringDataBoxOwnRepository extends JpaRepository<BoxOwnJpaEntit
             order by sum(o.points) desc, max(o.ownedAt) asc
             """)
     List<PlayerScore> topScores(Pageable pageable);
+
+    /** Une ligne par couple (machine, flag) : le décompte des validations. */
+    @Query("""
+            select new com.labplatform.application.port.out.OwnRepositoryPort$OwnTally(
+                       o.boxId, o.kind, count(o))
+            from BoxOwnJpaEntity o
+            group by o.boxId, o.kind
+            """)
+    List<OwnRepositoryPort.OwnTally> tallyByBox();
 }

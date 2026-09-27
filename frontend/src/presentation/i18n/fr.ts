@@ -622,12 +622,6 @@ export const fr = {
     'Analyse post-incident : collecte de traces, mémoire, disques, journaux, chronologie.',
   'track.defense.description':
     'Durcissement, détection et réponse : surveiller, contenir et fermer les portes.',
-  'module.exposure-analysis.title': 'Analyse d’exposition',
-  'module.exposure-analysis.description':
-    'Cartographie de la surface d’attaque exposée par vos environnements de lab.',
-  'module.attack-paths.title': 'Chemins d’attaque',
-  'module.attack-paths.description':
-    'Visualisation des chemins d’attaque possibles entre les machines du lab.',
   'module.scenario-designer.title': 'Concepteur de scénarios',
   'module.scenario-designer.description':
     'Conception de scénarios d’exercice rejouables sur l’infrastructure du lab.',
@@ -691,6 +685,48 @@ export const fr = {
   'support.noneWaiting': 'Rien à traiter : la file est vide.',
   'support.pick': 'Choisissez une demande pour lire son fil.',
   'support.asked': 'Demande de {handle}',
+
+  // ── Surface d'attaque ─────────────────────────────────────────────────────
+  'exposure.title': 'Analyse d’exposition',
+  'exposure.lead':
+    'Ce que le lab ouvre, cible par cible : le service exposé, ce qui rend chaque cible accessible, et par où commencer.',
+  'exposure.method': 'D’où viennent ces notes ?',
+  'exposure.methodText':
+    'Du catalogue et de ce qui s’y est joué : le système déclaré, la difficulté, les validations et les refus. Rien n’est découvert par balayage — c’est la surface que la plateforme ouvre elle-même, pas le résultat d’une reconnaissance.',
+  'exposure.loading': 'Analyse de la surface du lab',
+  'exposure.loadError': 'Impossible de charger l’analyse',
+  'exposure.targets': 'Cibles',
+  'exposure.paths': 'Chemins de progression',
+  'exposure.segments': 'Segments réseau',
+  'exposure.segmentTargets': '{count} cible(s)',
+  'exposure.level.CRITICAL': 'Critique',
+  'exposure.level.HIGH': 'Élevée',
+  'exposure.level.MODERATE': 'Modérée',
+  'exposure.level.LOW': 'Faible',
+  'exposure.score': 'Exposition {score} sur 100',
+  'exposure.service': 'Service exposé',
+  'exposure.port': 'port {port}',
+  'exposure.address': 'Adresse',
+  'exposure.locked': 'Détail réservé aux abonnés Pro',
+  'exposure.lockedCount': '{count} cible(s) dont le détail s’ouvre avec l’abonnement Pro',
+  'exposure.why': 'Pourquoi ce niveau',
+  'exposure.advice': 'À faire',
+  'exposure.firstDoor': 'Commencez par {name}',
+  'exposure.empty': 'Aucune cible publiée : rien à analyser pour l’instant.',
+  'paths.title': 'Chemins d’attaque',
+  'paths.lead':
+    'L’ordre dans lequel progresser vers chaque objectif : ce qu’une cible déjà possédée rend plus accessible.',
+  'paths.method': 'Comment ces chemins sont tracés',
+  'paths.methodText':
+    'Une cible atteinte depuis une autre coûte moins d’effort qu’attaquée de front : depuis le même segment réseau, où l’on est déjà entré, ou depuis un même système, où les techniques se réemploient. Ce sont des chemins modélisés à partir des adresses et des systèmes déclarés, non le résultat d’un scan du réseau.',
+  'paths.objective': 'Objectif',
+  'paths.effort': 'Effort {effort}',
+  'paths.hops': '{count} étape(s)',
+  'paths.link.ENTRY': 'Point d’entrée',
+  'paths.link.SAME_SEGMENT': 'Même segment',
+  'paths.link.SAME_SYSTEM': 'Même système',
+  'paths.empty': 'Aucun chemin à tracer : il faut au moins une cible dont le détail vous soit ouvert.',
+  'paths.loading': 'Calcul des chemins',
 
   // ── Réglages ──────────────────────────────────────────────────────────────
   'settings.language': 'Langue de l’interface',

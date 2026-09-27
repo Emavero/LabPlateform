@@ -46,6 +46,11 @@ public class OwnPersistenceAdapter implements OwnRepositoryPort {
     }
 
     @Override
+    public List<OwnTally> tallyByBox() {
+        return repository.tallyByBox();
+    }
+
+    @Override
     public List<PlayerScore> topScores(int limit) {
         return repository.topScores(PageRequest.of(0, limit));
     }

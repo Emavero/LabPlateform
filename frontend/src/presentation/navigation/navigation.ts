@@ -116,11 +116,6 @@ export const TRACK_PAGES: Readonly<Record<string, ModuleInfo>> = {
 };
 
 export const MODULES: Readonly<Record<string, ModuleInfo>> = {
-  'exposure-analysis': {
-    title: 'module.exposure-analysis.title',
-    description: 'module.exposure-analysis.description',
-  },
-  'attack-paths': { title: 'module.attack-paths.title', description: 'module.attack-paths.description' },
   'scenario-designer': {
     title: 'module.scenario-designer.title',
     description: 'module.scenario-designer.description',

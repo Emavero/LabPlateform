@@ -22,4 +22,16 @@ public interface OwnRepositoryPort {
 
     /** Totaux par joueur, les meilleurs d'abord. */
     List<PlayerScore> topScores(int limit);
+
+    /**
+     * Validations par machine et par flag, tous joueurs confondus.
+     * <p>
+     * Agrégé en base plutôt que compté en mémoire : l'analyse d'exposition a
+     * besoin du décompte de toutes les machines, et charger chaque validation
+     * pour en compter quelques totaux coûterait bien plus que la requête.
+     */
+    List<OwnTally> tallyByBox();
+
+    record OwnTally(Long boxId, FlagKind kind, long count) {
+    }
 }

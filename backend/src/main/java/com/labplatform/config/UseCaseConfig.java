@@ -34,6 +34,7 @@ import com.labplatform.application.service.BillingService;
 import com.labplatform.application.service.BillingSettings;
 import com.labplatform.application.service.AccountService;
 import com.labplatform.application.service.CourseAdminService;
+import com.labplatform.application.service.ExposureService;
 import com.labplatform.application.service.MediaService;
 import com.labplatform.application.service.WriteupService;
 import com.labplatform.application.service.BoxAdminService;
@@ -186,6 +187,12 @@ public class UseCaseConfig {
     @Bean
     public JournalService journalService(JournalPort journal, UserRepositoryPort users) {
         return new JournalService(journal, users);
+    }
+
+    @Bean
+    public ExposureService exposureService(BoxRepositoryPort boxes, OwnRepositoryPort owns, JournalPort journal,
+                                           GetEffectivePlanUseCase plans, Clock clock) {
+        return new ExposureService(boxes, owns, journal, plans, clock);
     }
 
     @Bean

@@ -7,6 +7,7 @@ import com.labplatform.domain.scoring.PlayerScore;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,6 +61,21 @@ public class InMemoryOwns implements OwnRepositoryPort {
                 .sorted(Comparator.comparingInt(PlayerScore::points).reversed()
                         .thenComparing(PlayerScore::lastOwnAt))
                 .limit(limit)
+                .toList();
+    }
+
+    /** Décompte par machine et par flag, comme l'agrégat de la base. */
+    @Override
+    public List<OwnTally> tallyByBox() {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (Own own : store) {
+            counts.merge(own.boxId() + ":" + own.kind(), 1L, Long::sum);
+        }
+        return counts.entrySet().stream()
+                .map(entry -> {
+                    String[] parts = entry.getKey().split(":");
+                    return new OwnTally(Long.valueOf(parts[0]), FlagKind.valueOf(parts[1]), entry.getValue());
+                })
                 .toList();
     }
 }
