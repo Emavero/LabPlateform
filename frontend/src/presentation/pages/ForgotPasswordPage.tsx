@@ -2,11 +2,13 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { PasswordResetRequestResult } from '@/domain/repositories/AuthRepository';
 import { Alert, Button, TextField } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { useAction } from '../hooks/useAction';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { useDependencies } from '../state/DependenciesContext';
 
 export function ForgotPasswordPage() {
+  const { t } = useI18n();
   const { auth } = useDependencies();
   const [email, setEmail] = useState('');
   const [result, setResult] = useState<PasswordResetRequestResult | null>(null);
@@ -21,9 +23,9 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Mot de passe oublié"
-      subtitle="Indiquez votre adresse : si un compte existe, un lien de réinitialisation vous sera envoyé."
-      footer={<Link to="/login">Retour à la connexion</Link>}
+      title={t('auth.forgotTitle')}
+      subtitle={t('auth.forgotLeadLong')}
+      footer={<Link to="/login">{t('auth.backToSignIn')}</Link>}
     >
       {result ? (
         <>
@@ -31,14 +33,14 @@ export function ForgotPasswordPage() {
           {result.demoToken && (
             <Alert
               tone="info"
-              title="Mode démonstration"
+              title={t('auth.demoMode')}
               action={
                 <Link className="btn btn--ghost btn--sm" to={`/reset-password?token=${encodeURIComponent(result.demoToken)}`}>
-                  Réinitialiser
+                  {t('auth.demoAction')}
                 </Link>
               }
             >
-              Aucun serveur d'e-mail n'est configuré : le lien est fourni directement.
+              {t('auth.demoText')}
             </Alert>
           )}
         </>
@@ -47,7 +49,7 @@ export function ForgotPasswordPage() {
           {error && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
           <form className="form" onSubmit={submit} noValidate>
             <TextField
-              label="Adresse e-mail"
+              label={t('auth.email')}
               type="email"
               icon="mail"
               autoComplete="email"
@@ -56,8 +58,8 @@ export function ForgotPasswordPage() {
               error={fieldErrors.email}
               autoFocus
             />
-            <Button type="submit" block loading={pending} loadingLabel="Envoi…">
-              Envoyer le lien
+            <Button type="submit" block loading={pending} loadingLabel={t('auth.forgotSending')}>
+              {t('auth.forgotAction')}
             </Button>
           </form>
         </>

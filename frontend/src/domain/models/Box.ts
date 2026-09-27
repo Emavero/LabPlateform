@@ -64,11 +64,6 @@ export function minutesLeft(box: Box, now: Date = new Date()): number {
 /** Ordre d'affichage des difficultés, du plus abordable au plus exigeant. */
 export const DIFFICULTY_ORDER: readonly Difficulty[] = ['VERY_EASY', 'EASY', 'MEDIUM', 'HARD', 'INSANE'];
 
-export const FLAG_LABELS: Record<FlagKind, string> = {
-  USER: 'Flag utilisateur',
-  ROOT: 'Flag root',
-};
-
 /** Position de la difficulté sur l'échelle, de 1 à 5 : sert à la jauge. */
 export function difficultyLevel(difficulty: Difficulty): number {
   return DIFFICULTY_ORDER.indexOf(difficulty) + 1;
@@ -94,12 +89,6 @@ export function ratingGap(box: Box): number {
 }
 
 export type BoxFilter = 'ALL' | 'TODO' | 'PWNED';
-
-export const BOX_FILTER_LABELS: Record<BoxFilter, string> = {
-  ALL: 'Toutes',
-  TODO: 'À faire',
-  PWNED: 'Possédées',
-};
 
 export function matchesFilter(box: Box, filter: BoxFilter): boolean {
   if (filter === 'PWNED') return box.pwned;

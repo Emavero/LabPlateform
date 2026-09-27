@@ -1,5 +1,6 @@
 import type { Recommendation, RecommendationSeverity } from '@/domain/models/Analytics';
 import { Icon, type IconName } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 /**
  * L'icône et le mot portent la gravité autant que la couleur : un niveau qui ne
@@ -18,8 +19,9 @@ const SEVERITY_ICONS: Record<RecommendationSeverity, IconName> = {
  * conseille sans montrer sa preuve n'est pas vérifiable, donc pas crédible.
  */
 export function RecommendationList({ recommendations }: { recommendations: readonly Recommendation[] }) {
+  const { t } = useI18n();
   if (recommendations.length === 0) {
-    return <p className="empty">Rien à signaler sur la période.</p>;
+    return <p className="empty">{t('admin.nothingToReport')}</p>;
   }
 
   return (

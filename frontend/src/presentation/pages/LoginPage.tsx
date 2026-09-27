@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Button, TextField } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { useAction } from '../hooks/useAction';
 import { AuthLayout } from '../layouts/AuthLayout';
 import type { RedirectState } from '../routing/guards';
 import { useAuth } from '../state/AuthContext';
 
 export function LoginPage() {
+  const { t } = useI18n();
   const { login, sessionExpired } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,19 +24,19 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Connexion"
-      subtitle="Accédez à vos environnements de lab."
+      title={t('auth.signIn')}
+      subtitle={t('auth.signInLead')}
       footer={
         <>
-          Pas encore de compte ? <Link to="/register">Créer un compte</Link>
+          {t('auth.noAccount')} <Link to="/register">{t('auth.createAccount')}</Link>
         </>
       }
     >
-      {sessionExpired && !error && <Alert tone="info">Votre session a expiré. Reconnectez-vous.</Alert>}
+      {sessionExpired && !error && <Alert tone="info">{t('auth.expired')}</Alert>}
       {error && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
       <form className="form" onSubmit={submit} noValidate>
         <TextField
-          label="Adresse e-mail"
+          label={t('auth.email')}
           type="email"
           icon="mail"
           autoComplete="email"
@@ -44,7 +46,7 @@ export function LoginPage() {
           autoFocus
         />
         <TextField
-          label="Mot de passe"
+          label={t('auth.password')}
           type="password"
           icon="lock"
           autoComplete="current-password"
@@ -55,11 +57,11 @@ export function LoginPage() {
         />
         <div className="form__row-end">
           <Link className="text-link" to="/forgot-password">
-            Mot de passe oublié ?
+            {t('auth.forgot')}
           </Link>
         </div>
-        <Button type="submit" block loading={pending} loadingLabel="Connexion…">
-          Se connecter
+        <Button type="submit" block loading={pending} loadingLabel={t('auth.signingIn')}>
+          {t('auth.signInAction')}
         </Button>
       </form>
     </AuthLayout>

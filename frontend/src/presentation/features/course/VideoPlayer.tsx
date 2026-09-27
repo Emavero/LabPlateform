@@ -1,11 +1,13 @@
 import { toVideoEmbed } from '@/domain/models/Video';
 import { Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 /**
  * Vidéo d'une section. Seules les plateformes connues sont intégrées à la
  * page ; toute autre adresse est proposée en lien, jamais chargée ici.
  */
 export function VideoPlayer({ url, title }: { url: string; title: string }) {
+  const { t } = useI18n();
   const embed = toVideoEmbed(url);
 
   if (embed.kind === 'iframe') {
@@ -37,7 +39,7 @@ export function VideoPlayer({ url, title }: { url: string; title: string }) {
     <p className="video__link">
       <Icon name="play" size={14} />
       <a href={embed.src} target="_blank" rel="noreferrer noopener">
-        Ouvrir la vidéo dans un nouvel onglet
+        {t('video.openInNewTab')}
       </a>
     </p>
   );

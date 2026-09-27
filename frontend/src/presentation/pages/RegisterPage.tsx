@@ -2,11 +2,13 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PASSWORD_MIN_LENGTH } from '@/domain/validation/credentials';
 import { Alert, Button, TextField } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { useAction } from '../hooks/useAction';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { useAuth } from '../state/AuthContext';
 
 export function RegisterPage() {
+  const { t } = useI18n();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
@@ -25,18 +27,18 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Créer un compte"
-      subtitle="Deux machines de lab, Windows et Linux, vous attendent."
+      title={t('auth.createAccount')}
+      subtitle={t('auth.registerLead')}
       footer={
         <>
-          Déjà inscrit ? <Link to="/login">Se connecter</Link>
+          {t('auth.alreadyRegistered')} <Link to="/login">{t('auth.signInAction')}</Link>
         </>
       }
     >
       {error && !emailTaken && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
       <form className="form" onSubmit={submit} noValidate>
         <TextField
-          label="Adresse e-mail"
+          label={t('auth.email')}
           type="email"
           icon="mail"
           autoComplete="email"
@@ -46,18 +48,18 @@ export function RegisterPage() {
           autoFocus
         />
         <TextField
-          label="Mot de passe"
+          label={t('auth.password')}
           type="password"
           icon="lock"
           autoComplete="new-password"
           value={form.password}
           onChange={update('password')}
           error={fieldErrors.password}
-          hint={`Au moins ${PASSWORD_MIN_LENGTH} caractères.`}
+          hint={t('auth.passwordHint', { count: PASSWORD_MIN_LENGTH })}
           revealable
         />
         <TextField
-          label="Confirmation du mot de passe"
+          label={t('auth.confirmPassword')}
           type="password"
           icon="lock"
           autoComplete="new-password"
@@ -66,8 +68,8 @@ export function RegisterPage() {
           error={fieldErrors.confirmPassword}
           revealable
         />
-        <Button type="submit" block loading={pending} loadingLabel="Création…">
-          Créer mon compte
+        <Button type="submit" block loading={pending} loadingLabel={t('auth.registering')}>
+          {t('auth.registerAction')}
         </Button>
       </form>
     </AuthLayout>

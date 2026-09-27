@@ -1,4 +1,5 @@
 import type { UsageSegment } from '@/domain/models/Analytics';
+import { useI18n } from '../../i18n/I18nContext';
 
 /**
  * Répartition des comptes par profil d'usage.
@@ -12,9 +13,10 @@ import type { UsageSegment } from '@/domain/models/Analytics';
  * comparent mal en angles, et les intitulés n'y tiennent pas.
  */
 export function SegmentBars({ segments }: { segments: readonly UsageSegment[] }) {
+  const { t } = useI18n();
   const total = segments.reduce((sum, segment) => sum + segment.accounts, 0);
   if (total === 0) {
-    return <p className="empty">Aucun compte à classer pour l’instant.</p>;
+    return <p className="empty">{t('admin.segmentsEmpty')}</p>;
   }
 
   return (
@@ -26,7 +28,7 @@ export function SegmentBars({ segments }: { segments: readonly UsageSegment[] })
             <div className="segments__head">
               <span className="segments__name">{segment.profileName}</span>
               <span className="segments__count">
-                {segment.accounts} compte{segment.accounts > 1 ? 's' : ''} · {segment.share} %
+                {t('admin.segmentAccounts', { count: segment.accounts, share: segment.share })}
               </span>
             </div>
             <span className="segments__track">

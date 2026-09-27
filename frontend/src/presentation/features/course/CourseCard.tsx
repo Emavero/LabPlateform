@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { courseRatio, formatDuration, type CourseSummary } from '@/domain/models/Course';
 import { Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 /** Vignette d'un cours : niveau, durée, et où l'on en est. */
 export function CourseCard({ course }: { course: CourseSummary }) {
+  const { t } = useI18n();
   const percent = Math.round(courseRatio(course) * 100);
   const titleId = `course-${course.slug}-title`;
 
@@ -15,7 +17,11 @@ export function CourseCard({ course }: { course: CourseSummary }) {
       <header className="course-card__header">
         <div>
           <p className="course-card__level">
-            {course.levelName} · {formatDuration(course.minutes)} · {course.sections} sections
+            {t('course.meta', {
+              level: course.levelName,
+              duration: formatDuration(course.minutes),
+              sections: course.sections,
+            })}
           </p>
           <h3 className="course-card__title" id={titleId}>
             <Link to={`/cours/${course.trackSlug}/${course.slug}`}>{course.title}</Link>
@@ -23,17 +29,17 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         </div>
         {course.completed ? (
           <span className="badge badge--pwned">
-            <Icon name="check" size={13} /> Terminé
+            <Icon name="check" size={13} /> {t('course.finished')}
           </span>
         ) : course.started ? (
-          <span className="badge">En cours</span>
+          <span className="badge">{t('course.inProgress')}</span>
         ) : null}
       </header>
 
       <p className="course-card__summary">{course.summary}</p>
 
       <div className="course-card__progress">
-        <div className="progress__bar" role="img" aria-label={`${percent} % du cours terminé`}>
+        <div className="progress__bar" role="img" aria-label={t('course.percentDone', { percent })}>
           <span className="progress__bar-fill" style={{ width: `${percent}%` }} />
         </div>
         <span className="course-card__count">
@@ -43,7 +49,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
 
       <footer className="course-card__footer">
         <Link className="text-link" to={`/cours/${course.trackSlug}/${course.slug}`}>
-          {course.started ? 'Reprendre' : 'Commencer'} <Icon name="chevronRight" size={14} />
+          {t(course.started ? 'course.resume' : 'course.start')} <Icon name="chevronRight" size={14} />
         </Link>
       </footer>
     </article>

@@ -2,6 +2,7 @@ import { useId, useState, type ChangeEvent } from 'react';
 import { MEDIA_TYPES } from '@/domain/models/Admin';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Icon, Spinner } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 import { useDependencies } from '../../state/DependenciesContext';
 
 interface VideoUploadProps {
@@ -14,6 +15,7 @@ interface VideoUploadProps {
  * d'une adresse externe : l'un remplit l'autre.
  */
 export function VideoUpload({ onUploaded }: VideoUploadProps) {
+  const { t, tm } = useI18n();
   const { admin } = useDependencies();
   const inputId = useId();
   const [uploading, setUploading] = useState(false);
@@ -52,14 +54,14 @@ export function VideoUpload({ onUploaded }: VideoUploadProps) {
       />
       <label className="btn btn--ghost btn--sm upload__button" htmlFor={inputId}>
         {uploading ? <Spinner /> : <Icon name="download" size={16} />}
-        <span>{uploading ? 'Téléversement…' : 'Téléverser une vidéo'}</span>
+        <span>{t(uploading ? 'upload.uploading' : 'upload.action')}</span>
       </label>
       {uploaded && (
         <span className="upload__done">
           <Icon name="check" size={14} /> {uploaded}
         </span>
       )}
-      {error && <span className="field__error">{error.fieldErrors.file ?? error.message}</span>}
+      {error && <span className="field__error">{tm(error.fieldErrors.file ?? error.message)}</span>}
     </div>
   );
 }

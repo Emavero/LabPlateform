@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
 import { remainingFlags, type FlagKind } from '@/domain/models/Box';
-import { OS_FAMILY_LABELS } from '@/domain/models/VirtualMachine';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { DifficultyMeter } from '../features/box/DifficultyMeter';
 import { FlagForm, FlagSuccess } from '../features/box/FlagForm';
@@ -9,11 +8,13 @@ import { PaywallPanel } from '../features/billing/PaywallPanel';
 import { InstancePanel } from '../features/box/InstancePanel';
 import { RatingPicker } from '../features/box/RatingPicker';
 import { Writeups } from '../features/box/Writeups';
+import { useI18n } from '../i18n/I18nContext';
 import { useBoxDetail } from '../hooks/useBoxDetail';
 import { NotFoundPage } from './NotFoundPage';
 
 /** Fiche d'une machine : contexte, adresse à attaquer, soumission des flags. */
 export function BoxDetailPage() {
+  const { t, formatDate } = useI18n();
   const { slug = '' } = useParams();
   const detail = useBoxDetail(slug);
 
@@ -21,7 +22,7 @@ export function BoxDetailPage() {
     return (
       <div className="page">
         <div className="empty">
-          <Spinner size={22} label="Chargement de la machine" />
+          <Spinner size={22} label={t('boxes.loading')} />
         </div>
       </div>
     );
@@ -32,10 +33,10 @@ export function BoxDetailPage() {
       <div className="page">
         <Alert
           tone="error"
-          title="Impossible de charger cette machine"
+          title={t('boxes.loadError')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void detail.reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
@@ -51,36 +52,32 @@ export function BoxDetailPage() {
   return (
     <div className="page">
       <Link className="back-link" to="/machines">
-        <Icon name="chevronRight" size={14} /> Catalogue
+        <Icon name="chevronRight" size={14} /> {t('boxes.catalogue')}
       </Link>
 
       <header className="page__header">
         <div>
           <p className="page__eyebrow">
-            {OS_FAMILY_LABELS[box.os]} · {box.osName} · par {box.maker}
+            {t(`os.${box.os}`)} · {box.osName} · {t('boxes.by', { maker: box.maker })}
           </p>
           <h1 className="page__title">{box.name}</h1>
-          <p className="page__lead">
-            {box.locked
-              ? 'Le détail de cette machine est réservé aux abonnés Pro.'
-              : box.synopsis}
-          </p>
+          <p className="page__lead">{box.locked ? t('boxes.lockedLead') : box.synopsis}</p>
         </div>
         <div className="box-detail__badges">
           <DifficultyMeter difficulty={box.difficulty} label={box.difficultyName} />
           {box.locked && (
             <span className="badge badge--locked">
-              <Icon name="lock" size={13} /> Pro
+              <Icon name="lock" size={13} /> {t('boxes.lockedBadge')}
             </span>
           )}
           {box.pwned && (
             <span className="badge badge--pwned">
-              <Icon name="check" size={13} /> Possédée
+              <Icon name="check" size={13} /> {t('boxes.owned')}
             </span>
           )}
           {box.firstBlood && (
             <span className="badge badge--blood">
-              <Icon name="crown" size={13} /> First blood
+              <Icon name="crown" size={13} /> {t('boxes.firstBlood')}
             </span>
           )}
         </div>
@@ -89,49 +86,49 @@ export function BoxDetailPage() {
       {box.locked ? (
         <div className="detail-grid">
           <PaywallPanel box={box} />
-          <Panel title="Ce que vous verrez" description="Une fois l'abonnement actif, cette fiche s'ouvre entièrement.">
+          <Panel title={t('boxes.preview')} description={t('boxes.previewHint')}>
             <dl className="box-detail__facts">
               <div>
-                <dt>Difficulté</dt>
+                <dt>{t('boxes.difficulty')}</dt>
                 <dd>{box.difficultyName}</dd>
               </div>
               <div>
-                <dt>Points</dt>
+                <dt>{t('boxes.points')}</dt>
                 <dd>{box.totalPoints}</dd>
               </div>
               <div>
-                <dt>Publiée le</dt>
-                <dd>{box.releasedAt.toLocaleDateString('fr-FR')}</dd>
+                <dt>{t('boxes.releasedOn')}</dt>
+                <dd>{formatDate(box.releasedAt)}</dd>
               </div>
               <div>
-                <dt>Difficulté ressentie</dt>
-                <dd>{box.perceivedDifficultyName ?? 'Pas encore notée'}</dd>
+                <dt>{t('boxes.perceived')}</dt>
+                <dd>{box.perceivedDifficultyName ?? t('boxes.notRated')}</dd>
               </div>
             </dl>
           </Panel>
         </div>
       ) : (
       <div className="detail-grid">
-        <Panel title="Cible" description="Lancée à la demande, joignable une fois le VPN du lab monté.">
+        <Panel title={t('instance.title')} description={t('instance.hint')}>
           <InstancePanel box={box} pending={detail.instancePending} onToggle={() => void detail.toggleInstance()} />
           <dl className="box-detail__facts">
             <div>
-              <dt>Difficulté</dt>
+              <dt>{t('boxes.difficulty')}</dt>
               <dd>{box.difficultyName}</dd>
             </div>
             <div>
-              <dt>Points</dt>
+              <dt>{t('boxes.points')}</dt>
               <dd>
                 {box.pointsEarned} / {box.totalPoints}
               </dd>
             </div>
             <div>
-              <dt>Publiée le</dt>
-              <dd>{box.releasedAt.toLocaleDateString('fr-FR')}</dd>
+              <dt>{t('boxes.releasedOn')}</dt>
+              <dd>{formatDate(box.releasedAt)}</dd>
             </div>
             <div>
-              <dt>État</dt>
-              <dd>{box.retired ? 'Retirée' : 'Active'}</dd>
+              <dt>{t('boxes.state')}</dt>
+              <dd>{t(box.retired ? 'boxes.retired' : 'boxes.active')}</dd>
             </div>
           </dl>
           <div className="box-card__flags">
@@ -140,17 +137,13 @@ export function BoxDetailPage() {
           </div>
         </Panel>
 
-        <Panel title="Difficulté ressentie" description="Ce qu'en disent les joueurs qui l'ont faite.">
+        <Panel title={t('rating.title')} description={t('rating.hint')}>
           <RatingPicker box={box} pending={detail.rating} onRate={(difficulty) => void detail.rate(difficulty)} />
         </Panel>
 
         <Panel
-          title="Soumettre un flag"
-          description={
-            box.pwned
-              ? 'Les deux flags sont validés : cette machine ne rapporte plus de points.'
-              : 'Collez le flag trouvé sur la machine. Chaque flag ne compte qu’une fois.'
-          }
+          title={t('flag.submitTitle')}
+          description={t(box.pwned ? 'flag.submitHintDone' : 'flag.submitHint')}
         >
           {detail.lastSubmission && (
             <FlagSuccess
@@ -163,7 +156,7 @@ export function BoxDetailPage() {
           {detail.submitError && <Alert tone="error">{detail.submitError.message}</Alert>}
 
           {remainingFlags(box).length === 0 ? (
-            <p className="empty">Machine terminée. Choisissez votre prochaine cible dans le catalogue.</p>
+            <p className="empty">{t('flag.allDone')}</p>
           ) : (
             (['USER', 'ROOT'] as const).map((kind) => (
               <FlagForm

@@ -1,13 +1,6 @@
 import { DIFFICULTY_ORDER, type Box, type Difficulty, ratingGap } from '@/domain/models/Box';
 import { Icon } from '../../design-system';
-
-const LABELS: Record<Difficulty, string> = {
-  VERY_EASY: 'Très facile',
-  EASY: 'Facile',
-  MEDIUM: 'Moyenne',
-  HARD: 'Difficile',
-  INSANE: 'Insane',
-};
+import { useI18n } from '../../i18n/I18nContext';
 
 interface RatingPickerProps {
   box: Box;
@@ -21,28 +14,26 @@ interface RatingPickerProps {
  * du travail.
  */
 export function RatingPicker({ box, pending, onRate }: RatingPickerProps) {
+  const { t } = useI18n();
   const gap = ratingGap(box);
 
   return (
     <div className="rating">
       <p className="rating__summary">
         {box.ratingVotes === 0 ? (
-          <>Personne n'a encore noté cette machine.</>
+          <>{t('rating.none')}</>
         ) : (
           <>
-            {box.ratingVotes} vote{box.ratingVotes > 1 ? 's' : ''} · ressentie{' '}
-            <strong>{box.perceivedDifficultyName}</strong>
+            {t('rating.votes', { count: box.ratingVotes })} <strong>{box.perceivedDifficultyName}</strong>
             {gap !== 0 && (
-              <span className="rating__gap">
-                {gap > 0 ? ' plus dure qu’annoncé' : ' plus facile qu’annoncé'}
-              </span>
+              <span className="rating__gap">{t(gap > 0 ? 'rating.harder' : 'rating.easier')}</span>
             )}
           </>
         )}
       </p>
 
       {box.pwned ? (
-        <div className="rating__options" role="group" aria-label="Noter la difficulté">
+        <div className="rating__options" role="group" aria-label={t('rating.group')}>
           {DIFFICULTY_ORDER.map((difficulty) => (
             <button
               key={difficulty}
@@ -54,13 +45,13 @@ export function RatingPicker({ box, pending, onRate }: RatingPickerProps) {
               disabled={pending}
               onClick={() => onRate(difficulty)}
             >
-              {LABELS[difficulty]}
+              {t(`difficulty.${difficulty}`)}
             </button>
           ))}
         </div>
       ) : (
         <p className="rating__locked">
-          <Icon name="lock" size={14} /> Notez cette machine une fois ses deux flags validés.
+          <Icon name="lock" size={14} /> {t('rating.locked')}
         </p>
       )}
     </div>

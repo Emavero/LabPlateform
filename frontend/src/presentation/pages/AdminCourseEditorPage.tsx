@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   EMPTY_DRAFT,
+  COURSE_LEVELS,
   EMPTY_QUESTION,
   EMPTY_SECTION,
-  KIND_LABELS,
-  LEVEL_LABELS,
+  SECTION_KINDS,
+  TRACK_CODES,
   type CourseDraft,
   type QuestionDraft,
   type SectionDraft,
@@ -14,15 +15,12 @@ import type { Course, CourseLevel, SectionKind, TrackCode } from '@/domain/model
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Alert, Button, Icon, Panel, Spinner, TextField } from '../design-system';
 import { VideoUpload } from '../features/course/VideoUpload';
+import { useI18n } from '../i18n/I18nContext';
 import { useDependencies } from '../state/DependenciesContext';
-
-const TRACKS: readonly { code: TrackCode; label: string }[] = [
-  { code: 'FORENSICS', label: 'Forensique' },
-  { code: 'DEFENSE', label: 'Défense' },
-];
 
 /** Éditeur d'un cours : en-tête, puis les sections dans l'ordre de lecture. */
 export function AdminCourseEditorPage() {
+  const { t, tm } = useI18n();
   const { slug } = useParams();
   const editing = slug !== undefined && slug !== 'nouveau';
   const navigate = useNavigate();
@@ -97,7 +95,7 @@ export function AdminCourseEditorPage() {
     return (
       <div className="page">
         <div className="empty">
-          <Spinner size={22} label="Chargement du cours" />
+          <Spinner size={22} label={t('courses.loadingCourse')} />
         </div>
       </div>
     );
@@ -108,85 +106,84 @@ export function AdminCourseEditorPage() {
   return (
     <div className="page">
       <button type="button" className="back-link" onClick={() => navigate('/admin/cours')}>
-        <Icon name="chevronRight" size={14} /> Gérer les cours
+        <Icon name="chevronRight" size={14} /> {t('adminCourses.title')}
       </button>
 
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Administration</p>
-          <h1 className="page__title">{editing ? 'Modifier un cours' : 'Nouveau cours'}</h1>
-          <p className="page__lead">
-            {editing
-              ? "Le lien du cours ne change pas, même si vous renommez son titre."
-              : "Le lien du cours sera dérivé de son titre, une fois pour toutes."}
-          </p>
+          <p className="page__eyebrow">{t('admin.eyebrow')}</p>
+          <h1 className="page__title">{t(editing ? 'editor.editTitle' : 'editor.newTitle')}</h1>
+          <p className="page__lead">{t(editing ? 'editor.editHint' : 'editor.newHint')}</p>
         </div>
       </header>
 
       {error && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
       {saved && (
-        <Alert tone="success" title="Cours enregistré">
-          Il est visible par les apprenants sur <code>/cours/{draft.track === 'FORENSICS' ? 'forensique' : 'defense'}/{saved}</code>.
+        <Alert tone="success" title={t('editor.saved')}>
+          {t('editor.savedText')}{' '}
+          <code>
+            /cours/{draft.track === 'FORENSICS' ? 'forensique' : 'defense'}/{saved}
+          </code>
         </Alert>
       )}
 
       <form className="form" onSubmit={submit} noValidate>
-        <Panel title="Le cours">
+        <Panel title={t('editor.course')}>
           <TextField
-            label="Titre"
+            label={t('editor.title')}
             value={draft.title}
             onChange={(e) => patch({ title: e.target.value })}
             error={fieldErrors.title}
-            hint="Affiché dans la liste et en tête de la fiche."
+            hint={t('editor.titleHint')}
           />
           <div className="editor-row">
             <label className="field">
-              <span className="field__label">Filière</span>
+              <span className="field__label">{t('editor.track')}</span>
               <select
                 className="field__input"
                 value={draft.track}
                 onChange={(e) => patch({ track: e.target.value as TrackCode })}
               >
-                {TRACKS.map((track) => (
-                  <option key={track.code} value={track.code}>
-                    {track.label}
+                {TRACK_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {t(`track.${code}`)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span className="field__label">Niveau</span>
+              <span className="field__label">{t('editor.level')}</span>
               <select
                 className="field__input"
                 value={draft.level}
                 onChange={(e) => patch({ level: e.target.value as CourseLevel })}
               >
-                {Object.entries(LEVEL_LABELS).map(([code, label]) => (
+                {COURSE_LEVELS.map((code) => (
                   <option key={code} value={code}>
-                    {label}
+                    {t(`courses.level.${code}`)}
                   </option>
                 ))}
               </select>
             </label>
           </div>
           <label className="field">
-            <span className="field__label">Résumé</span>
+            <span className="field__label">{t('editor.summary')}</span>
             <textarea
               className="field__input editor-textarea"
               rows={3}
               value={draft.summary}
               onChange={(e) => patch({ summary: e.target.value })}
-              placeholder="Ce que l'apprenant saura faire à la fin."
+              placeholder={t('editor.summaryPlaceholder')}
             />
-            {fieldErrors.summary && <span className="field__error">{fieldErrors.summary}</span>}
+            {fieldErrors.summary && <span className="field__error">{tm(fieldErrors.summary)}</span>}
           </label>
         </Panel>
 
         {draft.sections.map((section, index) => (
           <Panel
             key={index}
-            eyebrow={`Section ${index + 1}`}
-            title={section.title || 'Sans titre'}
+            eyebrow={t('editor.section', { number: index + 1 })}
+            title={section.title || t('editor.untitled')}
             actions={
               <span className="editor-actions">
                 <Button variant="ghost" size="sm" onClick={() => moveSection(index, -1)} disabled={index === 0}>
@@ -206,34 +203,34 @@ export function AdminCourseEditorPage() {
                   onClick={() => removeSection(index)}
                   disabled={draft.sections.length === 1}
                 >
-                  Retirer
+                  {t('editor.remove')}
                 </Button>
               </span>
             }
           >
             {fieldErrors[`section-${index}`] && <Alert tone="error">{fieldErrors[`section-${index}`]}</Alert>}
             <TextField
-              label="Titre de la section"
+              label={t('editor.sectionTitle')}
               value={section.title}
               onChange={(e) => patchSection(index, { title: e.target.value })}
             />
             <div className="editor-row">
               <label className="field">
-                <span className="field__label">Type</span>
+                <span className="field__label">{t('editor.kind')}</span>
                 <select
                   className="field__input"
                   value={section.kind}
                   onChange={(e) => patchSection(index, { kind: e.target.value as SectionKind })}
                 >
-                  {Object.entries(KIND_LABELS).map(([code, label]) => (
+                  {SECTION_KINDS.map((code) => (
                     <option key={code} value={code}>
-                      {label}
+                      {t(`courses.kind.${code}`)}
                     </option>
                   ))}
                 </select>
               </label>
               <TextField
-                label="Durée (minutes)"
+                label={t('editor.minutes')}
                 type="number"
                 min={0}
                 max={600}
@@ -242,11 +239,11 @@ export function AdminCourseEditorPage() {
               />
             </div>
             <TextField
-              label="Vidéo (facultatif)"
+              label={t('editor.video')}
               value={section.videoUrl}
               onChange={(e) => patchSection(index, { videoUrl: e.target.value })}
-              placeholder="https://www.youtube.com/watch?v=… ou une vidéo téléversée"
-              hint="YouTube et Vimeo s'affichent dans la page ; une vidéo déposée ici est hébergée par la plateforme."
+              placeholder={t('editor.videoPlaceholder')}
+              hint={t('editor.videoHint')}
               autoComplete="off"
               spellCheck={false}
             />
@@ -256,13 +253,13 @@ export function AdminCourseEditorPage() {
               onChange={(questions) => patchQuestions(index, questions)}
             />
             <label className="field">
-              <span className="field__label">Contenu</span>
+              <span className="field__label">{t('editor.content')}</span>
               <textarea
                 className="field__input editor-textarea editor-textarea--tall"
                 rows={10}
                 value={section.content}
                 onChange={(e) => patchSection(index, { content: e.target.value })}
-                placeholder="Le texte de la section. Les retours à la ligne et l'indentation sont conservés."
+                placeholder={t('editor.contentPlaceholder')}
               />
             </label>
           </Panel>
@@ -270,10 +267,10 @@ export function AdminCourseEditorPage() {
 
         <div className="editor-footer">
           <Button variant="ghost" icon="book" onClick={addSection}>
-            Ajouter une section
+            {t('editor.addSection')}
           </Button>
-          <Button type="submit" icon="check" loading={saving} loadingLabel="Enregistrement…">
-            {editing ? 'Enregistrer les modifications' : 'Publier le cours'}
+          <Button type="submit" icon="check" loading={saving} loadingLabel={t('writeup.saving')}>
+            {t(editing ? 'editor.saveChanges' : 'editor.publishCourse')}
           </Button>
         </div>
       </form>
@@ -292,18 +289,19 @@ function QuestionsEditor({
   questions: readonly QuestionDraft[];
   onChange: (questions: QuestionDraft[]) => void;
 }) {
+  const { t } = useI18n();
   const patchQuestion = (index: number, changes: Partial<QuestionDraft>) =>
     onChange(questions.map((question, i) => (i === index ? { ...question, ...changes } : question)));
 
   return (
     <div className="quiz-editor">
-      <p className="field__label">Quiz ({questions.length} question{questions.length > 1 ? 's' : ''})</p>
+      <p className="field__label">{t('editor.quiz', { count: questions.length })}</p>
 
       {questions.map((question, index) => (
         <div key={index} className="quiz-editor__question">
           <div className="quiz-editor__row">
             <TextField
-              label={`Question ${index + 1}`}
+              label={t('editor.question', { number: index + 1 })}
               value={question.statement}
               onChange={(e) => patchQuestion(index, { statement: e.target.value })}
             />
@@ -312,7 +310,7 @@ function QuestionsEditor({
               size="sm"
               onClick={() => onChange(questions.filter((_, i) => i !== index))}
             >
-              Retirer
+              {t('editor.removeQuestion')}
             </Button>
           </div>
 
@@ -321,7 +319,7 @@ function QuestionsEditor({
               <input
                 className="field__input"
                 value={choice.label}
-                placeholder={`Proposition ${choiceIndex + 1}`}
+                placeholder={t('editor.choice', { number: choiceIndex + 1 })}
                 onChange={(e) =>
                   patchQuestion(index, {
                     choices: question.choices.map((current, i) =>
@@ -342,7 +340,7 @@ function QuestionsEditor({
                     })
                   }
                 />
-                <span>Correcte</span>
+                <span>{t('editor.correct')}</span>
               </label>
               <Button
                 variant="ghost"
@@ -365,13 +363,13 @@ function QuestionsEditor({
               patchQuestion(index, { choices: [...question.choices, { label: '', correct: false }] })
             }
           >
-            Ajouter une proposition
+            {t('editor.addChoice')}
           </Button>
         </div>
       ))}
 
       <Button variant="ghost" size="sm" icon="book" onClick={() => onChange([...questions, EMPTY_QUESTION])}>
-        Ajouter une question
+        {t('editor.addQuestion')}
       </Button>
     </div>
   );

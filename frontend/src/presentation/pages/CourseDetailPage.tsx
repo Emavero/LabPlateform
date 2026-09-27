@@ -3,12 +3,14 @@ import { formatDuration, hasQuiz, nextSection, type CourseSection, type QuizResu
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { QuizForm } from '../features/course/QuizForm';
 import { VideoPlayer } from '../features/course/VideoPlayer';
+import { useI18n } from '../i18n/I18nContext';
 import { useCourse } from '../hooks/useCourse';
 import { TRACK_PAGES } from '../navigation/navigation';
 import { NotFoundPage } from './NotFoundPage';
 
 /** Fiche d'un cours : le contenu de chaque section, et la case à cocher. */
 export function CourseDetailPage() {
+  const { t } = useI18n();
   const { track = '', slug = '' } = useParams();
   const detail = useCourse(slug);
 
@@ -16,7 +18,7 @@ export function CourseDetailPage() {
     return (
       <div className="page">
         <div className="empty">
-          <Spinner size={22} label="Chargement du cours" />
+          <Spinner size={22} label={t('courses.loadingCourse')} />
         </div>
       </div>
     );
@@ -29,10 +31,10 @@ export function CourseDetailPage() {
       <div className="page">
         <Alert
           tone="error"
-          title="Impossible de charger ce cours"
+          title={t('courses.loadErrorCourse')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void detail.reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
@@ -55,18 +57,22 @@ export function CourseDetailPage() {
       <header className="page__header">
         <div>
           <p className="page__eyebrow">
-            {course.levelName} · {formatDuration(course.minutes)} · {course.sections.length} sections
+            {t('course.meta', {
+              level: course.levelName,
+              duration: formatDuration(course.minutes),
+              sections: course.sections.length,
+            })}
           </p>
           <h1 className="page__title">{course.title}</h1>
           <p className="page__lead">{course.summary}</p>
         </div>
         {course.completed ? (
           <span className="badge badge--pwned">
-            <Icon name="check" size={13} /> Cours terminé
+            <Icon name="check" size={13} /> {t('course.done')}
           </span>
         ) : resume ? (
           <span className="badge">
-            Section {resume.position} sur {course.sections.length}
+            {t('course.sectionOf', { position: resume.position, total: course.sections.length })}
           </span>
         ) : null}
       </header>
@@ -105,17 +111,22 @@ function SectionPanel({
   grading: boolean;
   onGrade: (answers: Readonly<Record<number, readonly number[]>>) => void;
 }) {
+  const { t } = useI18n();
   return (
     <Panel
       className={['course-section', section.completed && 'course-section--done'].filter(Boolean).join(' ')}
-      eyebrow={`${section.position}. ${section.kindName} · ${formatDuration(section.minutes)}`}
+      eyebrow={t('course.sectionMeta', {
+        position: section.position,
+        kind: section.kindName,
+        duration: formatDuration(section.minutes),
+      })}
       title={section.title}
       actions={
         // Une section à quiz se valide en rendant sa copie, pas en la cochant.
         hasQuiz(section) ? (
           section.completed && (
             <Button variant="ghost" size="sm" icon="stop" loading={pending} onClick={onToggle}>
-              Rouvrir
+              {t('course.reopen')}
             </Button>
           )
         ) : (
@@ -126,7 +137,7 @@ function SectionPanel({
             loading={pending}
             onClick={onToggle}
           >
-            {section.completed ? 'Rouvrir' : 'Marquer comme terminé'}
+            {t(section.completed ? 'course.reopen' : 'course.markDone')}
           </Button>
         )
       }

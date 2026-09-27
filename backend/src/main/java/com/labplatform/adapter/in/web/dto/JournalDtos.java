@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.journal.JournalLine;
 
 import java.time.Instant;
@@ -21,9 +22,9 @@ public final class JournalDtos {
         public static JournalLineResponse from(JournalLine line) {
             return new JournalLineResponse(
                     line.event().getKind().name(),
-                    line.event().getKind().displayName(),
+                    Texts.of(line.event().getKind().displayName()),
                     line.event().family().name(),
-                    line.event().family().displayName(),
+                    Texts.of(line.event().family().displayName()),
                     line.handle(),
                     line.event().getSubject().orElse(null),
                     line.event().getDetail().orElse(null),

@@ -4,11 +4,13 @@ import { formatDuration } from '@/domain/models/Course';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { useCourses } from '../hooks/useCourses';
+import { useI18n } from '../i18n/I18nContext';
 import { useDependencies } from '../state/DependenciesContext';
 import { TRACK_PAGES } from '../navigation/navigation';
 
 /** Liste des cours par filière, avec publication et suppression. */
 export function AdminCoursesPage() {
+  const { t } = useI18n();
   const forensics = useCourses('forensique');
   const defense = useCourses('defense');
 
@@ -16,15 +18,13 @@ export function AdminCoursesPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Administration</p>
-          <h1 className="page__title">Gérer les cours</h1>
-          <p className="page__lead">
-            Ce qui est publié ici apparaît aussitôt dans la filière choisie, côté apprenant.
-          </p>
+          <p className="page__eyebrow">{t('admin.eyebrow')}</p>
+          <h1 className="page__title">{t('adminCourses.title')}</h1>
+          <p className="page__lead">{t('adminCourses.lead')}</p>
         </div>
         <Link className="btn btn--primary btn--sm" to="/admin/cours/nouveau">
           <Icon name="book" size={16} />
-          <span>Nouveau cours</span>
+          <span>{t('adminCourses.new')}</span>
         </Link>
       </header>
 
@@ -35,6 +35,7 @@ export function AdminCoursesPage() {
 }
 
 function TrackCourses({ slug, courses }: { slug: string; courses: ReturnType<typeof useCourses> }) {
+  const { t } = useI18n();
   const { admin } = useDependencies();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<AppError | null>(null);
@@ -55,16 +56,19 @@ function TrackCourses({ slug, courses }: { slug: string; courses: ReturnType<typ
   };
 
   return (
-    <Panel title={TRACK_PAGES[slug]?.title ?? slug} description={`${courses.courses.length} cours publiés`}>
+    <Panel
+      title={TRACK_PAGES[slug] ? t(TRACK_PAGES[slug].title) : slug}
+      description={t('adminCourses.published', { count: courses.courses.length })}
+    >
       {error && <Alert tone="error">{error.message}</Alert>}
       {courses.loading && courses.courses.length === 0 ? (
         <div className="empty">
-          <Spinner size={22} label="Chargement des cours" />
+          <Spinner size={22} label={t('courses.loading')} />
         </div>
       ) : courses.error ? (
         <Alert tone="error">{courses.error.message}</Alert>
       ) : courses.courses.length === 0 ? (
-        <p className="empty">Aucun cours dans cette filière pour le moment.</p>
+        <p className="empty">{t('adminCourses.emptyTrack')}</p>
       ) : (
         <ul className="admin-list">
           {courses.courses.map((course) => (
@@ -85,7 +89,7 @@ function TrackCourses({ slug, courses }: { slug: string; courses: ReturnType<typ
                     loading={pending === course.slug}
                     onClick={() => void remove(course.slug)}
                   >
-                    Confirmer la suppression
+                    {t('adminCourses.confirmDelete')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setConfirming(null)}>
                     Annuler

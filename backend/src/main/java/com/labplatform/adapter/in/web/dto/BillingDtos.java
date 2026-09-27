@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.billing.BillingView;
 import com.labplatform.application.port.in.billing.CheckoutTicket;
 import com.labplatform.application.port.in.billing.PaymentSummary;
@@ -35,8 +36,8 @@ public final class BillingDtos {
                                 MoneyResponse price, boolean available) {
 
         public static OfferResponse from(PlanOffer offer) {
-            return new OfferResponse(offer.method().name(), offer.method().displayName(), offer.period().name(),
-                    offer.period().displayName(), MoneyResponse.from(offer.price()), offer.available());
+            return new OfferResponse(offer.method().name(), Texts.of(offer.method().displayName()), offer.period().name(),
+                    Texts.of(offer.period().displayName()), MoneyResponse.from(offer.price()), offer.available());
         }
     }
 
@@ -45,7 +46,7 @@ public final class BillingDtos {
 
         public static PaymentResponse from(PaymentSummary summary) {
             return new PaymentResponse(summary.reference(), MoneyResponse.from(summary.amount()),
-                    summary.method().name(), summary.method().displayName(), summary.status().name(),
+                    summary.method().name(), Texts.of(summary.method().displayName()), summary.status().name(),
                     summary.createdAt(), summary.settledAt());
         }
     }
@@ -56,7 +57,7 @@ public final class BillingDtos {
         public static BillingResponse from(BillingView view) {
             return new BillingResponse(
                     view.plan().name(),
-                    view.plan().displayName(),
+                    Texts.of(view.plan().displayName()),
                     view.status().name(),
                     view.expiresAt(),
                     view.plan().isPro(),

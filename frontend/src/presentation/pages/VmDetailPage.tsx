@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { VmCard } from '../features/lab/VmCard';
+import { useI18n } from '../i18n/I18nContext';
 import { useVmDetail } from '../hooks/useVmDetail';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -12,12 +13,13 @@ export function VmDetailPage() {
 }
 
 function VmDetail({ id }: { id: number }) {
+  const { t } = useI18n();
   const { vm, log, loading, error, pending, toggle, reload } = useVmDetail(id);
 
   if (loading && !vm) {
     return (
       <div className="page empty">
-        <Spinner size={22} label="Chargement de la machine" />
+        <Spinner size={22} label={t('lab.loadingMachine')} />
       </div>
     );
   }
@@ -27,10 +29,10 @@ function VmDetail({ id }: { id: number }) {
       <div className="page">
         <Alert
           tone="error"
-          title="Machine indisponible"
+          title={t('lab.unavailable')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
@@ -43,27 +45,27 @@ function VmDetail({ id }: { id: number }) {
   return (
     <div className="page">
       <Link className="text-link back-link" to="/labs">
-        <Icon name="arrowLeft" size={16} /> Lab Infrastructure
+        <Icon name="arrowLeft" size={16} /> {t('nav.labs')}
       </Link>
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Machine #{vm.id}</p>
+          <p className="page__eyebrow">{t('lab.machineNumber', { id: vm.id })}</p>
           <h1 className="page__title">{vm.osName}</h1>
         </div>
       </header>
       <div className="detail-grid">
         <VmCard vm={vm} pending={pending ?? undefined} error={error?.message} onToggle={() => void toggle()} hideDetailLink />
         <Panel
-          title="Console"
-          description="Journal de démarrage de la machine."
+          title={t('lab.console')}
+          description={t('lab.consoleHint')}
           actions={
             <Button variant="ghost" size="sm" icon="refresh" loading={loading} onClick={() => void reload()}>
-              Actualiser
+              {t('common.refresh')}
             </Button>
           }
         >
-          <pre className="console" tabIndex={0} aria-label="Journal de la console">
-            {log.length > 0 ? log.join('\n') : 'Aucune sortie pour le moment.'}
+          <pre className="console" tabIndex={0} aria-label={t('lab.consoleLabel')}>
+            {log.length > 0 ? log.join('\n') : t('lab.consoleEmpty')}
           </pre>
         </Panel>
       </div>

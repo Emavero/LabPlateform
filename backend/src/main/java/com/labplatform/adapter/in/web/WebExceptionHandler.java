@@ -34,6 +34,9 @@ public class WebExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(WebExceptionHandler.class);
 
+    /** Ce qui sépare le nom du champ de son message, dans un détail de validation. */
+    private static final String FIELD_SEPARATOR = ": ";
+
     private static final Map<Class<? extends DomainException>, HttpStatus> STATUS_BY_CATEGORY = Map.of(
             InvalidInputException.class, HttpStatus.BAD_REQUEST,
             AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED,
@@ -93,8 +96,24 @@ public class WebExceptionHandler {
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur inattendue est survenue", request, List.of());
     }
 
+    /**
+     * Le message part dans la langue demandée par l'appelant. La traduction a
+     * lieu ici, au bord : le domaine dit ce qui ne va pas, l'adaptateur le dit
+     * dans la langue de celui qui écoute.
+     */
     private static ResponseEntity<ApiError> respond(HttpStatus status, String message, HttpServletRequest request,
                                                     List<String> details) {
-        return ResponseEntity.status(status).body(ApiError.of(status, message, request.getRequestURI(), details));
+        return ResponseEntity.status(status).body(ApiError.of(status, Texts.of(message), request.getRequestURI(),
+                details.stream().map(WebExceptionHandler::translateDetail).toList()));
+    }
+
+    /** Un détail de validation s'écrit « champ: message » : seul le message se traduit. */
+    private static String translateDetail(String detail) {
+        int separator = detail.indexOf(FIELD_SEPARATOR);
+        if (separator < 0) {
+            return Texts.of(detail);
+        }
+        int messageStart = separator + FIELD_SEPARATOR.length();
+        return detail.substring(0, messageStart) + Texts.of(detail.substring(messageStart));
     }
 }

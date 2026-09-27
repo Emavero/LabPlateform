@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.admin.AdminOverview;
 import com.labplatform.application.port.in.admin.BoxDraft;
 import com.labplatform.application.port.in.admin.CourseDraft;
@@ -132,8 +133,8 @@ public final class AdminDtos {
 
         private static AdminBoxResponse from(Box box, String userFlagOnce, String rootFlagOnce) {
             return new AdminBoxResponse(box.getSlug(), box.getName(), box.getOperatingSystem().name(),
-                    box.getOperatingSystem().displayName(), box.getDifficulty().name(),
-                    box.getDifficulty().displayName(), box.pointsFor(FlagKind.USER), box.pointsFor(FlagKind.ROOT),
+                    Texts.of(box.getOperatingSystem().displayName()), box.getDifficulty().name(),
+                    Texts.of(box.getDifficulty().displayName()), box.pointsFor(FlagKind.USER), box.pointsFor(FlagKind.ROOT),
                     box.totalPoints(), box.getSynopsis(), box.getIpAddress(), box.getMaker(), box.getReleasedAt(),
                     box.isRetired(), box.isProOnly(), userFlagOnce, rootFlagOnce);
         }

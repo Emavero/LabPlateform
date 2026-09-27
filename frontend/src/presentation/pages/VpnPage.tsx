@@ -1,52 +1,46 @@
 import { useCallback, useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { defaultProtocol, VPN_PROTOCOL_LABELS, type VpnAccess, type VpnProtocol } from '@/domain/models/Vpn';
+import { defaultProtocol, type VpnAccess, type VpnProtocol } from '@/domain/models/Vpn';
 import { Alert, Button, CopyField, Icon, Panel, Spinner } from '../design-system';
-import { formatDate } from '../features/lab/format';
 import { CONNECTION_GUIDES, detectClientOs, type ClientOs } from '../features/vpn/connectionGuides';
 import { saveTextFile } from '../features/vpn/saveFile';
+import { useI18n } from '../i18n/I18nContext';
 import { useAction } from '../hooks/useAction';
 import { useVpnAccess } from '../hooks/useVpn';
 import { useDependencies } from '../state/DependenciesContext';
 
-const PROTOCOL_HINTS: Record<VpnProtocol, string> = {
-  udp: 'Recommandé, plus rapide',
-  tcp: 'Si votre réseau bloque l’UDP',
-};
-
 export function VpnPage() {
+  const { t } = useI18n();
   const vpn = useVpnAccess();
 
   return (
     <div className="page">
       <header className="page__header">
         <div>
-          <h1 className="page__title">VPN Access</h1>
-          <p className="page__lead">
-            Connectez votre ordinateur au réseau du lab pour joindre vos machines depuis vos propres outils.
-          </p>
+          <h1 className="page__title">{t('vpn.title')}</h1>
+          <p className="page__lead">{t('vpn.lead')}</p>
         </div>
       </header>
 
       {vpn.loading && !vpn.access ? (
         <div className="empty">
-          <Spinner size={22} label="Chargement de l'accès VPN" />
+          <Spinner size={22} label={t('vpn.loading')} />
         </div>
       ) : vpn.loadError ? (
         <Alert
           tone="error"
-          title="Impossible de charger l'accès VPN"
+          title={t('vpn.loadError')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void vpn.reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
           {vpn.loadError.message}
         </Alert>
       ) : vpn.access && !vpn.access.enabled ? (
-        <Alert tone="info" title="Accès VPN non configuré">
-          L'administrateur n'a pas encore activé le VPN sur cette plateforme.
+        <Alert tone="info" title={t('vpn.offTitle')}>
+          {t('vpn.offText')}
         </Alert>
       ) : vpn.access ? (
         <VpnAccessView access={vpn.access} onChange={vpn.setAccess} onDownloaded={() => void vpn.reload()} />
@@ -62,6 +56,7 @@ interface VpnAccessViewProps {
 }
 
 function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
+  const { t, formatDate } = useI18n();
   const { vpn } = useDependencies();
   const [protocol, setProtocol] = useState<VpnProtocol | null>(() => defaultProtocol(access));
   const [confirming, setConfirming] = useState(false);
@@ -96,18 +91,18 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
   return (
     <div className="vpn-grid">
       <Panel
-        title="Votre profil VPN"
-        description="Un fichier personnel : il vous identifie sur le réseau du lab. Ne le partagez pas."
+        title={t('vpn.profile')}
+        description={t('vpn.profileHint')}
         className="vpn-profile"
       >
         <div className={['vpn-status', access.issuedAt && 'vpn-status--ready'].filter(Boolean).join(' ')}>
           <Icon name="vpn" size={22} />
           <div>
-            <p className="vpn-status__title">{access.issuedAt ? 'Profil actif' : 'Aucun profil pour le moment'}</p>
+            <p className="vpn-status__title">{t(access.issuedAt ? 'vpn.profileActive' : 'vpn.profileNone')}</p>
             <p className="vpn-status__text">
               {access.issuedAt
-                ? `Généré le ${formatDate(access.issuedAt)}.`
-                : 'Il sera créé automatiquement à votre premier téléchargement.'}
+                ? t('vpn.generatedOn', { date: formatDate(access.issuedAt) })
+                : t('vpn.willBeCreated')}
             </p>
           </div>
         </div>
@@ -116,47 +111,54 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
 
         <dl className="vpn-facts">
           <div>
-            <dt>Serveur</dt>
+            <dt>{t('vpn.server')}</dt>
             <dd>{endpoint ? `${endpoint.host}:${endpoint.port}` : '—'}</dd>
           </div>
           <div>
-            <dt>Réseau du lab</dt>
+            <dt>{t('vpn.labNetwork')}</dt>
             <dd>{access.labNetwork}</dd>
           </div>
         </dl>
 
         {download.error && <Alert tone="error">{download.error.message}</Alert>}
         {regenerated && (
-          <Alert tone="success" title="Nouveau profil généré">
-            L'ancien fichier ne fonctionne plus. Téléchargez le nouveau et remplacez-le dans votre client VPN.
+          <Alert tone="success" title={t('vpn.regenerated')}>
+            {t('vpn.regeneratedText')}
           </Alert>
         )}
 
-        <Button icon="download" block loading={download.pending} loadingLabel="Préparation…" onClick={onDownload} disabled={!protocol}>
-          Télécharger le profil {protocol ? VPN_PROTOCOL_LABELS[protocol] : ''}
+        <Button
+          icon="download"
+          block
+          loading={download.pending}
+          loadingLabel={t('vpn.preparing')}
+          onClick={onDownload}
+          disabled={!protocol}
+        >
+          {t('vpn.download', { protocol: protocol ? t(`vpn.protocol.${protocol}`) : '' })}
         </Button>
 
         <div className="vpn-regenerate">
           {confirming ? (
             <Alert
               tone="error"
-              title="Régénérer le profil ?"
+              title={t('vpn.regenerateTitle')}
               action={
                 <div className="vpn-regenerate__actions">
                   <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} disabled={regenerate.pending}>
-                    Annuler
+                    {t('common.cancel')}
                   </Button>
                   <Button variant="danger" size="sm" loading={regenerate.pending} onClick={onRegenerate}>
-                    Régénérer
+                    {t('vpn.regenerate')}
                   </Button>
                 </div>
               }
             >
-              Votre fichier actuel cessera immédiatement de fonctionner, sur tous vos appareils.
+              {t('vpn.regenerateWarning')}
             </Alert>
           ) : (
             <button type="button" className="text-link vpn-regenerate__trigger" onClick={() => setConfirming(true)}>
-              <Icon name="refresh" size={14} /> Régénérer mon profil (fichier perdu ou partagé par erreur)
+              <Icon name="refresh" size={14} /> {t('vpn.regenerateTrigger')}
             </button>
           )}
           {regenerate.error && <Alert tone="error">{regenerate.error.message}</Alert>}
@@ -177,11 +179,12 @@ function ProtocolPicker({
   value: VpnProtocol | null;
   onChange: (protocol: VpnProtocol) => void;
 }) {
+  const { t } = useI18n();
   const labelId = useId();
   return (
     <div className="segmented" role="radiogroup" aria-labelledby={labelId}>
       <span className="segmented__label" id={labelId}>
-        Protocole
+        {t('vpn.protocol')}
       </span>
       <div className="segmented__options">
         {(['udp', 'tcp'] as const).map((protocol) => {
@@ -197,8 +200,10 @@ function ProtocolPicker({
               className={['segmented__option', checked && 'segmented__option--active'].filter(Boolean).join(' ')}
               onClick={() => onChange(protocol)}
             >
-              <span className="segmented__name">{VPN_PROTOCOL_LABELS[protocol]}</span>
-              <span className="segmented__hint">{available ? PROTOCOL_HINTS[protocol] : 'Non proposé'}</span>
+              <span className="segmented__name">{t(`vpn.protocol.${protocol}`)}</span>
+              <span className="segmented__hint">
+                {available ? t(`vpn.hint.${protocol}`) : t('vpn.notOffered')}
+              </span>
             </button>
           );
         })}
@@ -208,14 +213,15 @@ function ProtocolPicker({
 }
 
 function ConnectionGuidePanel({ fileName }: { fileName: string }) {
+  const { t } = useI18n();
   const [os, setOs] = useState<ClientOs>('linux');
   const tabsId = useId();
   useEffect(() => setOs(detectClientOs()), []);
   const guide = CONNECTION_GUIDES[os];
 
   return (
-    <Panel title="Se connecter" description="Suivez les étapes correspondant à votre système.">
-      <div className="tabs" role="tablist" aria-label="Système d'exploitation">
+    <Panel title={t('vpn.connect')} description={t('vpn.connectHint')}>
+      <div className="tabs" role="tablist" aria-label={t('vpn.osGroup')}>
         {(Object.keys(CONNECTION_GUIDES) as ClientOs[]).map((key) => (
           <button
             key={key}
@@ -245,18 +251,17 @@ function ConnectionGuidePanel({ fileName }: { fileName: string }) {
               </span>
             </div>
             <div className="terminal__body">
-              <CopyField label="Commande" value={guide.command(fileName)} />
+              <CopyField label={t('vpn.command')} value={guide.command(fileName)} />
             </div>
           </div>
         )}
         <ol className="access__steps">
-          {guide.steps(fileName).map((step) => (
-            <li key={step}>{step}</li>
+          {guide.steps.map((step) => (
+            <li key={step}>{t(step, { file: fileName })}</li>
           ))}
         </ol>
-        <Alert tone="info" title="Et ensuite ?">
-          Une fois connecté, démarrez une machine dans <Link to="/labs">Lab Infrastructure</Link> et utilisez l'adresse
-          affichée sur sa carte.
+        <Alert tone="info" title={t('vpn.next')}>
+          {t('vpn.nextBefore')} <Link to="/labs">{t('nav.labs')}</Link> {t('vpn.nextAfter')}
         </Alert>
       </div>
     </Panel>

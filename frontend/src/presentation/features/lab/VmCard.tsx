@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import {
   availableAction,
   isRunning,
-  OS_FAMILY_LABELS,
   type VirtualMachine,
   type VmAction,
 } from '@/domain/models/VirtualMachine';
 import { Alert, Button, Icon, StatusIndicator, type Status } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 import { ConnectionDetails } from './ConnectionDetails';
-import { formatUptimeSince } from './format';
+import { isSameDay } from './format';
 
 interface VmCardProps {
   vm: VirtualMachine;
@@ -26,9 +26,15 @@ export function statusOf(vm: VirtualMachine, pending?: VmAction): Status {
 }
 
 export function VmCard({ vm, pending, error, onToggle, hideDetailLink = false }: VmCardProps) {
+  const { t, formatDate, formatTime } = useI18n();
   const action = availableAction(vm);
   const running = isRunning(vm);
   const titleId = `vm-${vm.id}-title`;
+  /** L'heure suffit le jour même ; passé minuit, la date est plus parlante. */
+  const since = (date: Date) =>
+    isSameDay(date, new Date())
+      ? t('lab.sinceTime', { time: formatTime(date) })
+      : t('lab.sinceDate', { date: formatDate(date) });
 
   return (
     <article className={['vm-card', running && 'vm-card--running'].filter(Boolean).join(' ')} aria-labelledby={titleId}>
@@ -37,7 +43,7 @@ export function VmCard({ vm, pending, error, onToggle, hideDetailLink = false }:
           <Icon name={vm.os === 'WINDOWS' ? 'windows' : 'linux'} size={26} />
         </span>
         <div className="vm-card__heading">
-          <p className="vm-card__family">{OS_FAMILY_LABELS[vm.os]}</p>
+          <p className="vm-card__family">{t(`os.${vm.os}`)}</p>
           <h3 className="vm-card__name" id={titleId}>
             {vm.osName}
           </h3>
@@ -47,12 +53,12 @@ export function VmCard({ vm, pending, error, onToggle, hideDetailLink = false }:
 
       <dl className="vm-card__meta">
         <div>
-          <dt>Accès</dt>
-          <dd>{vm.os === 'WINDOWS' ? 'RDP, port 3389' : 'SSH, port 22'}</dd>
+          <dt>{t('lab.access')}</dt>
+          <dd>{t(vm.os === 'WINDOWS' ? 'lab.accessRdp' : 'lab.accessSsh')}</dd>
         </div>
         <div>
-          <dt>Démarrée</dt>
-          <dd>{running && vm.startedAt ? formatUptimeSince(vm.startedAt) : '—'}</dd>
+          <dt>{t('lab.startedSince')}</dt>
+          <dd>{running && vm.startedAt ? since(vm.startedAt) : '—'}</dd>
         </div>
       </dl>
 
@@ -62,24 +68,24 @@ export function VmCard({ vm, pending, error, onToggle, hideDetailLink = false }:
         <ConnectionDetails connection={vm.connection} />
       ) : (
         <p className="vm-card__idle">
-          La machine est arrêtée. Démarrez-la pour obtenir son adresse et des identifiants temporaires.
+          {t('lab.idle')}
         </p>
       )}
 
       <footer className="vm-card__footer">
         {!hideDetailLink && (
           <Link className="text-link" to={`/labs/${vm.id}`}>
-            Console & détails <Icon name="chevronRight" size={14} />
+            {t('lab.consoleAndDetails')} <Icon name="chevronRight" size={14} />
           </Link>
         )}
         <Button
           variant={action === 'start' ? 'success' : 'danger'}
           icon={action === 'start' ? 'play' : 'stop'}
           loading={Boolean(pending)}
-          loadingLabel={pending === 'start' ? 'Démarrage…' : 'Arrêt…'}
+          loadingLabel={t(pending === 'start' ? 'lab.starting' : 'lab.stopping')}
           onClick={() => onToggle(vm)}
         >
-          {action === 'start' ? 'Démarrer' : 'Arrêter'}
+          {t(action === 'start' ? 'lab.start' : 'lab.stop')}
         </Button>
       </footer>
     </article>

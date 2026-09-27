@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { EMPTY_WRITEUP, type Writeup, type WriteupDraft } from '@/domain/models/Writeup';
 import { Alert, Button, Icon, Panel, Spinner, TextField } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 import { useWriteups } from '../../hooks/useWriteups';
 
 /**
@@ -9,6 +10,7 @@ import { useWriteups } from '../../hooks/useWriteups';
  * possédée aussi : la plateforme ne distribue pas les solutions.
  */
 export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
+  const { t, tm } = useI18n();
   const state = useWriteups(slug);
   const [draft, setDraft] = useState<WriteupDraft>(EMPTY_WRITEUP);
   const [editing, setEditing] = useState(false);
@@ -30,17 +32,13 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
 
   return (
     <Panel
-      title="Comptes rendus"
-      description={
-        pwned
-          ? 'Publier partage votre méthode avec les joueurs qui ont possédé cette machine.'
-          : 'Ils se lisent et s’écrivent une fois la machine possédée : pas de solution avant l’effort.'
-      }
+      title={t('writeup.title')}
+      description={t(pwned ? 'writeup.hintPwned' : 'writeup.hintLocked')}
       actions={
         pwned &&
         !editing && (
           <Button variant="ghost" size="sm" icon="report" onClick={() => setEditing(true)}>
-            {state.mine ? 'Modifier le mien' : 'Écrire le mien'}
+            {t(state.mine ? 'writeup.edit' : 'writeup.write')}
           </Button>
         )
       }
@@ -50,21 +48,21 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
       {editing && (
         <form className="form" onSubmit={submit} noValidate>
           <TextField
-            label="Titre"
+            label={t('writeup.titleField')}
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             error={fieldErrors.title}
           />
           <label className="field">
-            <span className="field__label">Votre méthode</span>
+            <span className="field__label">{t('writeup.method')}</span>
             <textarea
               className="field__input editor-textarea editor-textarea--tall"
               rows={12}
               value={draft.content}
               onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-              placeholder="Reconnaissance, accès initial, élévation de privilèges, ce qui aurait dû l'empêcher."
+              placeholder={t('writeup.placeholder')}
             />
-            {fieldErrors.content && <span className="field__error">{fieldErrors.content}</span>}
+            {fieldErrors.content && <span className="field__error">{tm(fieldErrors.content)}</span>}
           </label>
           <label className="admin-check">
             <input
@@ -72,14 +70,14 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
               checked={draft.published}
               onChange={(e) => setDraft({ ...draft, published: e.target.checked })}
             />
-            <span>Publier (lisible par les joueurs ayant possédé cette machine)</span>
+            <span>{t('writeup.publish')}</span>
           </label>
           <div className="editor-footer">
             <Button variant="ghost" onClick={() => setEditing(false)}>
-              Annuler
+              {t('common.cancel')}
             </Button>
-            <Button type="submit" icon="check" loading={state.saving} loadingLabel="Enregistrement…">
-              Enregistrer
+            <Button type="submit" icon="check" loading={state.saving} loadingLabel={t('writeup.saving')}>
+              {t('common.save')}
             </Button>
           </div>
         </form>
@@ -87,7 +85,7 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
 
       {state.loading && state.writeups.length === 0 ? (
         <div className="empty">
-          <Spinner size={22} label="Chargement des comptes rendus" />
+          <Spinner size={22} label={t('writeup.loading')} />
         </div>
       ) : (
         <div className="writeups">
@@ -98,11 +96,7 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
             <WriteupCard key={writeup.handle} writeup={writeup} />
           ))}
           {state.writeups.length === 0 && !editing && (
-            <p className="empty">
-              {pwned
-                ? "Personne n'a encore publié de compte rendu. Le vôtre serait le premier."
-                : 'Rien à afficher pour le moment.'}
-            </p>
+            <p className="empty">{t(pwned ? 'writeup.emptyPwned' : 'common.empty')}</p>
           )}
         </div>
       )}
@@ -111,19 +105,20 @@ export function Writeups({ slug, pwned }: { slug: string; pwned: boolean }) {
 }
 
 function WriteupCard({ writeup, onDelete }: { writeup: Writeup; onDelete?: () => void }) {
+  const { t, formatDate } = useI18n();
   return (
     <article className={['writeup', writeup.mine && 'writeup--mine'].filter(Boolean).join(' ')}>
       <header className="writeup__header">
         <div>
           <h3 className="writeup__title">{writeup.title}</h3>
           <p className="writeup__meta">
-            {writeup.mine ? 'Vous' : writeup.handle} · {writeup.updatedAt.toLocaleDateString('fr-FR')}
-            {writeup.mine && !writeup.published && <span className="badge">Brouillon</span>}
+            {writeup.mine ? t('writeup.mine') : writeup.handle} · {formatDate(writeup.updatedAt)}
+            {writeup.mine && !writeup.published && <span className="badge">{t('writeup.draft')}</span>}
           </p>
         </div>
         {onDelete && (
           <Button variant="ghost" size="sm" onClick={onDelete}>
-            <Icon name="stop" size={14} /> Supprimer
+            <Icon name="stop" size={14} /> {t('common.delete')}
           </Button>
         )}
       </header>

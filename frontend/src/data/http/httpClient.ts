@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import { AppError, type AppErrorKind } from '@/domain/errors/AppError';
+import { readStoredLanguage } from '@/data/storage/languagePreference';
 import type { SessionMonitor } from '@/domain/repositories/SessionMonitor';
 
 interface ApiErrorBody {
@@ -31,6 +32,17 @@ export function createHttpClient(): { http: AxiosInstance; sessionMonitor: Sessi
     // Un démarrage de machine réelle (conteneur) peut prendre plusieurs secondes.
     timeout: 60_000,
     headers: { 'Content-Type': 'application/json' },
+  });
+
+  // La langue voyage à chaque requête plutôt qu'à la création du client : elle
+  // peut changer en cours de session, et une instance figée renverrait encore
+  // des messages dans l'ancienne.
+  http.interceptors.request.use((config) => {
+    const language = readStoredLanguage();
+    if (language) {
+      config.headers.set('Accept-Language', language);
+    }
+    return config;
   });
 
   http.interceptors.response.use(

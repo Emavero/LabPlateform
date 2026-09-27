@@ -1,5 +1,6 @@
 import { isInstanceRunning, minutesLeft, type Box } from '@/domain/models/Box';
 import { Button, CopyField, Icon, StatusIndicator } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface InstancePanelProps {
   box: Box;
@@ -13,6 +14,7 @@ interface InstancePanelProps {
  * limitée.
  */
 export function InstancePanel({ box, pending, onToggle }: InstancePanelProps) {
+  const { t } = useI18n();
   const running = isInstanceRunning(box);
   const minutes = minutesLeft(box);
 
@@ -22,28 +24,25 @@ export function InstancePanel({ box, pending, onToggle }: InstancePanelProps) {
         <StatusIndicator status={pending ? (running ? 'stopping' : 'starting') : running ? 'running' : 'stopped'} />
         {running && (
           <span className="instance__ttl">
-            <Icon name="activity" size={14} /> {minutes} min avant extinction
+            <Icon name="activity" size={14} /> {t('instance.ttl', { minutes })}
           </span>
         )}
       </div>
 
       {running && box.instanceAddress ? (
-        <CopyField label="Adresse de la cible" value={box.instanceAddress} />
+        <CopyField label={t('instance.address')} value={box.instanceAddress} />
       ) : (
-        <p className="instance__idle">
-          Lancez la machine pour obtenir son adresse. Une seule cible tourne à la fois, et elle s'éteint
-          automatiquement passé son délai.
-        </p>
+        <p className="instance__idle">{t('instance.idle')}</p>
       )}
 
       <Button
         variant={running ? 'danger' : 'success'}
         icon={running ? 'stop' : 'play'}
         loading={pending}
-        loadingLabel={running ? 'Arrêt…' : 'Lancement…'}
+        loadingLabel={t(running ? 'instance.stopping' : 'instance.starting')}
         onClick={onToggle}
       >
-        {running ? 'Arrêter la machine' : 'Lancer la machine'}
+        {t(running ? 'instance.stop' : 'instance.start')}
       </Button>
     </div>
   );

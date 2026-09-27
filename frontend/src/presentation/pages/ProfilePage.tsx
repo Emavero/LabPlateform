@@ -4,11 +4,13 @@ import { earnedCount, type ActivityEntry } from '@/domain/models/Profile';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { ProgressPanel } from '../features/box/ProgressPanel';
 import { TrackProgress } from '../features/course/TrackProgress';
+import { useI18n } from '../i18n/I18nContext';
 import { useProfile } from '../hooks/useProfile';
 import { useAuth } from '../state/AuthContext';
 
 /** Profil du joueur : progression, hauts faits, filières et activité récente. */
 export function ProfilePage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const profile = useProfile();
 
@@ -16,16 +18,17 @@ export function ProfilePage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Profil</p>
-          <h1 className="page__title">{user ? displayNameOf(user) : 'Profil'}</h1>
+          <p className="page__eyebrow">{t('profile.eyebrow')}</p>
+          <h1 className="page__title">{user ? displayNameOf(user) : t('profile.eyebrow')}</h1>
           <p className="page__lead">
             {profile.loading
-              ? 'Chargement de votre parcours…'
-              : `${profile.progress.rankName} · ${profile.progress.points} points · ${earnedCount(
-                  profile.achievements,
-                )} haut${earnedCount(profile.achievements) > 1 ? 's' : ''} fait${
-                  earnedCount(profile.achievements) > 1 ? 's' : ''
-                } sur ${profile.achievements.length}`}
+              ? t('profile.loading')
+              : t('profile.summary', {
+                  rank: profile.progress.rankName,
+                  points: profile.progress.points,
+                  earned: earnedCount(profile.achievements),
+                  total: profile.achievements.length,
+                })}
           </p>
         </div>
         <Button
@@ -35,17 +38,17 @@ export function ProfilePage() {
           loading={profile.loading}
           onClick={() => void profile.reload()}
         >
-          Actualiser
+          {t('common.refresh')}
         </Button>
       </header>
 
       {profile.error && (
         <Alert
           tone="error"
-          title="Impossible de charger le profil"
+          title={t('profile.loadError')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void profile.reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
@@ -54,21 +57,21 @@ export function ProfilePage() {
       )}
 
       <Panel
-        title="Machines"
+        title={t('nav.machines')}
         actions={
           <Link className="btn btn--ghost btn--sm" to="/scoreboard">
             <Icon name="trophy" size={16} />
-            <span>Classement</span>
+            <span>{t('nav.scoreboard')}</span>
           </Link>
         }
       >
         <ProgressPanel progress={profile.progress} />
       </Panel>
 
-      <Panel title="Hauts faits" description="Ceux qui manquent indiquent quoi viser ensuite.">
+      <Panel title={t('profile.achievements')} description={t('profile.achievementsHint')}>
         {profile.loading && profile.achievements.length === 0 ? (
           <div className="empty">
-            <Spinner size={22} label="Chargement des hauts faits" />
+            <Spinner size={22} label={t('profile.loadingAchievements')} />
           </div>
         ) : (
           <ul className="achievements">
@@ -95,11 +98,11 @@ export function ProfilePage() {
       {profile.learning.map((track) => (
         <Panel
           key={track.trackSlug}
-          title={`Cours · ${track.trackName}`}
+          title={t('profile.coursesOf', { track: track.trackName })}
           actions={
             <Link className="btn btn--ghost btn--sm" to={`/cours/${track.trackSlug}`}>
               <Icon name="book" size={16} />
-              <span>Ouvrir</span>
+              <span>{t('profile.open')}</span>
             </Link>
           }
         >
@@ -107,13 +110,13 @@ export function ProfilePage() {
         </Panel>
       ))}
 
-      <Panel title="Activité récente">
+      <Panel title={t('profile.activity')}>
         {profile.loading && profile.activity.length === 0 ? (
           <div className="empty">
-            <Spinner size={22} label="Chargement de l'activité" />
+            <Spinner size={22} label={t('profile.loadingActivity')} />
           </div>
         ) : profile.activity.length === 0 ? (
-          <p className="empty">Rien pour l'instant : validez un flag ou terminez une section de cours.</p>
+          <p className="empty">{t('profile.activityEmpty')}</p>
         ) : (
           <ol className="activity">
             {profile.activity.map((entry, index) => (
@@ -127,6 +130,7 @@ export function ProfilePage() {
 }
 
 function ActivityRow({ entry }: { entry: ActivityEntry }) {
+  const { t, locale } = useI18n();
   return (
     <li className="activity__item">
       <span className={`activity__icon activity__icon--${entry.kind.toLowerCase()}`}>
@@ -137,7 +141,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
           {entry.title}
           {entry.firstBlood && (
             <span className="badge badge--blood">
-              <Icon name="crown" size={12} /> First blood
+              <Icon name="crown" size={12} /> {t('boxes.firstBlood')}
             </span>
           )}
         </span>
@@ -145,7 +149,12 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
       </span>
       {entry.points > 0 && <span className="activity__points">+{entry.points}</span>}
       <time className="activity__date" dateTime={entry.at.toISOString()}>
-        {entry.at.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+        {entry.at.toLocaleDateString(locale, {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
       </time>
     </li>
   );

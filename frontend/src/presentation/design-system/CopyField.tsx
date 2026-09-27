@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '../i18n/I18nContext';
 import { Icon } from './Icon';
 
 interface CopyFieldProps {
@@ -31,6 +32,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 export function CopyField({ label, value, secret = false }: CopyFieldProps) {
+  const { t } = useI18n();
   const [revealed, setRevealed] = useState(!secret);
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
@@ -55,17 +57,22 @@ export function CopyField({ label, value, secret = false }: CopyFieldProps) {
             type="button"
             className="icon-btn"
             onClick={() => setRevealed((v) => !v)}
-            aria-label={revealed ? `Masquer ${label.toLowerCase()}` : `Afficher ${label.toLowerCase()}`}
+            aria-label={t(revealed ? 'a11y.hide' : 'a11y.show', { label: label.toLowerCase() })}
             aria-pressed={revealed}
           >
             <Icon name={revealed ? 'eyeOff' : 'eye'} size={16} />
           </button>
         )}
-        <button type="button" className="icon-btn" onClick={copy} aria-label={`Copier ${label.toLowerCase()}`}>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={copy}
+          aria-label={t('a11y.copy', { label: label.toLowerCase() })}
+        >
           <Icon name={copied ? 'check' : 'copy'} size={16} />
         </button>
         <span className="visually-hidden" aria-live="polite">
-          {copied ? `${label} copié` : ''}
+          {copied ? t('a11y.copied', { label }) : ''}
         </span>
       </div>
     </div>

@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.domain.lab.ConnectionInfo;
 import com.labplatform.domain.lab.VirtualMachine;
 
@@ -28,7 +29,7 @@ public record VmResponse(
         return new VmResponse(
                 vm.getId(),
                 vm.getOperatingSystem().name(),
-                vm.getOperatingSystem().displayName(),
+                Texts.of(vm.getOperatingSystem().displayName()),
                 vm.getStatus().name(),
                 vm.getStartedAt().orElse(null),
                 vm.getConnection().map(Connection::from).orElse(null));

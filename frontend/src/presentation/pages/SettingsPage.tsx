@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { UserProfile } from '@/domain/models/User';
-import { displayNameOf, initialsOf, ROLE_LABELS } from '@/domain/models/User';
+import { displayNameOf, initialsOf } from '@/domain/models/User';
 import type { PasswordChange } from '@/domain/repositories/AccountRepository';
 import { PASSWORD_MIN_LENGTH } from '@/domain/validation/credentials';
 import { Alert, Avatar, Button, Panel, TextField } from '../design-system';
-import { formatDate } from '../features/lab/format';
+import { useI18n } from '../i18n/I18nContext';
+import { LanguagePicker } from '../i18n/LanguagePicker';
 import { useAction } from '../hooks/useAction';
 import { useDependencies } from '../state/DependenciesContext';
 
 const EMPTY: PasswordChange = { currentPassword: '', newPassword: '', confirmPassword: '' };
 
 export function SettingsPage() {
+  const { t, formatDate } = useI18n();
   const { account } = useDependencies();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [form, setForm] = useState<PasswordChange>(EMPTY);
@@ -43,45 +45,49 @@ export function SettingsPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <h1 className="page__title">Paramètres du compte</h1>
+          <h1 className="page__title">{t('settings.title')}</h1>
         </div>
       </header>
 
       <div className="settings-grid">
-        <Panel title="Profil">
+        <Panel title={t('settings.language')} description={t('settings.languageHint')}>
+          <LanguagePicker />
+        </Panel>
+
+        <Panel title={t('settings.profile')}>
           {profile ? (
             <div className="profile">
               <Avatar initials={initialsOf(profile)} size="lg" />
               <dl className="profile__list">
                 <div>
-                  <dt>Nom affiché</dt>
+                  <dt>{t('settings.displayName')}</dt>
                   <dd>{displayNameOf(profile)}</dd>
                 </div>
                 <div>
-                  <dt>Adresse e-mail</dt>
+                  <dt>{t('auth.email')}</dt>
                   <dd>{profile.email}</dd>
                 </div>
                 <div>
-                  <dt>Rôle</dt>
-                  <dd>{ROLE_LABELS[profile.role]}</dd>
+                  <dt>{t('settings.role')}</dt>
+                  <dd>{t(`role.${profile.role}`)}</dd>
                 </div>
                 <div>
-                  <dt>Membre depuis</dt>
+                  <dt>{t('settings.memberSince')}</dt>
                   <dd>{formatDate(profile.createdAt)}</dd>
                 </div>
               </dl>
             </div>
           ) : (
-            <p className="muted">Chargement du profil…</p>
+            <p className="muted">{t('settings.loadingProfile')}</p>
           )}
         </Panel>
 
-        <Panel title="Mot de passe" description="Les sessions ouvertes restent valides jusqu'à leur expiration.">
-          {saved && <Alert tone="success">Votre mot de passe a été modifié.</Alert>}
+        <Panel title={t('settings.password')} description={t('settings.passwordHint')}>
+          {saved && <Alert tone="success">{t('settings.passwordChanged')}</Alert>}
           {error && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
           <form className="form" onSubmit={submit} noValidate>
             <TextField
-              label="Mot de passe actuel"
+              label={t('settings.currentPassword')}
               type="password"
               autoComplete="current-password"
               value={form.currentPassword}
@@ -90,17 +96,17 @@ export function SettingsPage() {
               revealable
             />
             <TextField
-              label="Nouveau mot de passe"
+              label={t('auth.newPassword')}
               type="password"
               autoComplete="new-password"
               value={form.newPassword}
               onChange={update('newPassword')}
               error={fieldErrors.newPassword}
-              hint={`Au moins ${PASSWORD_MIN_LENGTH} caractères.`}
+              hint={t('auth.passwordHint', { count: PASSWORD_MIN_LENGTH })}
               revealable
             />
             <TextField
-              label="Confirmation"
+              label={t('auth.confirmPassword')}
               type="password"
               autoComplete="new-password"
               value={form.confirmPassword}
@@ -108,8 +114,8 @@ export function SettingsPage() {
               error={fieldErrors.confirmPassword}
               revealable
             />
-            <Button type="submit" loading={pending} loadingLabel="Enregistrement…">
-              Modifier le mot de passe
+            <Button type="submit" loading={pending} loadingLabel={t('writeup.saving')}>
+              {t('settings.changePassword')}
             </Button>
           </form>
         </Panel>

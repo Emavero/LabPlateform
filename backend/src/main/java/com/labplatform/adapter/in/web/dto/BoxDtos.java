@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.box.BoxView;
 import com.labplatform.application.port.in.box.FlagSubmissionResult;
 import com.labplatform.application.port.in.scoring.LeaderboardEntry;
@@ -70,9 +71,9 @@ public final class BoxDtos {
                     box.getSlug(),
                     box.getName(),
                     box.getOperatingSystem().name(),
-                    box.getOperatingSystem().displayName(),
+                    Texts.of(box.getOperatingSystem().displayName()),
                     box.getDifficulty().name(),
-                    box.getDifficulty().displayName(),
+                    Texts.of(box.getDifficulty().displayName()),
                     box.pointsFor(FlagKind.USER),
                     box.pointsFor(FlagKind.ROOT),
                     box.totalPoints(),
@@ -107,7 +108,7 @@ public final class BoxDtos {
 
     private static String perceivedName(CommunityRating rating) {
         Difficulty difficulty = rating.perceived();
-        return difficulty == null ? null : difficulty.displayName();
+        return difficulty == null ? null : Texts.of(difficulty.displayName());
     }
 
     /** Note de difficulté donnée par un joueur. */
@@ -160,9 +161,9 @@ public final class BoxDtos {
                     progress.boxesPwned(),
                     progress.firstBloods(),
                     progress.rank().name(),
-                    progress.rank().displayName(),
+                    Texts.of(progress.rank().displayName()),
                     progress.nextRank() == null ? null : progress.nextRank().name(),
-                    progress.nextRank() == null ? null : progress.nextRank().displayName(),
+                    progress.nextRank() == null ? null : Texts.of(progress.nextRank().displayName()),
                     progress.pointsToNextRank(),
                     progress.completion());
         }
@@ -180,7 +181,7 @@ public final class BoxDtos {
 
         static LeaderboardRow from(LeaderboardEntry entry) {
             return new LeaderboardRow(entry.position(), entry.handle(), entry.points(), entry.ownedFlags(),
-                    entry.firstBloods(), entry.rank().name(), entry.rank().displayName(), entry.self());
+                    entry.firstBloods(), entry.rank().name(), Texts.of(entry.rank().displayName()), entry.self());
         }
     }
 }

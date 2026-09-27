@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Panel, Spinner } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { useBilling } from '../hooks/useBilling';
 
 /**
@@ -14,6 +15,7 @@ import { useBilling } from '../hooks/useBilling';
  * les deux cas le résultat est le même, le paiement n'étant crédité qu'une fois.
  */
 export function PaymentReturnPage() {
+  const { t, formatDate } = useI18n();
   const [params] = useSearchParams();
   const reference = params.get('reference') ?? '';
   const { billing, busy, error, confirm } = useBilling();
@@ -32,46 +34,42 @@ export function PaymentReturnPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Abonnement</p>
-          <h1 className="page__title">Retour de paiement</h1>
+          <p className="page__eyebrow">{t('billing.eyebrow')}</p>
+          <h1 className="page__title">{t('billing.return.title')}</h1>
         </div>
       </header>
 
       {!reference && (
-        <Alert tone="error" title="Référence manquante">
-          Cette page s’ouvre au retour d’un paiement. Reprenez depuis la page d’abonnement.
+        <Alert tone="error" title={t('billing.return.missing')}>
+          {t('billing.return.missingText')}
         </Alert>
       )}
 
       {error && (
-        <Alert tone="error" title="Paiement non confirmé">
+        <Alert tone="error" title={t('billing.return.failed')}>
           {error.message}
         </Alert>
       )}
 
-      {busy && <Spinner label="Vérification du paiement auprès du prestataire…" />}
+      {busy && <Spinner label={t('billing.return.checking')} />}
 
       {done && (
         <Panel
-          title={pro ? 'Abonnement actif' : 'Paiement non abouti'}
-          description={
-            pro
-              ? 'Les machines du catalogue sont désormais accessibles.'
-              : 'Le prestataire n’a pas confirmé l’encaissement. Rien n’a été débité de votre côté tant qu’il n’a pas abouti.'
-          }
+          title={t(pro ? 'billing.return.ok' : 'billing.return.ko')}
+          description={t(pro ? 'billing.return.okText' : 'billing.return.koText')}
         >
           {pro && billing?.expiresAt && (
             <p className="billing__term">
-              Accès jusqu’au {billing.expiresAt.toLocaleDateString('fr-FR')}
+              {t('billing.accessUntil', { date: formatDate(billing.expiresAt) })}
             </p>
           )}
           <div className="page__actions">
             <Link className="btn btn--primary btn--sm" to={pro ? '/machines' : '/abonnement'}>
-              {pro ? 'Aller au catalogue' : 'Revenir aux formules'}
+              {t(pro ? 'billing.return.toCatalogue' : 'billing.return.toPlans')}
             </Link>
             {!pro && (
               <Button variant="ghost" size="sm" onClick={() => void confirm(reference).then(setDone)}>
-                Vérifier à nouveau
+                {t('billing.return.recheck')}
               </Button>
             )}
           </div>

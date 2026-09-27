@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.analytics.AdminAnalytics;
 import com.labplatform.application.port.in.analytics.AudienceMetrics;
 import com.labplatform.application.port.in.analytics.ContentInsight;
@@ -31,7 +32,7 @@ public final class AnalyticsDtos {
     public record SegmentResponse(String profile, String profileName, String advice, long accounts, int share) {
 
         static SegmentResponse from(UsageSegment segment) {
-            return new SegmentResponse(segment.profile().name(), segment.profile().displayName(),
+            return new SegmentResponse(segment.profile().name(), Texts.of(segment.profile().displayName()),
                     segment.profile().advice(), segment.accounts(), segment.share());
         }
     }
@@ -54,7 +55,7 @@ public final class AnalyticsDtos {
 
         static RecommendationResponse from(Recommendation recommendation) {
             return new RecommendationResponse(recommendation.code(), recommendation.severity().name(),
-                    recommendation.severity().displayName(), recommendation.title(), recommendation.advice(),
+                    Texts.of(recommendation.severity().displayName()), recommendation.title(), recommendation.advice(),
                     recommendation.evidence(), recommendation.subject());
         }
     }

@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.academy.CourseView;
 import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.domain.academy.Course;
@@ -23,7 +24,7 @@ public final class CourseDtos {
     public record TrackResponse(String track, String slug, String name, String description) {
 
         public static TrackResponse from(Track track) {
-            return new TrackResponse(track.name(), track.slug(), track.displayName(), track.description());
+            return new TrackResponse(track.name(), track.slug(), Texts.of(track.displayName()), track.description());
         }
 
         public static List<TrackResponse> all() {
@@ -43,10 +44,10 @@ public final class CourseDtos {
                     course.getSlug(),
                     course.getTitle(),
                     course.getTrack().name(),
-                    course.getTrack().displayName(),
+                    Texts.of(course.getTrack().displayName()),
                     course.getTrack().slug(),
                     course.getLevel().name(),
-                    course.getLevel().displayName(),
+                    Texts.of(course.getLevel().displayName()),
                     course.getSummary(),
                     course.getSections().size(),
                     view.progress().completedSections(),
@@ -68,10 +69,10 @@ public final class CourseDtos {
                     course.getSlug(),
                     course.getTitle(),
                     course.getTrack().name(),
-                    course.getTrack().displayName(),
+                    Texts.of(course.getTrack().displayName()),
                     course.getTrack().slug(),
                     course.getLevel().name(),
-                    course.getLevel().displayName(),
+                    Texts.of(course.getLevel().displayName()),
                     course.getSummary(),
                     course.totalMinutes(),
                     view.progress().completedSections(),
@@ -91,7 +92,7 @@ public final class CourseDtos {
 
         static SectionResponse from(CourseSection section, boolean completed, Quiz quiz, boolean revealAnswers) {
             return new SectionResponse(section.id(), section.slug(), section.title(), section.kind().name(),
-                    section.kind().displayName(), section.position(), section.minutes(), section.content(),
+                    Texts.of(section.kind().displayName()), section.position(), section.minutes(), section.content(),
                     section.videoUrl(), completed,
                     quiz.questions().stream().map(question -> QuestionResponse.from(question, revealAnswers))
                             .toList());
@@ -155,7 +156,7 @@ public final class CourseDtos {
                                            int minutesDone, double ratio) {
 
         public static LearningProgressResponse from(LearningProgress progress) {
-            return new LearningProgressResponse(progress.track().name(), progress.track().displayName(),
+            return new LearningProgressResponse(progress.track().name(), Texts.of(progress.track().displayName()),
                     progress.track().slug(), progress.courses(), progress.coursesCompleted(), progress.sections(),
                     progress.sectionsCompleted(), progress.minutesDone(), progress.ratio());
         }

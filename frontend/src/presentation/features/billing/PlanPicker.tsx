@@ -9,18 +9,13 @@ import {
   type PlanOffer,
 } from '@/domain/models/Billing';
 import { Button, Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface PlanPickerProps {
   offers: readonly PlanOffer[];
   busy: boolean;
   onSubscribe: (method: PaymentMethod, period: BillingPeriod) => void;
 }
-
-const METHOD_HINTS: Partial<Record<PaymentMethod, string>> = {
-  CARD: 'Visa, Mastercard — débit en euros',
-  WAVE: 'Portefeuille mobile, sans frais pour vous',
-  ORANGE_MONEY: 'Portefeuille mobile',
-};
 
 /**
  * Choix de la durée puis du moyen de paiement.
@@ -31,12 +26,13 @@ const METHOD_HINTS: Partial<Record<PaymentMethod, string>> = {
  * mieux vaut un bouton grisé qu'un parcours qui échoue au dernier écran.
  */
 export function PlanPicker({ offers, busy, onSubscribe }: PlanPickerProps) {
+  const { t, locale } = useI18n();
   const [period, setPeriod] = useState<BillingPeriod>('MONTHLY');
   const methods = methodsOf(offers);
 
   return (
     <div className="plan-picker">
-      <div className="plan-picker__periods" role="group" aria-label="Durée de l'abonnement">
+      <div className="plan-picker__periods" role="group" aria-label={t('billing.periodGroup')}>
         {PERIOD_ORDER.map((candidate) => {
           const offer = offers.find((o) => o.period === candidate);
           if (!offer) return null;
@@ -49,7 +45,7 @@ export function PlanPicker({ offers, busy, onSubscribe }: PlanPickerProps) {
               aria-pressed={period === candidate}
               onClick={() => setPeriod(candidate)}
             >
-              <span className="plan-period__name">{offer.periodName}</span>
+              <span className="plan-period__name">{t(`billing.period.${candidate}`)}</span>
               {candidate === 'YEARLY' && savings > 0 && (
                 <span className="plan-period__badge">−{savings} %</span>
               )}
@@ -68,11 +64,9 @@ export function PlanPicker({ offers, busy, onSubscribe }: PlanPickerProps) {
                 <Icon name={method === 'CARD' ? 'key' : 'wallet'} size={18} />
                 <span className="plan-method__name">{offer.methodName}</span>
               </div>
-              <p className="plan-method__price">{formatMoney(offer.price)}</p>
+              <p className="plan-method__price">{formatMoney(offer.price, locale)}</p>
               <p className="plan-method__hint">
-                {offer.available
-                  ? (METHOD_HINTS[method] ?? '')
-                  : 'Momentanément indisponible sur cette installation.'}
+                {offer.available ? t(`billing.hint.${method}`) : t('billing.methodOff')}
               </p>
               <Button
                 size="sm"
@@ -80,7 +74,7 @@ export function PlanPicker({ offers, busy, onSubscribe }: PlanPickerProps) {
                 disabled={!offer.available}
                 onClick={() => onSubscribe(method, period)}
               >
-                Payer {formatMoney(offer.price)}
+                {t('billing.pay', { price: formatMoney(offer.price, locale) })}
               </Button>
             </li>
           );

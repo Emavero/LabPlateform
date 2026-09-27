@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { BOX_FILTER_LABELS, type BoxFilter } from '@/domain/models/Box';
+import type { BoxFilter } from '@/domain/models/Box';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { BoxCard } from '../features/box/BoxCard';
 import { ProgressPanel } from '../features/box/ProgressPanel';
+import { useI18n } from '../i18n/I18nContext';
 import { useBoxes } from '../hooks/useBoxes';
 import { useProgress } from '../hooks/useProgress';
 import { useVpnAccess } from '../hooks/useVpn';
@@ -11,6 +12,7 @@ const FILTERS: readonly BoxFilter[] = ['ALL', 'TODO', 'PWNED'];
 
 /** Catalogue des machines à compromettre. */
 export function MachinesPage() {
+  const { t } = useI18n();
   const catalogue = useBoxes();
   const { progress } = useProgress();
   const vpn = useVpnAccess();
@@ -19,10 +21,8 @@ export function MachinesPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <h1 className="page__title">Machines</h1>
-          <p className="page__lead">
-            Compromettez une machine, trouvez ses deux flags et marquez les points de sa difficulté.
-          </p>
+          <h1 className="page__title">{t('machines.title')}</h1>
+          <p className="page__lead">{t('machines.lead')}</p>
         </div>
         <Button
           variant="ghost"
@@ -31,17 +31,17 @@ export function MachinesPage() {
           loading={catalogue.loading}
           onClick={() => void catalogue.reload()}
         >
-          Actualiser
+          {t('common.refresh')}
         </Button>
       </header>
 
       <Panel
-        title="Votre progression"
-        description="Le rang se calcule sur la part du catalogue que vous possédez."
+        title={t('machines.progress')}
+        description={t('machines.progressHint')}
         actions={
           <Link className="btn btn--ghost btn--sm" to="/scoreboard">
             <Icon name="trophy" size={16} />
-            <span>Classement</span>
+            <span>{t('nav.scoreboard')}</span>
           </Link>
         }
       >
@@ -51,18 +51,18 @@ export function MachinesPage() {
       {vpn.access?.enabled && (
         <Alert
           tone="info"
-          title="Les machines vivent derrière le VPN"
+          title={t('machines.vpnTitle')}
           action={
             <Link className="btn btn--ghost btn--sm" to="/vpn">
-              VPN Access
+              {t('nav.vpn')}
             </Link>
           }
         >
-          Montez le VPN ({vpn.access.labNetwork}) pour joindre les adresses affichées sur chaque machine.
+          {t('machines.vpnText', { network: vpn.access.labNetwork })}
         </Alert>
       )}
 
-      <div className="tabs" role="tablist" aria-label="Filtrer le catalogue">
+      <div className="tabs" role="tablist" aria-label={t('machines.filterGroup')}>
         {FILTERS.map((filter) => (
           <button
             key={filter}
@@ -72,7 +72,7 @@ export function MachinesPage() {
             className={['tabs__tab', catalogue.filter === filter && 'tabs__tab--active'].filter(Boolean).join(' ')}
             onClick={() => catalogue.setFilter(filter)}
           >
-            {BOX_FILTER_LABELS[filter]}
+            {t(`machines.filter.${filter}`)}
           </button>
         ))}
       </div>
@@ -83,10 +83,11 @@ export function MachinesPage() {
 }
 
 function BoxGrid({ catalogue }: { catalogue: ReturnType<typeof useBoxes> }) {
+  const { t } = useI18n();
   if (catalogue.loading && catalogue.boxes.length === 0) {
     return (
       <div className="empty">
-        <Spinner size={22} label="Chargement du catalogue" />
+        <Spinner size={22} label={t('machines.loading')} />
       </div>
     );
   }
@@ -94,10 +95,10 @@ function BoxGrid({ catalogue }: { catalogue: ReturnType<typeof useBoxes> }) {
     return (
       <Alert
         tone="error"
-        title="Impossible de charger le catalogue"
+        title={t('machines.loadError')}
         action={
           <Button variant="ghost" size="sm" icon="refresh" onClick={() => void catalogue.reload()}>
-            Réessayer
+            {t('common.retry')}
           </Button>
         }
       >
@@ -108,9 +109,7 @@ function BoxGrid({ catalogue }: { catalogue: ReturnType<typeof useBoxes> }) {
   if (catalogue.visible.length === 0) {
     return (
       <p className="empty">
-        {catalogue.boxes.length === 0
-          ? "Aucune machine n'est publiée pour le moment."
-          : 'Aucune machine ne correspond à ce filtre.'}
+        {t(catalogue.boxes.length === 0 ? 'machines.none' : 'machines.noneForFilter')}
       </p>
     );
   }

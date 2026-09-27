@@ -1,22 +1,26 @@
 import type { ConnectionInfo } from '@/domain/models/VirtualMachine';
 import { CopyField, Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 import { ACCESS_GUIDES } from './accessGuides';
 
 /** Panneau d'accès affiché dès qu'une machine tourne : identifiants + mode d'emploi. */
 export function ConnectionDetails({ connection }: { connection: ConnectionInfo }) {
+  const { t } = useI18n();
   const guide = ACCESS_GUIDES[connection.protocol];
   const command = guide.command(connection);
+  const client = t(guide.client);
+  const steps = { user: connection.username, host: connection.host, port: connection.port };
 
   return (
     <div className="access">
       <div className="access__grid">
-        <CopyField label="Adresse IP" value={connection.host} />
-        <CopyField label={`Port ${connection.protocol}`} value={String(connection.port)} />
-        <CopyField label="Utilisateur" value={connection.username} />
-        <CopyField label="Mot de passe temporaire" value={connection.password} secret />
+        <CopyField label={t('access.ip')} value={connection.host} />
+        <CopyField label={t('access.port', { protocol: connection.protocol })} value={String(connection.port)} />
+        <CopyField label={t('access.user')} value={connection.username} />
+        <CopyField label={t('access.password')} value={connection.password} secret />
       </div>
 
-      <div className="terminal" aria-label={`Commande de connexion ${guide.client}`}>
+      <div className="terminal" aria-label={t('access.commandFor', { client })}>
         <div className="terminal__bar">
           <span className="terminal__dots" aria-hidden="true">
             <i />
@@ -24,17 +28,17 @@ export function ConnectionDetails({ connection }: { connection: ConnectionInfo }
             <i />
           </span>
           <span className="terminal__title">
-            <Icon name="terminal" size={14} /> {guide.client}
+            <Icon name="terminal" size={14} /> {client}
           </span>
         </div>
         <div className="terminal__body">
-          <CopyField label="Commande" value={command} />
+          <CopyField label={t('access.command')} value={command} />
         </div>
       </div>
 
       <ol className="access__steps">
-        {guide.steps(connection).map((step) => (
-          <li key={step}>{step}</li>
+        {guide.steps.map((step) => (
+          <li key={step}>{t(step, steps)}</li>
         ))}
       </ol>
     </div>

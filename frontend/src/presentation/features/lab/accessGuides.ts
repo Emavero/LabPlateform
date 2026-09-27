@@ -1,11 +1,18 @@
 import type { AccessProtocol, ConnectionInfo } from '@/domain/models/VirtualMachine';
+import type { CatalogueKey } from '../../i18n/I18nContext';
 
 export interface AccessGuide {
-  /** Nom du client à utiliser. */
-  readonly client: string;
+  /** Nom du client à utiliser, donné par sa clé de traduction. */
+  readonly client: CatalogueKey;
   /** Commande prête à coller dans un terminal. */
   readonly command: (connection: ConnectionInfo) => string;
-  readonly steps: (connection: ConnectionInfo) => readonly string[];
+  /**
+   * Étapes, données par leur clé de traduction plutôt qu'en toutes lettres :
+   * le guide dit quoi faire, le catalogue dit comment le formuler, et une
+   * langue de plus n'oblige pas à toucher ce fichier. Les clés reçoivent
+   * l'utilisateur, l'hôte et le port de la machine lancée.
+   */
+  readonly steps: readonly CatalogueKey[];
 }
 
 /**
@@ -14,23 +21,13 @@ export interface AccessGuide {
  */
 export const ACCESS_GUIDES: Readonly<Record<AccessProtocol, AccessGuide>> = {
   SSH: {
-    client: 'Terminal (OpenSSH)',
+    client: 'access.ssh.client',
     command: (c) => `ssh ${c.username}@${c.host} -p ${c.port}`,
-    steps: (c) => [
-      'Ouvrez un terminal (PowerShell, macOS Terminal ou Linux).',
-      'Collez la commande ci-dessus et validez.',
-      "Acceptez l'empreinte du serveur lors de la première connexion.",
-      `Saisissez le mot de passe temporaire de ${c.username}.`,
-    ],
+    steps: ['access.ssh.1', 'access.ssh.2', 'access.ssh.3', 'access.ssh.4'],
   },
   RDP: {
-    client: 'Bureau à distance (RDP)',
+    client: 'access.rdp.client',
     command: (c) => `mstsc /v:${c.host}:${c.port}`,
-    steps: (c) => [
-      'Sous Windows, exécutez la commande ci-dessus (Win + R). Sur macOS ou Linux, utilisez Windows App ou Remmina.',
-      `Renseignez l'hôte ${c.host}:${c.port}.`,
-      `Connectez-vous avec l'utilisateur ${c.username} et le mot de passe temporaire.`,
-      'Acceptez le certificat auto-signé de la machine de lab.',
-    ],
+    steps: ['access.rdp.1', 'access.rdp.2', 'access.rdp.3', 'access.rdp.4'],
   },
 };

@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
+import { useI18n } from '../i18n/I18nContext';
 
 export function NotFoundPage() {
+  const { t } = useI18n();
   return (
     <div className="page page--center">
       <p className="page__eyebrow">Erreur 404</p>
-      <h1 className="page__title">Page introuvable</h1>
-      <p className="page__lead">Cette ressource n'existe pas ou ne vous est pas accessible.</p>
+      <h1 className="page__title">{t('notFound.title')}</h1>
+      <p className="page__lead">{t('notFound.text')}</p>
       <Link className="btn btn--primary btn--md" to="/">
-        Retour au tableau de bord
+        {t('notFound.back')}
       </Link>
     </div>
   );

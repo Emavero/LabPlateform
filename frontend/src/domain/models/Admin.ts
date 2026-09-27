@@ -72,18 +72,16 @@ export const EMPTY_DRAFT: CourseDraft = {
   sections: [EMPTY_SECTION],
 };
 
-export const LEVEL_LABELS: Record<CourseLevel, string> = {
-  FUNDAMENTAL: 'Fondamental',
-  EASY: 'Facile',
-  MEDIUM: 'Intermédiaire',
-  HARD: 'Avancé',
-};
+/**
+ * Les codes, dans l'ordre où l'éditeur les propose. Ce sont des codes et non
+ * des libellés : le nom affiché vient du catalogue de traduction, pour que la
+ * liste déroulante suive la langue choisie.
+ */
+export const COURSE_LEVELS: readonly CourseLevel[] = ['FUNDAMENTAL', 'EASY', 'MEDIUM', 'HARD'];
 
-export const KIND_LABELS: Record<SectionKind, string> = {
-  THEORY: 'Cours',
-  LAB: 'Atelier',
-  QUIZ: 'Quiz',
-};
+export const SECTION_KINDS: readonly SectionKind[] = ['THEORY', 'LAB', 'QUIZ'];
+
+export const TRACK_CODES: readonly TrackCode[] = ['FORENSICS', 'DEFENSE'];
 
 /** Machine du catalogue en cours de saisie. */
 export interface BoxDraft {
@@ -138,18 +136,9 @@ export const EMPTY_BOX_DRAFT: BoxDraft = {
   rootFlag: '',
 };
 
-export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  VERY_EASY: 'Très facile',
-  EASY: 'Facile',
-  MEDIUM: 'Moyenne',
-  HARD: 'Difficile',
-  INSANE: 'Insane',
-};
+export const DIFFICULTIES: readonly Difficulty[] = ['VERY_EASY', 'EASY', 'MEDIUM', 'HARD', 'INSANE'];
 
-export const OS_LABELS: Record<OperatingSystem, string> = {
-  LINUX: 'Linux',
-  WINDOWS: 'Windows',
-};
+export const OPERATING_SYSTEMS: readonly OperatingSystem[] = ['LINUX', 'WINDOWS'];
 
 /** Fichier téléversé sur la plateforme. */
 export interface UploadedMedia {

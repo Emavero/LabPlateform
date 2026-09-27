@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { isQuizComplete, type CourseSection, type QuizAnswers, type QuizResult } from '@/domain/models/Course';
 import { Alert, Button, Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface QuizFormProps {
   section: CourseSection;
@@ -14,6 +15,7 @@ interface QuizFormProps {
  * question n'est acquise que si l'apprenant coche exactement celles-là.
  */
 export function QuizForm({ section, result, grading, onSubmit }: QuizFormProps) {
+  const { t } = useI18n();
   const [answers, setAnswers] = useState<QuizAnswers>({});
 
   const toggle = (questionId: number, choiceId: number) =>
@@ -39,13 +41,9 @@ export function QuizForm({ section, result, grading, onSubmit }: QuizFormProps) 
       {result && (
         <Alert
           tone={result.passed ? 'success' : 'error'}
-          title={`${result.correct} bonne${result.correct > 1 ? 's' : ''} réponse${
-            result.correct > 1 ? 's' : ''
-          } sur ${result.questions}`}
+          title={t('quiz.score', { correct: result.correct, total: result.questions })}
         >
-          {result.passed
-            ? 'Quiz réussi : la section est validée.'
-            : 'Il faut 70 % de bonnes réponses. Les bonnes réponses sont indiquées ci-dessous.'}
+          {t(result.passed ? 'quiz.passed' : 'quiz.failed')}
         </Alert>
       )}
 
@@ -90,10 +88,10 @@ export function QuizForm({ section, result, grading, onSubmit }: QuizFormProps) 
         type="submit"
         icon="check"
         loading={grading}
-        loadingLabel="Correction…"
+        loadingLabel={t('quiz.grading')}
         disabled={!isQuizComplete(section, answers)}
       >
-        {result ? 'Corriger à nouveau' : 'Rendre ma copie'}
+        {t(result ? 'quiz.again' : 'quiz.submit')}
       </Button>
     </form>
   );

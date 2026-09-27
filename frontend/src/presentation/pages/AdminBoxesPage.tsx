@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import {
-  DIFFICULTY_LABELS,
+  DIFFICULTIES,
   EMPTY_BOX_DRAFT,
-  OS_LABELS,
+  OPERATING_SYSTEMS,
   type BoxDraft,
   type PublishedBox,
 } from '@/domain/models/Admin';
@@ -10,10 +10,12 @@ import type { Difficulty } from '@/domain/models/Box';
 import type { OperatingSystem } from '@/domain/models/VirtualMachine';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Alert, Button, CopyField, Panel, Spinner, TextField } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { useDependencies } from '../state/DependenciesContext';
 
 /** Publication et retrait des machines du catalogue. */
 export function AdminBoxesPage() {
+  const { t } = useI18n();
   const { admin } = useDependencies();
   const [boxes, setBoxes] = useState<PublishedBox[]>([]);
   const [draft, setDraft] = useState<BoxDraft>(EMPTY_BOX_DRAFT);
@@ -99,76 +101,70 @@ export function AdminBoxesPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Administration</p>
-          <h1 className="page__title">Gérer les machines</h1>
-          <p className="page__lead">
-            Une machine publiée ici apparaît aussitôt dans le catalogue, avec ses points et ses deux flags.
-          </p>
+          <p className="page__eyebrow">{t('admin.eyebrow')}</p>
+          <h1 className="page__title">{t('adminBoxes.title')}</h1>
+          <p className="page__lead">{t('adminBoxes.lead')}</p>
         </div>
         <Button variant="ghost" size="sm" icon="refresh" loading={loading} onClick={() => void reload()}>
-          Actualiser
+          {t('common.refresh')}
         </Button>
       </header>
 
       {error && Object.keys(fieldErrors).length === 0 && <Alert tone="error">{error.message}</Alert>}
 
       {flags && (
-        <Alert tone="success" title={`${flags.name} — notez ces flags maintenant`}>
-          Ils ne seront plus jamais affichés : déposez-les sur la cible avant de quitter cette page.
+        <Alert tone="success" title={t('adminBoxes.flagsTitle', { name: flags.name })}>
+          {t('adminBoxes.flagsText')}
           <div className="admin-flags">
-            {flags.userFlagOnce && <CopyField label="Flag utilisateur" value={flags.userFlagOnce} />}
-            {flags.rootFlagOnce && <CopyField label="Flag root" value={flags.rootFlagOnce} />}
+            {flags.userFlagOnce && <CopyField label={t('flag.USER')} value={flags.userFlagOnce} />}
+            {flags.rootFlagOnce && <CopyField label={t('flag.ROOT')} value={flags.rootFlagOnce} />}
           </div>
         </Alert>
       )}
 
       <Panel
-        title={editing ? `Modifier « ${editing} »` : 'Nouvelle machine'}
-        description={
-          editing
-            ? "Laisser un flag vide le laisse inchangé. Le lien de la machine ne change pas."
-            : 'Laisser les flags vides les fait tirer au hasard : ils seront affichés une fois, à déposer sur la cible.'
-        }
+        title={editing ? t('adminBoxes.editing', { name: editing }) : t('adminBoxes.new')}
+        description={t(editing ? 'adminBoxes.editingHint' : 'adminBoxes.newHint')}
         actions={
           editing && (
             <Button variant="ghost" size="sm" onClick={reset}>
-              Annuler la modification
+              {t('adminBoxes.cancelEdit')}
             </Button>
           )
         }
       >
         <form className="form" onSubmit={submit} noValidate>
           <TextField
-            label="Nom"
+            label={t('adminBoxes.name')}
             value={draft.name}
             onChange={(e) => patch({ name: e.target.value })}
             error={fieldErrors.name}
           />
           <div className="editor-row">
             <label className="field">
-              <span className="field__label">Système</span>
+              <span className="field__label">{t('adminBoxes.system')}</span>
               <select
                 className="field__input"
                 value={draft.operatingSystem}
                 onChange={(e) => patch({ operatingSystem: e.target.value as OperatingSystem })}
               >
-                {Object.entries(OS_LABELS).map(([code, label]) => (
+                {OPERATING_SYSTEMS.map((code) => (
                   <option key={code} value={code}>
-                    {label}
+                    {t(`os.${code}`)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span className="field__label">Difficulté</span>
+              <span className="field__label">{t('adminBoxes.difficulty')}</span>
               <select
                 className="field__input"
                 value={draft.difficulty}
                 onChange={(e) => patch({ difficulty: e.target.value as Difficulty })}
               >
-                {Object.entries(DIFFICULTY_LABELS).map(([code, label]) => (
+                {DIFFICULTIES.map((code) => (
                   <option key={code} value={code}>
-                    {label}
+                    {t(`difficulty.${code}`)}
                   </option>
                 ))}
               </select>
@@ -176,41 +172,45 @@ export function AdminBoxesPage() {
           </div>
           <div className="editor-row">
             <TextField
-              label="Adresse dans le réseau du lab"
+              label={t('adminBoxes.address')}
               value={draft.ipAddress}
               onChange={(e) => patch({ ipAddress: e.target.value })}
               error={fieldErrors.ipAddress}
               autoComplete="off"
               spellCheck={false}
             />
-            <TextField label="Auteur" value={draft.maker} onChange={(e) => patch({ maker: e.target.value })} />
+            <TextField
+              label={t('adminBoxes.maker')}
+              value={draft.maker}
+              onChange={(e) => patch({ maker: e.target.value })}
+            />
           </div>
           <label className="field">
-            <span className="field__label">Synopsis</span>
+            <span className="field__label">{t('adminBoxes.synopsis')}</span>
             <textarea
               className="field__input editor-textarea"
               rows={3}
               value={draft.synopsis}
               onChange={(e) => patch({ synopsis: e.target.value })}
-              placeholder="Ce que le joueur va rencontrer, sans donner la solution."
+              placeholder={t('adminBoxes.synopsisPlaceholder')}
             />
           </label>
           <div className="editor-row">
             <TextField
-              label="Flag utilisateur"
+              label={t('flag.USER')}
               value={draft.userFlag}
               onChange={(e) => patch({ userFlag: e.target.value })}
               error={fieldErrors.userFlag}
-              placeholder="32 caractères hexadécimaux, ou vide"
+              placeholder={t('adminBoxes.flagPlaceholder')}
               autoComplete="off"
               spellCheck={false}
             />
             <TextField
-              label="Flag root"
+              label={t('flag.ROOT')}
               value={draft.rootFlag}
               onChange={(e) => patch({ rootFlag: e.target.value })}
               error={fieldErrors.rootFlag}
-              placeholder="32 caractères hexadécimaux, ou vide"
+              placeholder={t('adminBoxes.flagPlaceholder')}
               autoComplete="off"
               spellCheck={false}
             />
@@ -221,7 +221,7 @@ export function AdminBoxesPage() {
               checked={draft.retired}
               onChange={(e) => patch({ retired: e.target.checked })}
             />
-            <span>Machine retirée (elle reste jouable, mais signalée comme ancienne)</span>
+            <span>{t('adminBoxes.retired')}</span>
           </label>
           <label className="admin-check">
             <input
@@ -229,38 +229,35 @@ export function AdminBoxesPage() {
               checked={draft.proOnly}
               onChange={(e) => patch({ proOnly: e.target.checked })}
             />
-            <span>
-              Réservée aux abonnés Pro (décochez-la pour en faire une machine d’initiation, visible et jouable
-              sans abonnement)
-            </span>
+            <span>{t('admin.proOnly')}</span>
           </label>
           <div className="editor-footer">
             <span />
-            <Button type="submit" icon="check" loading={saving} loadingLabel="Enregistrement…">
-              {editing ? 'Enregistrer' : 'Publier la machine'}
+            <Button type="submit" icon="check" loading={saving} loadingLabel={t('writeup.saving')}>
+              {t(editing ? 'common.save' : 'adminBoxes.publish')}
             </Button>
           </div>
         </form>
       </Panel>
 
-      <Panel title="Catalogue" description={`${boxes.length} machines publiées`}>
+      <Panel title={t('adminBoxes.catalogue')} description={t('adminBoxes.count', { count: boxes.length })}>
         {loading && boxes.length === 0 ? (
           <div className="empty">
-            <Spinner size={22} label="Chargement du catalogue" />
+            <Spinner size={22} label={t('machines.loading')} />
           </div>
         ) : boxes.length === 0 ? (
-          <p className="empty">Aucune machine publiée pour le moment.</p>
+          <p className="empty">{t('adminBoxes.empty')}</p>
         ) : (
           <ul className="admin-list">
             {boxes.map((box) => (
               <li key={box.slug} className="admin-list__item">
                 <span className="admin-list__text">
                   <span className="admin-list__title">
-                    {box.name} {box.retired && <span className="badge">Retirée</span>}{' '}
+                    {box.name} {box.retired && <span className="badge">{t('boxes.retired')}</span>}{' '}
                     {box.proOnly ? (
-                      <span className="badge badge--locked">Pro</span>
+                      <span className="badge badge--locked">{t('boxes.lockedBadge')}</span>
                     ) : (
-                      <span className="badge">Ouverte à tous</span>
+                      <span className="badge">{t('admin.openToAll')}</span>
                     )}
                   </span>
                   <span className="admin-list__meta">
@@ -271,19 +268,19 @@ export function AdminBoxesPage() {
                 {confirming === box.slug ? (
                   <span className="admin-list__actions">
                     <Button variant="danger" size="sm" icon="check" onClick={() => void remove(box.slug)}>
-                      Confirmer la suppression
+                      {t('adminBoxes.confirmDelete')}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setConfirming(null)}>
-                      Annuler
+                      {t('common.cancel')}
                     </Button>
                   </span>
                 ) : (
                   <span className="admin-list__actions">
                     <Button variant="ghost" size="sm" icon="target" onClick={() => edit(box)}>
-                      Modifier
+                      {t('adminBoxes.edit')}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setConfirming(box.slug)}>
-                      Supprimer
+                      {t('common.delete')}
                     </Button>
                   </span>
                 )}

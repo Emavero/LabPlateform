@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { FLAG_LABELS, type FlagKind } from '@/domain/models/Box';
+import type { FlagKind } from '@/domain/models/Box';
 import { validateFlag } from '@/domain/validation/flag';
 import { Alert, Button, Icon, TextField } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface FlagFormProps {
   kind: FlagKind;
@@ -16,6 +17,7 @@ interface FlagFormProps {
  * de suite ; seul le serveur sait si la valeur est la bonne.
  */
 export function FlagForm({ kind, points, owned, submitting, onSubmit }: FlagFormProps) {
+  const { t } = useI18n();
   const [value, setValue] = useState('');
   const [fieldError, setFieldError] = useState<string | undefined>();
 
@@ -23,9 +25,7 @@ export function FlagForm({ kind, points, owned, submitting, onSubmit }: FlagForm
     return (
       <div className="flag-form flag-form--owned">
         <Icon name="check" size={18} />
-        <span>
-          {FLAG_LABELS[kind]} validé — {points} points acquis.
-        </span>
+        <span>{t('flag.owned', { flag: t(`flag.${kind}`), points })}</span>
       </div>
     );
   }
@@ -41,17 +41,17 @@ export function FlagForm({ kind, points, owned, submitting, onSubmit }: FlagForm
   return (
     <form className="flag-form" onSubmit={handleSubmit} noValidate>
       <TextField
-        label={`${FLAG_LABELS[kind]} (${points} pts)`}
+        label={t('flag.label', { flag: t(`flag.${kind}`), points })}
         name={`flag-${kind.toLowerCase()}`}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         error={fieldError}
-        hint="32 caractères hexadécimaux, tels qu'ils apparaissent sur la machine."
+        hint={t('flag.hint')}
         autoComplete="off"
         spellCheck={false}
       />
-      <Button type="submit" icon="flag" loading={submitting} loadingLabel="Vérification…">
-        Soumettre
+      <Button type="submit" icon="flag" loading={submitting} loadingLabel={t('flag.checking')}>
+        {t('flag.submit')}
       </Button>
     </form>
   );
@@ -69,12 +69,11 @@ export function FlagSuccess({
   firstBlood: boolean;
   pwned: boolean;
 }) {
+  const { t } = useI18n();
   return (
-    <Alert tone="success" title={`${FLAG_LABELS[kind]} accepté — +${points} points`}>
-      {firstBlood && 'First blood : personne ne l’avait validé avant vous. '}
-      {pwned
-        ? 'La machine est possédée de bout en bout.'
-        : 'Il reste un flag à trouver sur cette machine.'}
+    <Alert tone="success" title={t('flag.accepted', { flag: t(`flag.${kind}`), points })}>
+      {firstBlood && `${t('flag.firstBlood')} `}
+      {t(pwned ? 'flag.pwned' : 'flag.oneLeft')}
     </Alert>
   );
 }

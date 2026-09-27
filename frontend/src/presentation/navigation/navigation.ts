@@ -1,8 +1,10 @@
 import type { Role } from '@/domain/models/User';
 import type { IconName } from '../design-system';
+import type { CatalogueKey } from '../i18n/I18nContext';
 
 export interface NavItem {
-  readonly label: string;
+  /** Clé de traduction : le menu ne porte pas de texte, il porte des clés. */
+  readonly label: CatalogueKey;
   readonly to: string;
   readonly icon: IconName;
   /** Correspondance exacte du chemin (pour la racine). */
@@ -16,7 +18,7 @@ export interface NavItem {
  * Le groupe n'est pas cliquable, ses enfants le sont.
  */
 export interface NavGroup {
-  readonly label: string;
+  readonly label: CatalogueKey;
   readonly icon: IconName;
   readonly children: readonly NavItem[];
   readonly roles?: readonly Role[];
@@ -50,8 +52,9 @@ export function navigationFor(entries: readonly NavEntry[], role: Role | undefin
 }
 
 export interface ModuleInfo {
-  readonly title: string;
-  readonly description: string;
+  /** Clés de traduction : une page de module ne porte pas de texte. */
+  readonly title: CatalogueKey;
+  readonly description: CatalogueKey;
 }
 
 /**
@@ -62,43 +65,43 @@ export interface ModuleInfo {
 const PLAYER: readonly Role[] = ['USER'];
 
 export const PRIMARY_NAV: readonly NavEntry[] = [
-  { label: 'Dashboard', to: '/', icon: 'dashboard', end: true, roles: PLAYER },
-  { label: 'Machines', to: '/machines', icon: 'target', roles: PLAYER },
-  { label: 'Classement', to: '/scoreboard', icon: 'trophy', roles: PLAYER },
+  { label: 'nav.dashboard', to: '/', icon: 'dashboard', end: true, roles: PLAYER },
+  { label: 'nav.machines', to: '/machines', icon: 'target', roles: PLAYER },
+  { label: 'nav.scoreboard', to: '/scoreboard', icon: 'trophy', roles: PLAYER },
   {
-    label: 'Cours',
+    label: 'nav.courses',
     icon: 'book',
     roles: PLAYER,
     children: [
-      { label: 'Forensique', to: '/cours/forensique', icon: 'search' },
-      { label: 'Défense', to: '/cours/defense', icon: 'shield' },
+      { label: 'nav.forensics', to: '/cours/forensique', icon: 'search' },
+      { label: 'nav.defense', to: '/cours/defense', icon: 'shield' },
     ],
   },
-  { label: 'Lab Infrastructure', to: '/labs', icon: 'server', roles: PLAYER },
-  { label: 'VPN Access', to: '/vpn', icon: 'vpn', roles: PLAYER },
-  { label: 'Exposure Analysis', to: '/modules/exposure-analysis', icon: 'radar', roles: PLAYER },
-  { label: 'Attack Paths', to: '/modules/attack-paths', icon: 'route', roles: PLAYER },
-  { label: 'Events', to: '/modules/events', icon: 'activity', roles: PLAYER },
-  { label: 'Scenario Designer', to: '/modules/scenario-designer', icon: 'scenario', roles: PLAYER },
-  { label: 'Report Center', to: '/modules/report-center', icon: 'report', roles: PLAYER },
+  { label: 'nav.labs', to: '/labs', icon: 'server', roles: PLAYER },
+  { label: 'nav.vpn', to: '/vpn', icon: 'vpn', roles: PLAYER },
+  { label: 'nav.exposure', to: '/modules/exposure-analysis', icon: 'radar', roles: PLAYER },
+  { label: 'nav.attackPaths', to: '/modules/attack-paths', icon: 'route', roles: PLAYER },
+  { label: 'nav.events', to: '/modules/events', icon: 'activity', roles: PLAYER },
+  { label: 'nav.scenarios', to: '/modules/scenario-designer', icon: 'scenario', roles: PLAYER },
+  { label: 'nav.reports', to: '/modules/report-center', icon: 'report', roles: PLAYER },
   {
-    label: 'Administration',
+    label: 'nav.administration',
     icon: 'admin',
     roles: ['ADMIN'],
     children: [
-      { label: 'Tableau de bord', to: '/admin', icon: 'dashboard', end: true },
-      { label: 'Gérer les cours', to: '/admin/cours', icon: 'book' },
-      { label: 'Gérer les machines', to: '/admin/machines', icon: 'target' },
+      { label: 'nav.dashboard', to: '/admin', icon: 'dashboard', end: true },
+      { label: 'nav.adminCourses', to: '/admin/cours', icon: 'book' },
+      { label: 'nav.adminMachines', to: '/admin/machines', icon: 'target' },
     ],
   },
 ];
 
 export const SECONDARY_NAV: readonly NavEntry[] = [
-  { label: 'Profil', to: '/profil', icon: 'medal', roles: PLAYER },
-  { label: 'Abonnement', to: '/abonnement', icon: 'crown', roles: PLAYER },
+  { label: 'nav.profile', to: '/profil', icon: 'medal', roles: PLAYER },
+  { label: 'nav.subscription', to: '/abonnement', icon: 'crown', roles: PLAYER },
   // Les réglages du compte (mot de passe, langue) valent pour les deux rôles.
-  { label: 'Settings', to: '/settings', icon: 'settings' },
-  { label: 'Support', to: '/modules/support', icon: 'support', roles: PLAYER },
+  { label: 'nav.settings', to: '/settings', icon: 'settings' },
+  { label: 'nav.support', to: '/modules/support', icon: 'support', roles: PLAYER },
 ];
 
 /**
@@ -107,40 +110,21 @@ export const SECONDARY_NAV: readonly NavEntry[] = [
  * PRIMARY_NAV suffit à la faire apparaître.
  */
 export const TRACK_PAGES: Readonly<Record<string, ModuleInfo>> = {
-  forensique: {
-    title: 'Forensique',
-    description:
-      'Analyse post-incident : collecte de traces, mémoire, disques, journaux, chronologie.',
-  },
-  defense: {
-    title: 'Défense',
-    description: 'Durcissement, détection et réponse : surveiller, contenir et fermer les portes.',
-  },
+  forensique: { title: 'track.FORENSICS', description: 'track.forensique.description' },
+  defense: { title: 'track.DEFENSE', description: 'track.defense.description' },
 };
 
 export const MODULES: Readonly<Record<string, ModuleInfo>> = {
   'exposure-analysis': {
-    title: 'Exposure Analysis',
-    description: "Cartographie de la surface d'attaque exposée par vos environnements de lab.",
+    title: 'module.exposure-analysis.title',
+    description: 'module.exposure-analysis.description',
   },
-  'attack-paths': {
-    title: 'Attack Paths',
-    description: "Visualisation des chemins d'attaque possibles entre les machines du lab.",
-  },
-  events: {
-    title: 'Events',
-    description: 'Journal centralisé des événements de sécurité remontés par les machines.',
-  },
+  'attack-paths': { title: 'module.attack-paths.title', description: 'module.attack-paths.description' },
+  events: { title: 'module.events.title', description: 'module.events.description' },
   'scenario-designer': {
-    title: 'Scenario Designer',
-    description: "Conception de scénarios d'exercice rejouables sur l'infrastructure du lab.",
+    title: 'module.scenario-designer.title',
+    description: 'module.scenario-designer.description',
   },
-  'report-center': {
-    title: 'Report Center',
-    description: 'Rapports d’activité et de progression générés à partir de vos sessions.',
-  },
-  support: {
-    title: 'Support',
-    description: "Documentation, FAQ et contact de l'équipe plateforme.",
-  },
+  'report-center': { title: 'module.report-center.title', description: 'module.report-center.description' },
+  support: { title: 'module.support.title', description: 'module.support.description' },
 };

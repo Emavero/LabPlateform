@@ -1,4 +1,5 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
+import { useI18n } from '../i18n/I18nContext';
 import { Icon, type IconName } from './Icon';
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
@@ -11,6 +12,7 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id
 }
 
 export function TextField({ label, error, hint, icon, revealable = false, type = 'text', className, ...rest }: TextFieldProps) {
+  const { t, tm } = useI18n();
   const id = useId();
   const [revealed, setRevealed] = useState(false);
   const describedBy = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ') || undefined;
@@ -36,7 +38,7 @@ export function TextField({ label, error, hint, icon, revealable = false, type =
             type="button"
             className="field__reveal"
             onClick={() => setRevealed((v) => !v)}
-            aria-label={revealed ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            aria-label={t(revealed ? 'a11y.hidePassword' : 'a11y.showPassword')}
             aria-pressed={revealed}
           >
             <Icon name={revealed ? 'eyeOff' : 'eye'} size={18} />
@@ -45,7 +47,7 @@ export function TextField({ label, error, hint, icon, revealable = false, type =
       </div>
       {error ? (
         <p className="field__error" id={`${id}-error`}>
-          {error}
+          {tm(error)}
         </p>
       ) : hint ? (
         <p className="field__hint" id={`${id}-hint`}>

@@ -7,6 +7,7 @@ import {
   type JournalLine,
 } from '@/domain/models/Journal';
 import { Icon, type IconName } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 const FAMILY_ICONS: Record<JournalFamily, IconName> = {
   ACCOUNT: 'user',
@@ -28,24 +29,25 @@ interface JournalTimelineProps {
  * deux cents lignes ne se lit pas ; groupée par jour, elle raconte quelque chose.
  */
 export function JournalTimeline({ lines, showAuthor = false }: JournalTimelineProps) {
+  const { t, locale } = useI18n();
   const [family, setFamily] = useState<JournalFamily | null>(null);
   const families = useMemo(() => familiesOf(lines), [lines]);
   const days = useMemo(() => groupByDay(filterByFamily(lines, family)), [lines, family]);
 
   if (lines.length === 0) {
-    return <p className="empty">Rien pour l’instant : le journal se remplit au fil de vos actions.</p>;
+    return <p className="empty">{t('journal.empty')}</p>;
   }
 
   return (
     <div className="journal">
-      <div className="journal__filters" role="group" aria-label="Filtrer par famille">
+      <div className="journal__filters" role="group" aria-label={t('journal.filterGroup')}>
         <button
           type="button"
           className={['journal__filter', family === null && 'journal__filter--active'].filter(Boolean).join(' ')}
           aria-pressed={family === null}
           onClick={() => setFamily(null)}
         >
-          Tout
+          {t('journal.filterAll')}
         </button>
         {families.map((candidate) => (
           <button
@@ -65,7 +67,7 @@ export function JournalTimeline({ lines, showAuthor = false }: JournalTimelinePr
 
       {days.map(({ day, lines: ofDay }) => (
         <section key={day} className="journal__day">
-          <h3 className="journal__date">{new Date(day).toLocaleDateString('fr-FR', { dateStyle: 'long' })}</h3>
+          <h3 className="journal__date">{new Date(day).toLocaleDateString(locale, { dateStyle: 'long' })}</h3>
           <ul className="journal__list">
             {ofDay.map((line, index) => (
               <li key={`${line.at.toISOString()}-${index}`} className="journal__line">
@@ -79,7 +81,7 @@ export function JournalTimeline({ lines, showAuthor = false }: JournalTimelinePr
                 </span>
                 {showAuthor && <span className="journal__author">{line.handle}</span>}
                 <time className="journal__time" dateTime={line.at.toISOString()}>
-                  {line.at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  {line.at.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                 </time>
               </li>
             ))}

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Icon, Logo } from '../design-system';
+import { useI18n } from '../i18n/I18nContext';
 import { Sidebar } from './Sidebar';
 
 /** Gabarit des pages connectées : sidebar fixe sur grand écran, tiroir sur mobile. */
 export function AppShell() {
+  const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
 
@@ -20,14 +22,14 @@ export function AppShell() {
   return (
     <div className="shell">
       <a className="skip-link" href="#main">
-        Aller au contenu
+        {t('a11y.skipToContent')}
       </a>
       <header className="topbar">
         <button
           type="button"
           className="icon-btn"
           onClick={() => setDrawerOpen((v) => !v)}
-          aria-label={drawerOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+          aria-label={t(drawerOpen ? 'a11y.closeMenu' : 'a11y.openMenu')}
           aria-expanded={drawerOpen}
         >
           <Icon name={drawerOpen ? 'x' : 'menu'} size={22} />

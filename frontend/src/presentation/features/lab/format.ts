@@ -1,12 +1,8 @@
-const TIME = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
-
-/** « à 14:32 » le jour même, sinon la date. */
-export function formatUptimeSince(date: Date, now: Date = new Date()): string {
-  const sameDay = date.toDateString() === now.toDateString();
-  return sameDay ? `à ${TIME.format(date)}` : `le ${DATE.format(date)}`;
-}
-
-export function formatDate(date: Date): string {
-  return DATE.format(date);
+/**
+ * Deux dates tombent-elles le même jour ? La formulation (« à 14:32 » ou « le
+ * 3 mars ») et le format viennent du catalogue et de la locale, pas d'ici :
+ * ce fichier ne connaît plus aucune langue.
+ */
+export function isSameDay(a: Date, b: Date): boolean {
+  return a.toDateString() === b.toDateString();
 }

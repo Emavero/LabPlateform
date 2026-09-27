@@ -1,5 +1,6 @@
 package com.labplatform.adapter.in.web.dto;
 
+import com.labplatform.adapter.in.web.Texts;
 import com.labplatform.application.port.in.profile.ActivityEntry;
 import com.labplatform.domain.achievement.Achievement;
 
@@ -15,7 +16,7 @@ public final class ProfileDtos {
     public record AchievementResponse(String code, String name, String requirement, boolean earned) {
 
         public static AchievementResponse from(Achievement.Earned earned) {
-            return new AchievementResponse(earned.achievement().name(), earned.achievement().displayName(),
+            return new AchievementResponse(earned.achievement().name(), Texts.of(earned.achievement().displayName()),
                     earned.achievement().requirement(), earned.earned());
         }
 

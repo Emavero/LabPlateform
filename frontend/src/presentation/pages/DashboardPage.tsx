@@ -5,25 +5,20 @@ import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { BoxCard } from '../features/box/BoxCard';
 import { ProgressPanel } from '../features/box/ProgressPanel';
 import { VmCard } from '../features/lab/VmCard';
+import { useI18n } from '../i18n/I18nContext';
 import { useBoxes } from '../hooks/useBoxes';
 import { useLab } from '../hooks/useLab';
 import { useProgress } from '../hooks/useProgress';
 import { useAuth } from '../state/AuthContext';
 
-function greeting(now = new Date()): string {
+/** Salutation du moment. L'heure est celle du poste, comme partout ailleurs. */
+function greetingKey(now = new Date()): 'home.morning' | 'home.evening' {
   const hour = now.getHours();
-  if (hour < 5 || hour >= 18) return 'Bonsoir';
-  return 'Bonjour';
-}
-
-function summary(loading: boolean, total: number, running: number): string {
-  if (loading) return 'Chargement de votre environnement…';
-  if (total === 0) return 'Aucune machine provisionnée pour le moment.';
-  if (running === 0) return `Vos ${total} machines sont arrêtées.`;
-  return `${running} machine${running > 1 ? 's' : ''} sur ${total} en cours d'exécution.`;
+  return hour < 5 || hour >= 18 ? 'home.evening' : 'home.morning';
 }
 
 export function DashboardPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const lab = useLab();
   const { progress } = useProgress();
@@ -37,19 +32,27 @@ export function DashboardPage() {
       <header className="page__header">
         <div>
           <h1 className="page__title">
-            {greeting()}, {user ? displayNameOf(user) : ''}
+            {t('home.greeting', { greeting: t(greetingKey()), name: user ? displayNameOf(user) : '' })}
           </h1>
-          <p className="page__lead">{summary(lab.loading, lab.vms.length, running)}</p>
+          <p className="page__lead">
+            {lab.loading
+              ? t('home.loadingEnvironment')
+              : lab.vms.length === 0
+                ? t('home.noMachine')
+                : running === 0
+                  ? t('home.allStopped', { total: lab.vms.length })
+                  : t('home.running', { running, total: lab.vms.length })}
+          </p>
         </div>
       </header>
 
       <Panel
-        title="Progression"
-        description="Votre rang, vos points et les machines qu'il vous reste à posséder."
+        title={t('home.progress')}
+        description={t('home.progressHint')}
         actions={
           <Link className="btn btn--ghost btn--sm" to="/scoreboard">
             <Icon name="trophy" size={16} />
-            <span>Classement</span>
+            <span>{t('nav.scoreboard')}</span>
           </Link>
         }
       >
@@ -57,24 +60,22 @@ export function DashboardPage() {
       </Panel>
 
       <Panel
-        title="Machines à compromettre"
-        description="Les cibles du moment. Trouvez leurs deux flags pour marquer leurs points."
+        title={t('home.targets')}
+        description={t('home.targetsHint')}
         actions={
           <Link className="btn btn--ghost btn--sm" to="/machines">
             <Icon name="target" size={16} />
-            <span>Tout le catalogue</span>
+            <span>{t('home.wholeCatalogue')}</span>
           </Link>
         }
       >
         {catalogue.loading && catalogue.boxes.length === 0 ? (
           <div className="empty">
-            <Spinner size={22} label="Chargement des machines" />
+            <Spinner size={22} label={t('home.loadingMachines')} />
           </div>
         ) : featured.length === 0 ? (
           <p className="empty">
-            {catalogue.boxes.length === 0
-              ? "Aucune machine n'est publiée pour le moment."
-              : 'Toutes les machines du catalogue sont possédées. Chapeau.'}
+            {t(catalogue.boxes.length === 0 ? 'machines.none' : 'home.allOwned')}
           </p>
         ) : (
           <div className="box-grid">
@@ -86,12 +87,12 @@ export function DashboardPage() {
       </Panel>
 
       <Panel
-        title="Lab / Infrastructure"
-        description="Démarrez une machine pour afficher son adresse, son port et ses identifiants temporaires."
+        title={t('home.lab')}
+        description={t('home.labHint')}
         actions={
           <Link className="btn btn--ghost btn--sm" to="/labs">
             <Icon name="server" size={16} />
-            <span>Ouvrir le lab</span>
+            <span>{t('home.openLab')}</span>
           </Link>
         }
       >
@@ -103,10 +104,11 @@ export function DashboardPage() {
 
 /** Grille partagée par le tableau de bord et la page Lab. */
 export function LabGrid({ lab }: { lab: ReturnType<typeof useLab> }) {
+  const { t } = useI18n();
   if (lab.loading && lab.vms.length === 0) {
     return (
       <div className="empty">
-        <Spinner size={22} label="Chargement des machines" />
+        <Spinner size={22} label={t('home.loadingMachines')} />
       </div>
     );
   }
@@ -114,10 +116,10 @@ export function LabGrid({ lab }: { lab: ReturnType<typeof useLab> }) {
     return (
       <Alert
         tone="error"
-        title="Impossible de charger les machines"
+        title={t('home.labLoadError')}
         action={
           <Button variant="ghost" size="sm" icon="refresh" onClick={() => void lab.reload()}>
-            Réessayer
+            {t('common.retry')}
           </Button>
         }
       >
@@ -126,7 +128,7 @@ export function LabGrid({ lab }: { lab: ReturnType<typeof useLab> }) {
     );
   }
   if (lab.vms.length === 0) {
-    return <p className="empty">Aucune machine n'est encore provisionnée pour votre compte.</p>;
+    return <p className="empty">{t('home.labEmpty')}</p>;
   }
   return (
     <div className="vm-grid">

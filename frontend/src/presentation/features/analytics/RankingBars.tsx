@@ -1,4 +1,5 @@
 import { barWidth, type ContentInsight } from '@/domain/models/Analytics';
+import { useI18n } from '../../i18n/I18nContext';
 
 /**
  * Classement de contenus, en barres horizontales.
@@ -10,8 +11,9 @@ import { barWidth, type ContentInsight } from '@/domain/models/Analytics';
  * et de cours, qui ne tiennent pas sous une colonne.
  */
 export function RankingBars({ insight }: { insight: ContentInsight }) {
+  const { t } = useI18n();
   if (insight.entries.length === 0) {
-    return <p className="empty">Aucune donnée sur la période.</p>;
+    return <p className="empty">{t('admin.noData')}</p>;
   }
 
   return (

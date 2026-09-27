@@ -7,6 +7,7 @@ import { RecommendationList } from '../features/analytics/RecommendationList';
 import { SegmentBars } from '../features/analytics/SegmentBars';
 import { StatTile } from '../features/analytics/StatTile';
 import { JournalTimeline } from '../features/journal/JournalTimeline';
+import { useI18n } from '../i18n/I18nContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useJournal } from '../hooks/useJournal';
 
@@ -19,6 +20,7 @@ import { useJournal } from '../hooks/useJournal';
  * qui flatteraient une plateforme dont personne ne se sert plus.
  */
 export function AdminDashboardPage() {
+  const { t, locale } = useI18n();
   const { analytics, windowDays, loading, error, setWindow, reload } = useAnalytics();
   const journal = useJournal('platform', 40);
 
@@ -26,14 +28,12 @@ export function AdminDashboardPage() {
     <div className="page">
       <header className="page__header">
         <div>
-          <p className="page__eyebrow">Administration</p>
-          <h1 className="page__title">Tableau de bord</h1>
-          <p className="page__lead">
-            Ce que les comptes font de la plateforme, sur {windowDays} jours, et ce qu'il y a à en tirer.
-          </p>
+          <p className="page__eyebrow">{t('admin.eyebrow')}</p>
+          <h1 className="page__title">{t('admin.title')}</h1>
+          <p className="page__lead">{t('admin.lead', { days: windowDays })}</p>
         </div>
         <div className="page__actions">
-          <div className="window-picker" role="group" aria-label="Fenêtre d'observation">
+          <div className="window-picker" role="group" aria-label={t('admin.window')}>
             {WINDOWS.map((days) => (
               <button
                 key={days}
@@ -44,12 +44,12 @@ export function AdminDashboardPage() {
                 aria-pressed={windowDays === days}
                 onClick={() => setWindow(days)}
               >
-                {days} j
+                {t('admin.windowDays', { days })}
               </button>
             ))}
           </div>
           <Button variant="ghost" size="sm" icon="refresh" loading={loading} onClick={() => void reload()}>
-            Actualiser
+            {t('common.refresh')}
           </Button>
         </div>
       </header>
@@ -57,10 +57,10 @@ export function AdminDashboardPage() {
       {error && (
         <Alert
           tone="error"
-          title="Impossible de charger les indicateurs"
+          title={t('admin.metricsUnavailable')}
           action={
             <Button variant="ghost" size="sm" icon="refresh" onClick={() => void reload()}>
-              Réessayer
+              {t('common.retry')}
             </Button>
           }
         >
@@ -70,93 +70,93 @@ export function AdminDashboardPage() {
 
       {loading && !analytics ? (
         <div className="empty">
-          <Spinner size={22} label="Calcul des indicateurs" />
+          <Spinner size={22} label={t('admin.computing')} />
         </div>
       ) : (
         analytics && (
           <>
             <Panel
-              title="Ce qu'il y a à faire"
-              description="Déduit de ce que les comptes ont réellement fait, avec le chiffre qui le motive."
+              title={t('admin.todo')}
+              description={t('admin.todoHint')}
             >
               <RecommendationList recommendations={analytics.recommendations} />
             </Panel>
 
-            <section className="kpi-row" aria-label="Indicateurs d'audience">
+            <section className="kpi-row" aria-label={t('admin.audienceGroup')}>
               <StatTile
-                label="Comptes"
+                label={t('admin.accounts')}
                 value={analytics.audience.users}
-                hint={`${analytics.audience.newUsers} nouveaux sur la période`}
+                hint={t('admin.accountsHint', { count: analytics.audience.newUsers })}
               />
               <StatTile
-                label="Comptes actifs"
+                label={t('admin.activeAccounts')}
                 value={analytics.audience.activeUsers}
                 previous={analytics.previous.activeUsers}
-                hint={`${analytics.audience.activeRate} % de l'ensemble`}
+                hint={t('admin.activeHint', { rate: analytics.audience.activeRate })}
               />
               <StatTile
-                label="Comptes dormants"
+                label={t('admin.dormantAccounts')}
                 value={analytics.audience.dormantUsers}
-                hint="Rien fait depuis l'inscription"
+                hint={t('admin.dormantHint')}
                 upIsGood={false}
               />
               {/* Pas de variation ici : le nombre d'abonnés est un stock, et le
                   comparer aux abonnements ouverts la période d'avant — un flux —
                   donnerait un pourcentage qui ne veut rien dire. */}
               <StatTile
-                label="Abonnés Pro"
+                label={t('admin.proAccounts')}
                 value={analytics.audience.proUsers}
-                hint={`${analytics.audience.conversionRate} % de conversion`}
+                hint={t('admin.proHint', { rate: analytics.audience.conversionRate })}
               />
               <StatTile
-                label="Abonnements ouverts"
+                label={t('admin.subscriptionsOpened')}
                 value={analytics.revenue.paymentsSucceeded}
                 previous={analytics.previous.subscriptionsStarted}
-                hint={`${analytics.revenue.checkoutsStarted} paiements engagés`}
+                hint={t('admin.subscriptionsHint', { count: analytics.revenue.checkoutsStarted })}
               />
               {/* Sans cohorte antérieure, la rétention n'est pas « nulle » :
                   il n'y a rien à mesurer, et 0 % se lirait comme un résultat. */}
               <StatTile
-                label="Rétention"
+                label={t('admin.retention')}
                 value={analytics.audience.retentionCohort > 0 ? analytics.audience.retentionRate : null}
                 unit=" %"
                 hint={
                   analytics.audience.retentionCohort > 0
-                    ? `Sur ${analytics.audience.retentionCohort} comptes déjà là au début de la période`
-                    : 'Aucun compte antérieur à la période : rien à mesurer.'
+                    ? t('admin.retentionHint', { count: analytics.audience.retentionCohort })
+                    : t('admin.retentionNone')
                 }
               />
             </section>
 
-            <section className="kpi-row" aria-label="Indicateurs d'usage">
+            <section className="kpi-row" aria-label={t('admin.usageGroup')}>
               <StatTile
-                label="Flags validés"
+                label={t('admin.flagsValidated')}
                 value={analytics.engagement.flagsValidated}
                 previous={analytics.previous.flagsValidated}
               />
               <StatTile
-                label="Machines possédées"
+                label={t('admin.boxesPwned')}
                 value={analytics.engagement.boxesPwned}
-                hint={`${analytics.engagement.targetsSpawned} cibles lancées`}
+                hint={t('admin.boxesPwnedHint', { count: analytics.engagement.targetsSpawned })}
               />
               <StatTile
-                label="Flags refusés"
+                label={t('admin.flagsRefused')}
                 value={
                   analytics.engagement.flagsValidated + analytics.engagement.flagsRefused > 0
                     ? analytics.engagement.flagRefusalRate
                     : null
                 }
                 unit=" %"
-                hint={`${analytics.engagement.flagsRefused} soumissions refusées`}
+                hint={t('admin.flagsRefusedHint', { count: analytics.engagement.flagsRefused })}
                 upIsGood={false}
               />
               <StatTile
-                label="Sections terminées"
+                label={t('admin.sectionsCompleted')}
                 value={analytics.engagement.sectionsCompleted}
                 previous={analytics.previous.sectionsCompleted}
               />
               <StatTile
-                label="Quiz réussis"
+                label={t('admin.quizPassed')}
                 value={
                   analytics.engagement.quizPassed + analytics.engagement.quizFailed > 0
                     ? analytics.engagement.quizPassRate
@@ -165,36 +165,39 @@ export function AdminDashboardPage() {
                 unit=" %"
                 hint={
                   analytics.engagement.quizPassed + analytics.engagement.quizFailed > 0
-                    ? `${analytics.engagement.quizPassed} réussis, ${analytics.engagement.quizFailed} manqués`
-                    : 'Aucun quiz passé sur la période.'
+                    ? t('admin.quizHint', {
+                        passed: analytics.engagement.quizPassed,
+                        failed: analytics.engagement.quizFailed,
+                      })
+                    : t('admin.quizNone')
                 }
               />
               <StatTile
-                label="Comptes rendus"
+                label={t('admin.writeups')}
                 value={analytics.engagement.writeupsPublished}
-                hint="Publiés sur la période"
+                hint={t('admin.writeupsHint')}
               />
             </section>
 
             <div className="page__grid">
               <Panel
-                title="Classes d'utilisateurs"
-                description="Chaque compte est rangé selon la famille où il agit le plus."
+                title={t('admin.segments')}
+                description={t('admin.segmentsHint')}
               >
                 <SegmentBars segments={analytics.segments} />
               </Panel>
 
               <Panel
-                title="Encaissements"
-                description="Un total par devise : des francs CFA et des euros ne s'additionnent pas."
+                title={t('admin.revenue')}
+                description={t('admin.revenueHint')}
               >
                 {analytics.revenue.collected.length === 0 ? (
-                  <p className="empty">Aucun paiement encaissé sur la période.</p>
+                  <p className="empty">{t('admin.revenueEmpty')}</p>
                 ) : (
                   <ul className="revenue">
                     {analytics.revenue.collected.map((money) => (
                       <li key={money.currency} className="revenue__row">
-                        <span className="revenue__amount">{formatMoney(money)}</span>
+                        <span className="revenue__amount">{formatMoney(money, locale)}</span>
                         <span className="revenue__currency">{money.currency}</span>
                       </li>
                     ))}
@@ -202,19 +205,25 @@ export function AdminDashboardPage() {
                 )}
                 <dl className="revenue__facts">
                   <div>
-                    <dt>Paiements aboutis</dt>
+                    <dt>{t('admin.paymentsSettled')}</dt>
                     <dd>
-                      {analytics.revenue.paymentsSucceeded} / {analytics.revenue.checkoutsStarted} engagés
+                      {t('admin.paymentsSettledValue', {
+                        succeeded: analytics.revenue.paymentsSucceeded,
+                        started: analytics.revenue.checkoutsStarted,
+                      })}
                     </dd>
                   </div>
                   <div>
-                    <dt>Refusés</dt>
+                    <dt>{t('admin.paymentsRefused')}</dt>
                     <dd>
-                      {analytics.revenue.paymentsFailed} ({analytics.revenue.failureRate} %)
+                      {t('admin.paymentsRefusedValue', {
+                        count: analytics.revenue.paymentsFailed,
+                        rate: analytics.revenue.failureRate,
+                      })}
                     </dd>
                   </div>
                   <div>
-                    <dt>Parcours mené à terme</dt>
+                    <dt>{t('admin.checkoutCompleted')}</dt>
                     <dd>{analytics.revenue.checkoutCompletionRate} %</dd>
                   </div>
                 </dl>
@@ -230,44 +239,44 @@ export function AdminDashboardPage() {
             </div>
 
             <Panel
-              title="Contenu publié"
+              title={t('admin.published')}
               actions={
                 <>
                   <Link className="btn btn--ghost btn--sm" to="/admin/machines">
                     <Icon name="target" size={16} />
-                    <span>Gérer les machines</span>
+                    <span>{t('nav.adminMachines')}</span>
                   </Link>
                   <Link className="btn btn--primary btn--sm" to="/admin/cours">
                     <Icon name="book" size={16} />
-                    <span>Gérer les cours</span>
+                    <span>{t('nav.adminCourses')}</span>
                   </Link>
                 </>
               }
             >
               <dl className="admin-stats">
                 <div>
-                  <dt>Machines</dt>
+                  <dt>{t('admin.machines')}</dt>
                   <dd>{analytics.catalogue.boxes ?? 0}</dd>
                 </div>
                 <div>
-                  <dt>Cours</dt>
+                  <dt>{t('admin.courses')}</dt>
                   <dd>{analytics.catalogue.courses ?? 0}</dd>
                 </div>
                 <div>
-                  <dt>Sections</dt>
+                  <dt>{t('admin.sections')}</dt>
                   <dd>{analytics.catalogue.sections ?? 0}</dd>
                 </div>
               </dl>
             </Panel>
 
             <Panel
-              title="Dernières actions"
-              description="Journal de toute la plateforme. Les auteurs n'y figurent que par leur pseudonyme."
+              title={t('admin.latest')}
+              description={t('admin.latestHint')}
             >
               {journal.error ? (
                 <Alert tone="error">{journal.error.message}</Alert>
               ) : journal.loading && journal.lines.length === 0 ? (
-                <Spinner label="Chargement du journal…" />
+                <Spinner label={t('common.loading')} />
               ) : (
                 <JournalTimeline lines={journal.lines} showAuthor />
               )}
