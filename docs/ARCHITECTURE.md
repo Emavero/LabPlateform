@@ -217,6 +217,85 @@ qu'il arrive. C'est le meilleur angle pour comprendre le code.
   se perdre, ni se décerner deux fois — et en ajouter un n'exige aucune
   migration.
 
+### `billing` — l'abonnement et l'encaissement
+
+- **`Payment`** — un paiement qui réussit ne réussit qu'une fois :
+  `succeed()` rend `false` si le paiement était déjà encaissé, ce qui rend
+  l'encaissement **idempotent** — un prestataire qui notifie deux fois ne
+  crédite pas deux abonnements.
+- **`Subscription`** — la formule et son échéance. Résilier arrête le
+  renouvellement sans rien retirer : la période déjà payée reste acquise.
+- **`Money`** — montants en **unités mineures** et `Currency` : aucun flottant,
+  et deux monnaies ne s'additionnent jamais (XOF et EUR restent séparés).
+- **`ProAccessPolicy`** — **la porte unique** de l'accès réservé. Le contrôle
+  est dans le domaine, pas dans la chaîne HTTP : une ressource réservée le
+  reste quel que soit l'appelant, et la règle se lit en un endroit. Les modules
+  qui lisent le catalogue en masse (exposition, scénarios) passent par elle.
+
+### `journal` — ce que les comptes font vraiment
+
+- **`JournalEvent`** — journal **en ajout seul** : un événement ne se corrige
+  pas, il s'en ajoute un autre. C'est ce qui permet de s'y fier pour compter.
+  La ressource est désignée par son lien, jamais par une clé étrangère : le
+  journal reste lisible après la suppression d'une machine.
+- **`JournalKind` / `JournalFamily`** — ne sont inscrits que des **actes réels,
+  faits côté serveur** : aucune balise de suivi dans le navigateur. Ce que la
+  plateforme sait d'un compte est exactement ce que ce compte lui a demandé.
+
+### `insight` — ce que les chiffres conseillent
+
+- **`RecommendationEngine`** — fonction **pure** : des signaux entrent, des
+  recommandations classées par gravité sortent. Les seuils sont nommés, réunis
+  en tête de fichier, et se relisent sans dérouler une requête SQL.
+
+### `exposure` — la surface d'attaque du lab
+
+- **`ExposureAnalyzer`** — note chaque cible et **rend les raisons de la
+  note** : un score sans ses raisons ne se conteste pas, donc ne s'améliore
+  pas. Un taux n'est lu qu'au-delà d'un seuil de tentatives, sans quoi « 100 %
+  de réussite » sur deux essais décrirait un hasard.
+- **`AttackPathFinder`** — une cible atteinte depuis une autre **coûte moins**
+  qu'attaquée de front. Sans cette remise, aucun détour ne serait jamais
+  rentable et « le plus court chemin » n'aurait qu'une étape. Les arcs vont du
+  moins résistant au plus résistant : le graphe est sans cycle, et le calcul
+  tient en une passe.
+- **`ExposedService`** — déduit du système déclaré, **jamais d'un balayage** :
+  ce module décrit la surface que la plateforme ouvre elle-même, et le dit.
+
+### `report` — rendre compte d'une période
+
+- **`ReportWindow`** — la période et **celle qui la précède**, de même durée :
+  un chiffre seul ne dit pas s'il monte. Bornes disjointes (inférieure exclue,
+  supérieure incluse), donc aucun acte compté deux fois.
+- **`ReportTotals`** — « aucun quiz rendu » se distingue de « tous manqués » :
+  le premier n'a rien à mesurer et s'affiche en tiret, pas en zéro.
+
+### `support` — les demandes d'assistance
+
+- **`Ticket`** — agrégat et fil de messages. **Le statut ne se saisit pas** :
+  il se déduit du dernier message — l'équipe répond, la demande attend le
+  demandeur ; le demandeur écrit, elle attend l'équipe. Une file d'attente ne
+  peut donc pas mentir. Une demande résolue accepte encore des messages, et le
+  premier la rouvre : un fil clos serait une impasse pour qui n'a pas obtenu
+  ce qu'il demandait.
+- **`TicketMessage`** — porte `fromStaff` **en plus** de son auteur : c'est ce
+  drapeau qui décide du côté du fil, de sorte qu'un compte promu
+  administrateur ne réécrive pas l'histoire des fils déjà écrits.
+
+### `scenario` — les parcours guidés
+
+- **`Scenario`** — **n'ajoute aucun contenu** : il ordonne des machines et des
+  cours qui existent déjà. Conséquence heureuse, l'avancement n'a rien à
+  stocker — il se déduit des flags validés et des sections terminées, si bien
+  qu'un joueur ayant fait le travail avant d'ouvrir le scénario en voit les
+  étapes déjà franchies.
+- **`ScenarioEvidence`** — ce que le joueur a obtenu, rassemblé **par la
+  couche application** et passé à l'agrégat : un agrégat qui va chercher ses
+  données ne se teste plus sans base.
+- **`ScenarioStepKind`** — deux natures seulement, parce que la plateforme n'a
+  que deux sortes de preuves qu'une chose a été faite. Une étape « lire la
+  documentation » n'existe pas, faute de pouvoir la constater.
+
 ### `shared` — le vocabulaire des erreurs
 
 Cinq catégories, traduites une seule fois en codes HTTP (§6) :
@@ -420,7 +499,7 @@ points, le service ne connaît pas les flags, le domaine ne connaît pas HTTP.
 
 ## 9. La base de données
 
-Neuf tables, décrites dans `backend/src/main/resources/db/schema.sql`.
+Décrites dans `backend/src/main/resources/db/schema.sql`.
 
 | Table | Rôle |
 |---|---|
@@ -436,12 +515,23 @@ Neuf tables, décrites dans `backend/src/main/resources/db/schema.sql`.
 | `media_asset` | Fiches des vidéos téléversées (le contenu vit sur le disque) |
 | `course` / `course_section` | Cours et leurs sections (texte, vidéo) |
 | `course_section_completion` | Suivi de lecture |
+| `subscription` | Formule en cours d'un compte et son échéance |
+| `payment` | Paiements engagés et encaissés (contrainte : réglé ⇔ daté) |
+| `journal_event` | Journal des actes, en ajout seul |
+| `support_ticket` / `support_message` | Demandes d'assistance et leurs fils |
+| `scenario` / `scenario_step` | Scénarios d'exercice et leurs étapes |
 
 **Le schéma n'est pas généré par Hibernate** (`ddl-auto: none`). Il est écrit
 à la main, en SQL compatible PostgreSQL et H2, et **idempotent** : PostgreSQL
 l'exécute à la création du volume, le backend le rejoue sans effet à chaque
 démarrage. Une évolution s'ajoute en fin de fichier sous une forme rejouable
 (`ALTER TABLE … ADD COLUMN IF NOT EXISTS …`).
+
+**Deux modules n'ont aucune table**, et c'est voulu : le centre de rapports et
+l'analyse d'exposition se **calculent à la demande**. Un rapport enregistré
+vieillirait mal — les cours sont réécrits, les machines retirées — et il
+faudrait le régénérer pour s'y fier ; le recalculer coûte une requête et dit
+toujours la vérité du moment.
 
 **Les invariants du domaine sont doublés en base** quand c'est possible :
 `ck_vm_state` interdit une machine arrêtée avec des accès, et
