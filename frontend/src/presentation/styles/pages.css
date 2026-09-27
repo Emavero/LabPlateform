@@ -2039,3 +2039,323 @@ button.back-link {
     display: none;
   }
 }
+
+/* ── Indicateurs d'administration ───────────────────────────────────────── */
+
+.window-picker {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.5);
+}
+
+.window-picker__option {
+  padding: 0.3rem 0.65rem;
+  border: 0;
+  border-radius: calc(var(--radius-md) - 0.25rem);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--step--1);
+  cursor: pointer;
+}
+
+.window-picker__option--active {
+  background: var(--violet-soft);
+  color: var(--text);
+}
+
+/* Rangée de tuiles : un chiffre isolé se lit mieux en chiffres qu'en barre. */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-tile {
+  display: grid;
+  align-content: start;
+  gap: 0.15rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.stat-tile__label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.stat-tile__value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 600;
+  line-height: 1.1;
+  /* Chiffres proportionnels pour un grand nombre isolé : plus lisible qu'une
+     grille de largeurs fixes, qui n'a d'intérêt qu'en colonne. */
+  font-variant-numeric: proportional-nums;
+}
+
+.stat-tile__unit {
+  margin-left: 0.1rem;
+  color: var(--text-muted);
+  font-size: var(--step-1);
+}
+
+.stat-tile__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.1rem 0 0;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+/* La couleur suit le sens de la nouvelle, pas celui de la flèche. */
+.stat-tile__delta--good {
+  color: var(--running);
+}
+
+.stat-tile__delta--bad {
+  color: var(--danger);
+}
+
+.stat-tile__hint {
+  margin: 0.15rem 0 0;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+/* Classements : une seule teinte, la longueur porte la comparaison. */
+.ranking,
+.segments,
+.revenue,
+.advice {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ranking {
+  gap: 0.45rem;
+}
+
+.ranking__row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ranking__label {
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking__track,
+.segments__track {
+  display: block;
+  height: 0.6rem;
+  border-radius: 0 0.25rem 0.25rem 0;
+  background: rgba(139, 124, 255, 0.08);
+}
+
+/* Extrémité arrondie côté valeur, d'aplomb sur la ligne de départ. */
+.ranking__bar,
+.segments__bar {
+  display: block;
+  height: 100%;
+  min-width: 0.15rem;
+  border-radius: 0 0.25rem 0.25rem 0;
+  background: var(--violet);
+}
+
+.ranking__value {
+  color: var(--text);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking__unit {
+  color: var(--text-faint);
+}
+
+.segments {
+  gap: 0.85rem;
+}
+
+.segments__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.segments__name {
+  font-family: var(--font-display);
+}
+
+.segments__count {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+.segments__advice {
+  margin: 0.3rem 0 0;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.revenue {
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+}
+
+.revenue__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.revenue__amount {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+
+.revenue__currency {
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.revenue__facts {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.revenue__facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: var(--step--1);
+}
+
+.revenue__facts dt {
+  color: var(--text-muted);
+}
+
+.revenue__facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.advice {
+  gap: 0.6rem;
+}
+
+.advice__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.4);
+}
+
+/* La teinte double l'icône et le mot ; elle ne les remplace pas. */
+.advice__item--warning {
+  border-left-color: var(--danger);
+}
+
+.advice__item--warning .advice__icon {
+  color: var(--danger);
+}
+
+.advice__item--opportunity {
+  border-left-color: var(--warning);
+}
+
+.advice__item--opportunity .advice__icon {
+  color: var(--warning);
+}
+
+.advice__item--info {
+  border-left-color: var(--line-strong);
+}
+
+.advice__item--info .advice__icon {
+  color: var(--text-muted);
+}
+
+.advice__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.2rem;
+  font-family: var(--font-display);
+}
+
+.advice__severity {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+}
+
+.advice__text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.advice__evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.3rem 0 0;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.advice__evidence code {
+  font-family: var(--font-mono);
+}
+
+/* Indicateur sans donnée : un tiret cadratin, jamais un zéro qui mentirait. */
+.stat-tile__value--none {
+  color: var(--text-faint);
+}
+
+/*
+ * Deux colonnes sur écran large pour les panneaux du tableau de bord : les
+ * classements tiennent en demi-largeur, et les empiler tous ferait défiler
+ * l'écran sur deux mètres pour six listes de cinq lignes.
+ */
+.page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  align-items: start;
+  gap: 1rem;
+}
+
+@media (max-width: 52rem) {
+  .page__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

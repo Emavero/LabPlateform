@@ -27,16 +27,24 @@ public interface JournalPort {
     /** Tous comptes confondus, les plus récents d'abord : vue d'administration. */
     List<JournalEvent> findRecent(int limit);
 
-    /** Nombre d'événements par nature depuis cette date. */
-    List<Tally<JournalKind>> tallyByKindSince(Instant since);
+    /**
+     * Décomptes sur un intervalle, borne inférieure exclue et borne supérieure
+     * incluse.
+     * <p>
+     * Les deux bornes sont demandées, et non une simple date de départ : le
+     * tableau de bord compare une période à celle qui la précède, ce qu'une
+     * borne unique ne permet pas — on ne peut pas soustraire deux « depuis »
+     * sans compter deux fois ce qui est à cheval.
+     */
+    List<Tally<JournalKind>> tallyByKindBetween(Instant from, Instant to);
 
     /** Ressources les plus concernées par cette nature d'événement. */
-    List<Tally<String>> tallyBySubjectSince(JournalKind kind, Instant since, int limit);
+    List<Tally<String>> tallyBySubjectBetween(JournalKind kind, Instant from, Instant to, int limit);
 
-    /** Comptes ayant agi depuis cette date, une ligne par couple (compte, nature). */
-    List<UserActivity> activityByUserSince(Instant since);
+    /** Comptes ayant agi sur l'intervalle, une ligne par couple (compte, nature). */
+    List<UserActivity> activityByUserBetween(Instant from, Instant to);
 
-    long countSince(JournalKind kind, Instant since);
+    long countBetween(JournalKind kind, Instant from, Instant to);
 
     record Tally<T>(T key, long count) {
     }

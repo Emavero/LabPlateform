@@ -61,29 +61,29 @@ public class JournalPersistenceAdapter implements JournalPort {
     }
 
     @Override
-    public List<Tally<JournalKind>> tallyByKindSince(Instant since) {
-        return repository.tallyByKind(since).stream()
+    public List<Tally<JournalKind>> tallyByKindBetween(Instant from, Instant to) {
+        return repository.tallyByKind(from, to).stream()
                 .map(row -> new Tally<>(row.getKind(), row.getTotal()))
                 .toList();
     }
 
     @Override
-    public List<Tally<String>> tallyBySubjectSince(JournalKind kind, Instant since, int limit) {
-        return repository.tallyBySubject(kind, since, PageRequest.of(0, bounded(limit))).stream()
+    public List<Tally<String>> tallyBySubjectBetween(JournalKind kind, Instant from, Instant to, int limit) {
+        return repository.tallyBySubject(kind, from, to, PageRequest.of(0, bounded(limit))).stream()
                 .map(row -> new Tally<>(row.getSubject(), row.getTotal()))
                 .toList();
     }
 
     @Override
-    public List<UserActivity> activityByUserSince(Instant since) {
-        return repository.activityByUser(since).stream()
+    public List<UserActivity> activityByUserBetween(Instant from, Instant to) {
+        return repository.activityByUser(from, to).stream()
                 .map(row -> new UserActivity(row.getUserId(), row.getKind(), row.getTotal()))
                 .toList();
     }
 
     @Override
-    public long countSince(JournalKind kind, Instant since) {
-        return repository.countByKindAndOccurredAtAfter(kind, since);
+    public long countBetween(JournalKind kind, Instant from, Instant to) {
+        return repository.countByKindAndOccurredAtAfterAndOccurredAtLessThanEqual(kind, from, to);
     }
 
     /** Une page demandée à zéro ou sans borne ferait tomber la base, pas la page. */

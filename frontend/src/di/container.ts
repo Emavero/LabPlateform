@@ -1,6 +1,7 @@
 import { createHttpClient } from '@/data/http/httpClient';
 import { HttpAccountRepository } from '@/data/repositories/HttpAccountRepository';
 import { HttpAdminRepository } from '@/data/repositories/HttpAdminRepository';
+import { HttpAnalyticsRepository } from '@/data/repositories/HttpAnalyticsRepository';
 import { HttpAuthRepository } from '@/data/repositories/HttpAuthRepository';
 import { HttpBillingRepository } from '@/data/repositories/HttpBillingRepository';
 import { HttpJournalRepository } from '@/data/repositories/HttpJournalRepository';
@@ -35,6 +36,7 @@ import {
   StartVmUseCase,
   StopVmUseCase,
 } from '@/domain/usecases/lab';
+import { GetAnalyticsUseCase } from '@/domain/usecases/analytics';
 import {
   DeleteBoxUseCase,
   DeleteCourseUseCase,
@@ -128,6 +130,8 @@ export interface Dependencies {
     readonly deleteBox: DeleteBoxUseCase;
     readonly uploadMedia: UploadMediaUseCase;
     readonly getCourse: GetCourseForEditingUseCase;
+    /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
+    readonly analytics: GetAnalyticsUseCase;
   };
   readonly writeups: {
     readonly list: ListWriteupsUseCase;
@@ -165,6 +169,7 @@ export function createContainer(): Dependencies {
   const adminRepository = new HttpAdminRepository(http);
   const billingRepository = new HttpBillingRepository(http);
   const journalRepository = new HttpJournalRepository(http);
+  const analyticsRepository = new HttpAnalyticsRepository(http);
 
   return {
     sessionMonitor,
@@ -224,6 +229,7 @@ export function createContainer(): Dependencies {
       deleteBox: new DeleteBoxUseCase(adminRepository),
       uploadMedia: new UploadMediaUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
+      analytics: new GetAnalyticsUseCase(analyticsRepository),
     },
     writeups: {
       list: new ListWriteupsUseCase(writeupRepository),

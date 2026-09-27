@@ -16,6 +16,7 @@ import com.labplatform.domain.journal.JournalEvent;
 import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.ConflictException;
 import com.labplatform.domain.shared.NotFoundException;
+import com.labplatform.domain.shared.PaymentRequiredException;
 import com.labplatform.domain.user.Actor;
 
 import java.time.Clock;
@@ -66,9 +67,17 @@ public class BoxInstanceService implements SpawnBoxUseCase {
     public BoxView spawn(Actor actor, String slug) {
         Box box = require(slug);
         // Vérifié avant d'allumer quoi que ce soit : une cible réservée ne
-        // consomme pas de ressources pour un compte qui n'y a pas droit.
+        // consomme pas de ressources pour un compte qui n'y a pas droit. Le
+        // refus est inscrit — comme celui d'un flag — parce qu'une envie non
+        // servie est ce que le tableau de bord a le plus besoin de connaître.
         if (box.isProOnly()) {
-            ProAccessPolicy.requirePro(actor, plans.planOf(actor));
+            try {
+                ProAccessPolicy.requirePro(actor, plans.planOf(actor));
+            } catch (PaymentRequiredException locked) {
+                journal.record(JournalEvent.of(actor.userId(), JournalKind.BOX_LOCKED_OUT, box.getSlug(),
+                        clock.instant()));
+                throw locked;
+            }
         }
         expireOutdated(actor.userId());
 

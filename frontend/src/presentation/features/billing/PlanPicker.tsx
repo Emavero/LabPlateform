@@ -65,7 +65,7 @@ export function PlanPicker({ offers, busy, onSubscribe }: PlanPickerProps) {
           return (
             <li key={method} className={['plan-method', !offer.available && 'plan-method--off'].filter(Boolean).join(' ')}>
               <div className="plan-method__head">
-                <Icon name={method === 'CARD' ? 'key' : 'medal'} size={18} />
+                <Icon name={method === 'CARD' ? 'key' : 'wallet'} size={18} />
                 <span className="plan-method__name">{offer.methodName}</span>
               </div>
               <p className="plan-method__price">{formatMoney(offer.price)}</p>

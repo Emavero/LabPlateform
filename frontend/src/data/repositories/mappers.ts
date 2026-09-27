@@ -7,6 +7,7 @@ import type {
   PlanOffer,
   SubscriptionStatus,
 } from '@/domain/models/Billing';
+import type { Analytics } from '@/domain/models/Analytics';
 import type { Box, Difficulty, FlagKind } from '@/domain/models/Box';
 import type { JournalFamily, JournalLine } from '@/domain/models/Journal';
 import type {
@@ -113,6 +114,9 @@ export interface CheckoutDto {
   reference: string;
   redirectUrl: string;
 }
+
+/** Le serveur envoie les libellés avec les codes : rien à tenir à jour ici. */
+export type AnalyticsDto = Omit<Analytics, 'generatedAt'> & { generatedAt: string };
 
 export interface JournalLineDto {
   kind: string;
@@ -286,6 +290,10 @@ export function toBilling(dto: BillingDto): Billing {
       settledAt: payment.settledAt ? new Date(payment.settledAt) : null,
     })),
   };
+}
+
+export function toAnalytics(dto: AnalyticsDto): Analytics {
+  return { ...dto, generatedAt: new Date(dto.generatedAt) };
 }
 
 export function toJournalLine(dto: JournalLineDto): JournalLine {

@@ -48,10 +48,10 @@ public class InMemoryJournal implements JournalPort {
     }
 
     @Override
-    public List<Tally<JournalKind>> tallyByKindSince(Instant since) {
+    public List<Tally<JournalKind>> tallyByKindBetween(Instant from, Instant to) {
         Map<JournalKind, Long> counts = new LinkedHashMap<>();
         events.stream()
-                .filter(event -> event.getOccurredAt().isAfter(since))
+                .filter(event -> within(event.getOccurredAt(), from, to))
                 .forEach(event -> counts.merge(event.getKind(), 1L, Long::sum));
         return counts.entrySet().stream()
                 .map(entry -> new Tally<>(entry.getKey(), entry.getValue()))
@@ -60,10 +60,10 @@ public class InMemoryJournal implements JournalPort {
     }
 
     @Override
-    public List<Tally<String>> tallyBySubjectSince(JournalKind kind, Instant since, int limit) {
+    public List<Tally<String>> tallyBySubjectBetween(JournalKind kind, Instant from, Instant to, int limit) {
         Map<String, Long> counts = new LinkedHashMap<>();
         events.stream()
-                .filter(event -> event.getKind() == kind && event.getOccurredAt().isAfter(since))
+                .filter(event -> event.getKind() == kind && within(event.getOccurredAt(), from, to))
                 .forEach(event -> event.getSubject().ifPresent(subject -> counts.merge(subject, 1L, Long::sum)));
         return counts.entrySet().stream()
                 .map(entry -> new Tally<>(entry.getKey(), entry.getValue()))
@@ -73,10 +73,10 @@ public class InMemoryJournal implements JournalPort {
     }
 
     @Override
-    public List<UserActivity> activityByUserSince(Instant since) {
+    public List<UserActivity> activityByUserBetween(Instant from, Instant to) {
         Map<String, UserActivity> rows = new LinkedHashMap<>();
         events.stream()
-                .filter(event -> event.getOccurredAt().isAfter(since))
+                .filter(event -> within(event.getOccurredAt(), from, to))
                 .forEach(event -> rows.merge(event.getUserId() + ":" + event.getKind(),
                         new UserActivity(event.getUserId(), event.getKind(), 1L),
                         (existing, one) -> new UserActivity(existing.userId(), existing.kind(),
@@ -85,9 +85,14 @@ public class InMemoryJournal implements JournalPort {
     }
 
     @Override
-    public long countSince(JournalKind kind, Instant since) {
+    public long countBetween(JournalKind kind, Instant from, Instant to) {
         return events.stream()
-                .filter(event -> event.getKind() == kind && event.getOccurredAt().isAfter(since))
+                .filter(event -> event.getKind() == kind && within(event.getOccurredAt(), from, to))
                 .count();
+    }
+
+    /** Borne inférieure exclue, borne supérieure incluse : comme la requête réelle. */
+    private static boolean within(Instant at, Instant from, Instant to) {
+        return at.isAfter(from) && !at.isAfter(to);
     }
 }

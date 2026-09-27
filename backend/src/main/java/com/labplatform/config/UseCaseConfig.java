@@ -27,6 +27,7 @@ import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
 import com.labplatform.application.port.out.VirtualMachineRepositoryPort;
 import com.labplatform.application.service.AcademyService;
+import com.labplatform.application.service.AdminAnalyticsService;
 import com.labplatform.application.service.JournalService;
 import com.labplatform.application.service.BillingService;
 import com.labplatform.application.service.BillingSettings;
@@ -169,6 +170,15 @@ public class UseCaseConfig {
                                          WriteupRepositoryPort writeups, UserRepositoryPort users,
                                          JournalPort journal, TransactionPort transactions, Clock clock) {
         return new WriteupService(boxes, owns, writeups, users, journal, transactions, clock);
+    }
+
+    @Bean
+    public AdminAnalyticsService adminAnalyticsService(UserRepositoryPort users, BoxRepositoryPort boxes,
+                                                      CourseRepositoryPort courses,
+                                                      SubscriptionRepositoryPort subscriptions,
+                                                      PaymentRepositoryPort payments, JournalPort journal,
+                                                      Clock clock) {
+        return new AdminAnalyticsService(users, boxes, courses, subscriptions, payments, journal, clock);
     }
 
     @Bean

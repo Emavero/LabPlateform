@@ -81,6 +81,14 @@ const PATHS = {
   ),
   chevronsUpDown: <path d="m8 9 4-4 4 4M8 15l4 4 4-4" />,
   chevronRight: <path d="m9 6 6 6-6 6" />,
+  chevronUp: <path d="m6 15 6-6 6 6" />,
+  wallet: (
+    <>
+      <path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z" />
+      <path d="M16 12h4v3h-4a1.5 1.5 0 0 1 0-3Z" />
+    </>
+  ),
+  chevronDown: <path d="m6 9 6 6 6-6" />,
   logout: (
     <>
       <path d="M9.5 20.5H6A1.5 1.5 0 0 1 4.5 19V5A1.5 1.5 0 0 1 6 3.5h3.5" />

@@ -182,6 +182,37 @@ journaux. Une installation qui facture réellement passe en `live` et renseigne
 APP_BILLING_MODE=live STRIPE_SECRET_KEY=sk_live_… WAVE_API_KEY=wave_… docker compose up -d
 ```
 
+## Tableau de bord d'administration
+
+Le tableau de bord répond dans cet ordre : combien de monde, ce qu'ils font, ce
+que ça rapporte, **qui ils sont**, ce qui attire ou bloque, et **quoi faire**.
+
+- **Tout porte sur une fenêtre** (7, 30 ou 90 jours), jamais sur des totaux
+  depuis l'origine, qui flatteraient une plateforme dont plus personne ne se
+  sert. Les indicateurs qui mènent la lecture sont comparés à la période
+  précédente de même longueur : c'est la comparaison qui fait la tendance.
+- **Les comptes sont classés par ce dont ils se servent le plus** — chasseur de
+  machines, apprenant, bâtisseur de lab, curieux (il regarde sans agir),
+  dormant (rien depuis l'inscription). Chaque classe porte ce qu'il y a à lui
+  proposer. C'est la réponse à « qui sont mes utilisateurs ? » quand leur nombre
+  ne dit rien.
+- **Les recommandations sont déduites des chiffres et portent leur preuve** :
+  une section dont le quiz est massivement manqué, une machine où les flags sont
+  surtout refusés, un parcours de paiement abandonné, des cibles lancées sans
+  aucun flag, une machine réservée que les comptes gratuits viennent voir, une
+  filière bien plus consultée que l'autre. Les règles sont une fonction pure du
+  domaine (`RecommendationEngine`) : mêmes chiffres, mêmes conseils, éprouvables
+  sans base de données.
+- **Une mesure sans données affiche un tiret, jamais un zéro** : un taux de
+  réussite à 0 % se lirait comme un résultat alors qu'il n'y a rien eu à mesurer.
+- **Les encaissements sont totalisés par devise** : additionner des francs CFA
+  et des euros donnerait un nombre qui ne veut rien dire.
+
+Les graphiques sont en CSS, sans bibliothèque : des barres horizontales d'une
+seule teinte, parce que la longueur porte déjà la comparaison et que colorer
+chaque ligne encoderait deux fois la même information. La gravité des
+recommandations s'affiche avec une icône et un mot, jamais par la couleur seule.
+
 ## Administration
 
 L'administrateur ne voit pas les pages de joueur : son menu ne contient que
@@ -478,6 +509,7 @@ Principes appliqués :
 | POST    | `/api/billing/webhooks/{method}` | Notification du prestataire, authentifiée par signature |
 | GET     | `/api/journal?limit=50`        | Journal d'activité du compte connecté |
 | GET     | `/api/admin/journal?limit=100` | Journal de toute la plateforme (administration) |
+| GET     | `/api/admin/analytics?windowDays=30` | Indicateurs : audience, usage, revenus, classes, recommandations |
 | GET     | `/api/boxes/{slug}/writeups`   | Comptes rendus lisibles par l'appelant |
 | PUT     | `/api/boxes/{slug}/writeups/mine` | Écrit ou révise le sien (409 si non possédée) |
 | DELETE  | `/api/boxes/{slug}/writeups/mine` | Supprime le sien (204) |
