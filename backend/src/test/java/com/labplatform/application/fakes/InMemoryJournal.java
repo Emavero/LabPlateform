@@ -39,6 +39,16 @@ public class InMemoryJournal implements JournalPort {
                 .toList();
     }
 
+    /** Mêmes bornes que la requête : inférieure exclue, supérieure incluse. */
+    @Override
+    public List<JournalEvent> findByUserBetween(Long userId, Instant from, Instant to) {
+        return events.stream()
+                .filter(event -> event.getUserId().equals(userId))
+                .filter(event -> event.getOccurredAt().isAfter(from) && !event.getOccurredAt().isAfter(to))
+                .sorted(java.util.Comparator.comparing(JournalEvent::getOccurredAt))
+                .toList();
+    }
+
     @Override
     public List<JournalEvent> findRecent(int limit) {
         return events.stream()

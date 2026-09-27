@@ -41,6 +41,7 @@ import com.labplatform.application.service.BoxAdminService;
 import com.labplatform.application.service.BoxInstanceService;
 import com.labplatform.application.service.BoxService;
 import com.labplatform.application.service.ProfileService;
+import com.labplatform.application.service.ReportService;
 import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.SupportService;
 import com.labplatform.application.service.AuthenticationService;
@@ -187,6 +188,13 @@ public class UseCaseConfig {
     @Bean
     public JournalService journalService(JournalPort journal, UserRepositoryPort users) {
         return new JournalService(journal, users);
+    }
+
+    @Bean
+    public ReportService reportService(JournalPort journal, OwnRepositoryPort owns, BoxRepositoryPort boxes,
+                                       CourseRepositoryPort courses, SectionCompletionRepositoryPort completions,
+                                       Clock clock) {
+        return new ReportService(journal, owns, boxes, courses, completions, clock);
     }
 
     @Bean

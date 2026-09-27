@@ -10,6 +10,7 @@ import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
 import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
+import { HttpReportRepository } from '@/data/repositories/HttpReportRepository';
 import { HttpScoreboardRepository } from '@/data/repositories/HttpScoreboardRepository';
 import { HttpSupportRepository } from '@/data/repositories/HttpSupportRepository';
 import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
@@ -40,6 +41,7 @@ import {
 } from '@/domain/usecases/lab';
 import { GetAnalyticsUseCase } from '@/domain/usecases/analytics';
 import { GetLabExposureUseCase } from '@/domain/usecases/exposure';
+import { GetActivityReportUseCase } from '@/domain/usecases/report';
 import {
   DeleteBoxUseCase,
   DeleteCourseUseCase,
@@ -144,6 +146,10 @@ export interface Dependencies {
     /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
     readonly analytics: GetAnalyticsUseCase;
   };
+  /** Rapport d'activité du compte connecté, sur la période qu'il choisit. */
+  readonly reports: {
+    readonly activity: GetActivityReportUseCase;
+  };
   /** Surface d'attaque du lab : exposition des cibles et chemins de progression. */
   readonly exposure: {
     readonly get: GetLabExposureUseCase;
@@ -196,6 +202,7 @@ export function createContainer(): Dependencies {
   const analyticsRepository = new HttpAnalyticsRepository(http);
   const supportRepository = new HttpSupportRepository(http);
   const exposureRepository = new HttpExposureRepository(http);
+  const reportRepository = new HttpReportRepository(http);
 
   return {
     sessionMonitor,
@@ -256,6 +263,9 @@ export function createContainer(): Dependencies {
       uploadMedia: new UploadMediaUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
       analytics: new GetAnalyticsUseCase(analyticsRepository),
+    },
+    reports: {
+      activity: new GetActivityReportUseCase(reportRepository),
     },
     exposure: {
       get: new GetLabExposureUseCase(exposureRepository),

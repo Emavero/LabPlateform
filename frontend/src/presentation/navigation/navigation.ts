@@ -120,5 +120,4 @@ export const MODULES: Readonly<Record<string, ModuleInfo>> = {
     title: 'module.scenario-designer.title',
     description: 'module.scenario-designer.description',
   },
-  'report-center': { title: 'module.report-center.title', description: 'module.report-center.description' },
 };

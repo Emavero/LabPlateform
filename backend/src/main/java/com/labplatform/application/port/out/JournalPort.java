@@ -41,6 +41,15 @@ public interface JournalPort {
     /** Ressources les plus concernées par cette nature d'événement. */
     List<Tally<String>> tallyBySubjectBetween(JournalKind kind, Instant from, Instant to, int limit);
 
+    /**
+     * Événements d'un compte sur un intervalle, du plus ancien au plus récent.
+     * <p>
+     * Demandé au journal plutôt qu'obtenu en tronquant {@link #findByUser} :
+     * un rapport qui compte doit voir toute la période, et une limite laisserait
+     * silencieusement tomber les premiers jours d'un compte très actif.
+     */
+    List<JournalEvent> findByUserBetween(Long userId, Instant from, Instant to);
+
     /** Comptes ayant agi sur l'intervalle, une ligne par couple (compte, nature). */
     List<UserActivity> activityByUserBetween(Instant from, Instant to);
 

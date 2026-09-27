@@ -54,6 +54,15 @@ public class JournalPersistenceAdapter implements JournalPort {
     }
 
     @Override
+    public List<JournalEvent> findByUserBetween(Long userId, Instant from, Instant to) {
+        return repository
+                .findByUserIdAndOccurredAtAfterAndOccurredAtLessThanEqualOrderByOccurredAtAsc(userId, from, to)
+                .stream()
+                .map(JournalPersistenceAdapter::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<JournalEvent> findRecent(int limit) {
         return repository.findAllByOrderByOccurredAtDesc(PageRequest.of(0, bounded(limit))).stream()
                 .map(JournalPersistenceAdapter::toDomain)

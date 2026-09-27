@@ -14,6 +14,10 @@ public interface SpringDataJournalRepository extends JpaRepository<JournalEventJ
 
     List<JournalEventJpaEntity> findByUserIdOrderByOccurredAtDesc(Long userId, Pageable page);
 
+    /** Toute la période d'un compte, du plus ancien au plus récent : le rapport les additionne. */
+    List<JournalEventJpaEntity> findByUserIdAndOccurredAtAfterAndOccurredAtLessThanEqualOrderByOccurredAtAsc(
+            Long userId, java.time.Instant from, java.time.Instant to);
+
     List<JournalEventJpaEntity> findAllByOrderByOccurredAtDesc(Pageable page);
 
     long countByKindAndOccurredAtAfterAndOccurredAtLessThanEqual(JournalKind kind, Instant from, Instant to);

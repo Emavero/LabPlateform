@@ -21,6 +21,7 @@ import { ModulePlaceholderPage } from '@/presentation/pages/ModulePlaceholderPag
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
 import { PaymentReturnPage } from '@/presentation/pages/PaymentReturnPage';
 import { RegisterPage } from '@/presentation/pages/RegisterPage';
+import { ReportCenterPage } from '@/presentation/pages/ReportCenterPage';
 import { ProfilePage } from '@/presentation/pages/ProfilePage';
 import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
 import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
@@ -76,6 +77,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     <Route path="/modules/support" element={<SupportPage />} />
                     <Route path="/modules/exposure-analysis" element={<ExposurePage />} />
                     <Route path="/modules/attack-paths" element={<AttackPathsPage />} />
+                    <Route path="/modules/report-center" element={<ReportCenterPage />} />
                     <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
                   </Route>
 

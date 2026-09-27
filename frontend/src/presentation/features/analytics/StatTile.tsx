@@ -1,5 +1,6 @@
 import { compact, deltaPercent } from '@/domain/models/Analytics';
 import { Icon } from '../../design-system';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface StatTileProps {
   label: string;
@@ -26,6 +27,7 @@ interface StatTileProps {
  * 0 % se lirait comme un résultat, alors qu'il n'y a rien eu à mesurer.
  */
 export function StatTile({ label, value, previous, unit, hint, upIsGood = true }: StatTileProps) {
+  const { t } = useI18n();
   const delta = previous === undefined || value === null ? null : deltaPercent(value, previous);
   const good = delta === null || delta === 0 ? null : (delta > 0) === upIsGood;
 
@@ -43,11 +45,11 @@ export function StatTile({ label, value, previous, unit, hint, upIsGood = true }
             .join(' ')}
         >
           {delta === null ? (
-            'nouveau'
+            t('stat.new')
           ) : (
             <>
               <Icon name={delta >= 0 ? 'chevronUp' : 'chevronDown'} size={13} />
-              {Math.abs(delta)} % vs période précédente
+              {t('stat.vsPrevious', { percent: Math.abs(delta) })}
             </>
           )}
         </p>
