@@ -22,6 +22,7 @@ import com.labplatform.application.port.out.PasswordResetNotifierPort;
 import com.labplatform.application.port.out.PaymentGatewayPort;
 import com.labplatform.application.port.out.PaymentRepositoryPort;
 import com.labplatform.application.port.out.SecretGeneratorPort;
+import com.labplatform.application.port.out.ScenarioRepositoryPort;
 import com.labplatform.application.port.out.SubscriptionRepositoryPort;
 import com.labplatform.application.port.out.TicketRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
@@ -42,6 +43,7 @@ import com.labplatform.application.service.BoxInstanceService;
 import com.labplatform.application.service.BoxService;
 import com.labplatform.application.service.ProfileService;
 import com.labplatform.application.service.ReportService;
+import com.labplatform.application.service.ScenarioService;
 import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.SupportService;
 import com.labplatform.application.service.AuthenticationService;
@@ -188,6 +190,14 @@ public class UseCaseConfig {
     @Bean
     public JournalService journalService(JournalPort journal, UserRepositoryPort users) {
         return new JournalService(journal, users);
+    }
+
+    @Bean
+    public ScenarioService scenarioService(ScenarioRepositoryPort scenarios, BoxRepositoryPort boxes,
+                                          CourseRepositoryPort courses, OwnRepositoryPort owns,
+                                          SectionCompletionRepositoryPort completions, GetEffectivePlanUseCase plans,
+                                          TransactionPort transactions, Clock clock) {
+        return new ScenarioService(scenarios, boxes, courses, owns, completions, plans, transactions, clock);
     }
 
     @Bean

@@ -4,6 +4,7 @@ import { AppShell } from '@/presentation/layouts/AppShell';
 import { AdminBoxesPage } from '@/presentation/pages/AdminBoxesPage';
 import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPage';
 import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
+import { AdminScenariosPage } from '@/presentation/pages/AdminScenariosPage';
 import { AdminSupportPage } from '@/presentation/pages/AdminSupportPage';
 import { AttackPathsPage } from '@/presentation/pages/AttackPathsPage';
 import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
@@ -17,13 +18,13 @@ import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
 import { LabsPage } from '@/presentation/pages/LabsPage';
 import { LoginPage } from '@/presentation/pages/LoginPage';
 import { MachinesPage } from '@/presentation/pages/MachinesPage';
-import { ModulePlaceholderPage } from '@/presentation/pages/ModulePlaceholderPage';
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
 import { PaymentReturnPage } from '@/presentation/pages/PaymentReturnPage';
 import { RegisterPage } from '@/presentation/pages/RegisterPage';
 import { ReportCenterPage } from '@/presentation/pages/ReportCenterPage';
 import { ProfilePage } from '@/presentation/pages/ProfilePage';
 import { ResetPasswordPage } from '@/presentation/pages/ResetPasswordPage';
+import { ScenariosPage } from '@/presentation/pages/ScenariosPage';
 import { ScoreboardPage } from '@/presentation/pages/ScoreboardPage';
 import { SettingsPage } from '@/presentation/pages/SettingsPage';
 import { SubscriptionPage } from '@/presentation/pages/SubscriptionPage';
@@ -72,13 +73,13 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     <Route path="/labs" element={<LabsPage />} />
                     <Route path="/labs/:id" element={<VmDetailPage />} />
                     <Route path="/vpn" element={<VpnPage />} />
-                    {/* Modules livrés : la route explicite prime sur la page d'attente. */}
                     <Route path="/modules/events" element={<EventsPage />} />
                     <Route path="/modules/support" element={<SupportPage />} />
                     <Route path="/modules/exposure-analysis" element={<ExposurePage />} />
                     <Route path="/modules/attack-paths" element={<AttackPathsPage />} />
                     <Route path="/modules/report-center" element={<ReportCenterPage />} />
-                    <Route path="/modules/:moduleId" element={<ModulePlaceholderPage />} />
+                    <Route path="/modules/scenario-designer" element={<ScenariosPage />} />
+                    <Route path="/modules/scenario-designer/:slug" element={<ScenariosPage />} />
                   </Route>
 
                   <Route element={<AdminRoute />}>
@@ -87,6 +88,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                     <Route path="/admin/machines" element={<AdminBoxesPage />} />
                     <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
                     <Route path="/admin/support" element={<AdminSupportPage />} />
+                    <Route path="/admin/scenarios" element={<AdminScenariosPage />} />
                   </Route>
 
                   <Route path="*" element={<NotFoundPage />} />

@@ -235,7 +235,14 @@
     "Cible exigeante : les cours de la filière correspondante préparent mieux qu'un essai direct.": "A demanding target: the matching track's courses prepare better than a direct attempt.",
     "Point d'entrée : la cible la moins résistante du lab": "Entry point: the least resistant target of the lab",
     "Même segment réseau : déplacement latéral plausible": "Same network segment: lateral movement is plausible",
-    "Même système : les techniques et les identifiants se réemploient": "Same system: techniques and credentials carry over"
+    "Même système : les techniques et les identifiants se réemploient": "Same system: techniques and credentials carry over",
+    "Machine à compromettre": "Machine to compromise",
+    "Cours à suivre": "Course to follow",
+    "Les deux flags": "Both flags",
+    "Scénario introuvable": "Scenario not found",
+    "Un scénario publié comporte au moins une étape": "A published scenario has at least one step",
+    "La mise en situation est obligatoire": "The briefing is required",
+    "Chaque étape désigne une machine ou un cours": "Each step names a machine or a course"
   },
   "patterns": [
     [
@@ -313,6 +320,26 @@
     [
       "^Le message est limité à ([\\d\\s ]+) caractères$",
       "The message is limited to $1 characters"
+    ],
+    [
+      "^La mise en situation est limitée à ([\\d\\s ]+) caractères$",
+      "The briefing is limited to $1 characters"
+    ],
+    [
+      "^Un scénario comporte au plus (\\d+) étapes$",
+      "A scenario has at most $1 steps"
+    ],
+    [
+      "^La consigne est limitée à ([\\d\\s ]+) caractères$",
+      "The instruction is limited to $1 characters"
+    ],
+    [
+      "^Machine introuvable : (.+)$",
+      "Machine not found: $1"
+    ],
+    [
+      "^Cours introuvable : (.+)$",
+      "Course not found: $1"
     ]
   ]
 }

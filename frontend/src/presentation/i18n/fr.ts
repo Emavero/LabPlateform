@@ -238,10 +238,6 @@ export const fr = {
     'Indiquez votre adresse : si un compte existe, un lien de réinitialisation vous sera envoyé.',
   'auth.newPassword': 'Nouveau mot de passe',
 
-  // ── Modules en préparation ────────────────────────────────────────────────
-  'module.comingTitle': 'Module en préparation',
-  'module.comingText':
-    'Cette section arrive dans une prochaine version. Le lab Windows / Linux est déjà opérationnel.',
 
   'machines.title': 'Machines',
   'machines.lead': 'Compromettez une machine, trouvez ses deux flags et marquez les points de sa difficulté.',
@@ -763,6 +759,57 @@ export const fr = {
   'report.none': 'Rien sur cette période.',
   'report.generated': 'Rapport établi par cyberMans à partir du journal d’activité du compte.',
   'report.trend': 'contre {value} sur la période précédente',
+
+  // ── Scénarios d'exercice ──────────────────────────────────────────────────
+  'scenario.title': 'Scénarios d’exercice',
+  'scenario.lead':
+    'Des parcours guidés : une mise en situation, puis les étapes à franchir dans l’ordre sur les machines et les cours de la plateforme.',
+  'scenario.loading': 'Chargement des scénarios',
+  'scenario.loadError': 'Impossible de charger les scénarios',
+  'scenario.empty': 'Aucun scénario publié pour le moment.',
+  'scenario.progress': '{done} / {total} étapes',
+  'scenario.complete': 'Scénario terminé',
+  'scenario.next': 'Prochaine étape : {name}',
+  'scenario.steps': 'Étapes',
+  'scenario.step': 'Étape {position}',
+  'scenario.kind.MACHINE': 'Machine à compromettre',
+  'scenario.kind.COURSE': 'Cours à suivre',
+  'scenario.objective.USER_FLAG': 'Flag utilisateur',
+  'scenario.objective.ROOT_FLAG': 'Flag root',
+  'scenario.objective.BOTH_FLAGS': 'Les deux flags',
+  'scenario.done': 'Franchie',
+  'scenario.todo': 'À faire',
+  'scenario.missing': 'Ressource retirée du catalogue : étape à corriger',
+  'scenario.locked': 'Réservée aux abonnés Pro',
+  'scenario.percentDone': '{percent} % du scénario franchi',
+  'scenario.brokenWarning': 'Ce scénario comporte une étape dont la ressource a disparu.',
+  // Administration
+  'scenario.manage': 'Concevoir des scénarios',
+  'scenario.manageLead':
+    'Un scénario ordonne ce qui existe déjà : il ne crée ni machine ni cours, et l’avancement se déduit des flags validés et des sections terminées.',
+  'scenario.new': 'Nouveau scénario',
+  'scenario.editing': 'Modifier « {name} »',
+  'scenario.cancelEdit': 'Annuler la modification',
+  'scenario.titleField': 'Titre',
+  'scenario.brief': 'Mise en situation',
+  'scenario.briefPlaceholder': 'Le contexte : ce que le joueur est censé découvrir, et pourquoi.',
+  'scenario.publish': 'Publier le scénario',
+  'scenario.publishedLabel': 'Publié (visible par les joueurs)',
+  'scenario.draftLabel': 'Brouillon',
+  'scenario.stepKind': 'Type d’étape',
+  'scenario.reference': 'Lien de la ressource',
+  'scenario.referenceHintMachine': 'Le lien de la machine, tel qu’il apparaît dans son adresse.',
+  'scenario.referenceHintCourse': 'Le lien du cours, tel qu’il apparaît dans son adresse.',
+  'scenario.instruction': 'Consigne',
+  'scenario.instructionPlaceholder': 'Ce que le joueur doit chercher à cette étape.',
+  'scenario.objective': 'Validé par',
+  'scenario.addStep': 'Ajouter une étape',
+  'scenario.removeStep': 'Retirer',
+  'scenario.list': 'Scénarios',
+  'scenario.count': '{count} scénario(s)',
+  'scenario.stepCount': '{count} étape(s)',
+  'scenario.saved': 'Scénario enregistré',
+  'scenario.confirmDelete': 'Confirmer la suppression',
 
   // ── Réglages ──────────────────────────────────────────────────────────────
   'settings.language': 'Langue de l’interface',

@@ -92,6 +92,7 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
       { label: 'nav.dashboard', to: '/admin', icon: 'dashboard', end: true },
       { label: 'nav.adminCourses', to: '/admin/cours', icon: 'book' },
       { label: 'nav.adminMachines', to: '/admin/machines', icon: 'target' },
+      { label: 'nav.scenarios', to: '/admin/scenarios', icon: 'scenario' },
       { label: 'nav.support', to: '/admin/support', icon: 'support' },
     ],
   },
@@ -115,9 +116,3 @@ export const TRACK_PAGES: Readonly<Record<string, ModuleInfo>> = {
   defense: { title: 'track.DEFENSE', description: 'track.defense.description' },
 };
 
-export const MODULES: Readonly<Record<string, ModuleInfo>> = {
-  'scenario-designer': {
-    title: 'module.scenario-designer.title',
-    description: 'module.scenario-designer.description',
-  },
-};

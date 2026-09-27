@@ -11,6 +11,7 @@ import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
 import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
 import { HttpReportRepository } from '@/data/repositories/HttpReportRepository';
+import { HttpScenarioRepository } from '@/data/repositories/HttpScenarioRepository';
 import { HttpScoreboardRepository } from '@/data/repositories/HttpScoreboardRepository';
 import { HttpSupportRepository } from '@/data/repositories/HttpSupportRepository';
 import { HttpVpnRepository } from '@/data/repositories/HttpVpnRepository';
@@ -42,6 +43,13 @@ import {
 import { GetAnalyticsUseCase } from '@/domain/usecases/analytics';
 import { GetLabExposureUseCase } from '@/domain/usecases/exposure';
 import { GetActivityReportUseCase } from '@/domain/usecases/report';
+import {
+  DeleteScenarioUseCase,
+  GetScenarioUseCase,
+  ListAllScenariosUseCase,
+  ListScenariosUseCase,
+  SaveScenarioUseCase,
+} from '@/domain/usecases/scenario';
 import {
   DeleteBoxUseCase,
   DeleteCourseUseCase,
@@ -146,6 +154,17 @@ export interface Dependencies {
     /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
     readonly analytics: GetAnalyticsUseCase;
   };
+  /**
+   * Scénarios d'exercice. La conception est réservée à l'administration : le
+   * serveur refuse ces appels aux autres comptes.
+   */
+  readonly scenarios: {
+    readonly listPublished: ListScenariosUseCase;
+    readonly get: GetScenarioUseCase;
+    readonly listAll: ListAllScenariosUseCase;
+    readonly save: SaveScenarioUseCase;
+    readonly remove: DeleteScenarioUseCase;
+  };
   /** Rapport d'activité du compte connecté, sur la période qu'il choisit. */
   readonly reports: {
     readonly activity: GetActivityReportUseCase;
@@ -203,6 +222,7 @@ export function createContainer(): Dependencies {
   const supportRepository = new HttpSupportRepository(http);
   const exposureRepository = new HttpExposureRepository(http);
   const reportRepository = new HttpReportRepository(http);
+  const scenarioRepository = new HttpScenarioRepository(http);
 
   return {
     sessionMonitor,
@@ -263,6 +283,13 @@ export function createContainer(): Dependencies {
       uploadMedia: new UploadMediaUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
       analytics: new GetAnalyticsUseCase(analyticsRepository),
+    },
+    scenarios: {
+      listPublished: new ListScenariosUseCase(scenarioRepository),
+      get: new GetScenarioUseCase(scenarioRepository),
+      listAll: new ListAllScenariosUseCase(scenarioRepository),
+      save: new SaveScenarioUseCase(scenarioRepository),
+      remove: new DeleteScenarioUseCase(scenarioRepository),
     },
     reports: {
       activity: new GetActivityReportUseCase(reportRepository),

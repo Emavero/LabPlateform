@@ -2843,3 +2843,174 @@ button.back-link {
   color: var(--text-faint);
   font-size: var(--step--1);
 }
+
+/* ── Scénarios d'exercice ─────────────────────────────────────────────────── */
+.scenarios {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.scenario {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.scenario__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.scenario__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.scenario__count {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.scenario__gauge {
+  height: 0.4rem;
+  border-radius: var(--radius-pill);
+  background: rgba(139, 124, 255, 0.1);
+}
+
+.scenario__bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--violet);
+}
+
+.scenario__brief {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.scenario__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: var(--step--1);
+}
+
+.scenario__state--done {
+  color: var(--running);
+}
+
+/* Étapes : le numéro devient une coche quand l'étape est franchie, de sorte que
+   l'avancement se lise sans distinguer les couleurs. */
+.steps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.steps__marker {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--violet);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.steps__item--done .steps__marker {
+  border-color: var(--running);
+  color: var(--running);
+}
+
+.steps__body {
+  display: grid;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.steps__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.8rem;
+}
+
+.steps__name {
+  font-family: var(--font-display);
+}
+
+.steps__kind,
+.steps__meta {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+
+.steps__state {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.steps__state--done {
+  color: var(--running);
+}
+
+.steps__instruction {
+  font-size: var(--step--1);
+}
+
+.steps__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+}
+
+.steps__missing {
+  color: var(--danger);
+}
+
+/* Éditeur : chaque étape est un groupe de champs, visuellement détaché. */
+.step-editor {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(11, 12, 16, 0.4);
+}
+
+.step-editor legend {
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
