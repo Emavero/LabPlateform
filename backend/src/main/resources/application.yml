@@ -57,6 +57,20 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    mail:
+      # La sonde du courrier est éteinte volontairement.
+      #
+      # Depuis que le starter mail est présent, l'actuator tente d'ouvrir une
+      # connexion SMTP à chaque appel de /actuator/health. Un serveur d'envoi
+      # absent ou injoignable faisait alors répondre DOWN à toute la
+      # plateforme — donc un conteneur « unhealthy », donc un frontend qui
+      # refuse de démarrer, pour une fonction accessoire qui n'empêche
+      # personne de jouer ni d'apprendre.
+      #
+      # C'est la même règle que dans SmtpPasswordResetNotifier : une panne du
+      # courrier se journalise, elle n'arrête rien.
+      enabled: false
 
 app:
   # Adresse publique de l'application : c'est elle qui rend cliquables les liens
