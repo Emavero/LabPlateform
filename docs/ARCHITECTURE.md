@@ -714,6 +714,21 @@ accepte des groupes à deux niveaux et un filtre par rôle
 
 ## 15. Pièges connus
 
+**Fins de ligne CRLF sous Windows.** Git pour Windows convertit les fichiers
+en CRLF à l'extraction quand `core.autocrlf=true` — son réglage d'installation
+par défaut. Un script shell ainsi converti part tel quel dans l'image Docker,
+où le noyau cherche un interpréteur nommé `/bin/sh␍` : le conteneur meurt sur
+`exec /usr/local/bin/lab-entrypoint: no such file or directory`, message qui
+désigne le script alors que c'est son interpréteur qui manque. Le dépôt impose
+désormais LF par `.gitattributes`, et l'image du lab retire les retours chariot
+à la construction. Une copie de travail extraite **avant** cette correction les
+contient toujours ; pour la remettre d'aplomb :
+
+```bash
+git rm --cached -r . && git reset --hard
+```
+
+
 | Piège | Pourquoi | Quoi faire |
 |---|---|---|
 | `@Lob` sur une `String` | PostgreSQL écrit un *large object* et ne stocke que son identifiant ; illisible hors transaction. H2 ne le reproduit pas. | `columnDefinition = "text"`, et rejouer la suite sur PostgreSQL. |

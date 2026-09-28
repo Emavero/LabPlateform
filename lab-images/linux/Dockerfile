@@ -20,7 +20,14 @@ RUN apt-get update \
 
 COPY lab.conf /etc/ssh/sshd_config.d/00-lab.conf
 COPY entrypoint.sh /usr/local/bin/lab-entrypoint
-RUN chmod 0644 /etc/ssh/sshd_config.d/00-lab.conf && chmod 0755 /usr/local/bin/lab-entrypoint
+# Les retours chariot sont retirés à la construction. Le dépôt livre bien ces
+# fichiers en LF (voir .gitattributes), mais une copie de travail extraite sous
+# Windows avant ce réglage les contient encore : sans ce nettoyage, le noyau
+# chercherait un interpréteur « /bin/sh␍ » et le conteneur mourrait aussitôt
+# sur « no such file or directory », en désignant le script plutôt que la cause.
+RUN sed -i 's/\r$//' /usr/local/bin/lab-entrypoint /etc/ssh/sshd_config.d/00-lab.conf \
+ && chmod 0644 /etc/ssh/sshd_config.d/00-lab.conf \
+ && chmod 0755 /usr/local/bin/lab-entrypoint
 
 EXPOSE 22
 ENTRYPOINT ["/usr/local/bin/lab-entrypoint"]
