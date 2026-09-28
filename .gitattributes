@@ -1,0 +1,24 @@
+# Fins de ligne. Sans ce fichier, Git pour Windows convertit les fichiers en
+# CRLF à l'extraction (core.autocrlf=true, son réglage d'installation par
+# défaut). Un script shell ainsi converti part tel quel dans une image Docker,
+# où le noyau cherche alors un interpréteur nommé « /bin/sh␍ » : le conteneur
+# meurt sur « exec /usr/local/bin/lab-entrypoint: no such file or directory »,
+# un message qui désigne le script alors que c'est son interpréteur qui manque.
+#
+# Ces fichiers sont donc extraits en LF sur toutes les plateformes.
+* text=auto
+
+*.sh        text eol=lf
+*.conf      text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.sql       text eol=lf
+.env.example text eol=lf
+
+# Binaires : jamais convertis.
+*.png  binary
+*.jpg  binary
+*.svg  text eol=lf
+*.pdf  binary
+*.jar  binary
