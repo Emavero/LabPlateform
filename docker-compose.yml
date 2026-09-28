@@ -40,7 +40,9 @@ services:
       # Envoi des courriels. Éteint, rien n'est contacté.
       APP_MAIL_ENABLED: ${APP_MAIL_ENABLED:-false}
       APP_MAIL_FROM: ${APP_MAIL_FROM:-cyberMans <no-reply@cybermans.local>}
-      MAIL_HOST: ${MAIL_HOST:-mail}
+      # « mail » n'existe qu'avec docker-compose.mail.yml, qui le fixe lui-même :
+      # le défaut ici doit rester un hôte inoffensif.
+      MAIL_HOST: ${MAIL_HOST:-localhost}
       MAIL_PORT: ${MAIL_PORT:-1025}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
