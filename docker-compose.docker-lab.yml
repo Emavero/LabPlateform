@@ -25,6 +25,10 @@ services:
       APP_DOCKER_PUBLIC_HOST: ${LAB_PUBLIC_HOST:-localhost}
       # 127.0.0.1 : SSH accessible depuis ce poste uniquement ; 0.0.0.0 : depuis le réseau.
       APP_DOCKER_BIND_ADDRESS: ${LAB_BIND_ADDRESS:-127.0.0.1}
+      # Délai laissé à une cible pour devenir joignable. À relever sur une
+      # machine lente ou chargée : le message « n'a pas démarré dans le délai
+      # prévu » vient de là.
+      APP_DOCKER_READY_TIMEOUT: ${LAB_READY_TIMEOUT:-45s}
       APP_DOCKER_MEMORY: ${LAB_MEMORY:-512m}
       APP_DOCKER_CPUS: ${LAB_CPUS:-1.0}
     volumes:

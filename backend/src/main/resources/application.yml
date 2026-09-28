@@ -164,7 +164,12 @@ app:
       pids-limit: 256
       container-prefix: labplatform-vm-
       command-timeout: 60s
-      ready-timeout: 20s
+      # Temps laissé au conteneur pour créer son compte, générer ses clés SSH
+      # et poser son marqueur. Vingt secondes suffisent sur une machine au
+      # repos, mais pas juste après un « up --build », ni sur Docker Desktop
+      # dont les écritures sont plus lentes. Attendre ne coûte rien quand tout
+      # va vite : la boucle rend la main dès que le marqueur existe.
+      ready-timeout: ${APP_DOCKER_READY_TIMEOUT:45s}
       poll-interval: 250ms
 
 logging:
