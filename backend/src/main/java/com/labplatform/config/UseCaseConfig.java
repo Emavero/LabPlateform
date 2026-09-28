@@ -58,6 +58,7 @@ import com.labplatform.application.port.out.VpnCertificateAuthorityPort;
 import com.labplatform.application.port.out.VpnProfileRepositoryPort;
 import com.labplatform.domain.vpn.VpnEndpoint;
 import com.labplatform.domain.vpn.VpnProtocol;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -93,6 +94,15 @@ public class UseCaseConfig {
     public PasswordResetService passwordResetService(UserRepositoryPort users, PasswordHasherPort passwordHasher,
                                                      SecretGeneratorPort secrets, PasswordResetNotifierPort notifier,
                                                      TransactionPort transactions, Clock clock, AppProperties properties) {
+        // Les deux ensemble n'ont pas de sens : le lien part par courriel et
+        // reste en clair dans la réponse HTTP, où n'importe qui peut le lire en
+        // demandant une réinitialisation pour l'adresse d'un autre.
+        if (properties.getMail().isEnabled() && properties.getSecurity().isExposeResetTokenInResponse()) {
+            LoggerFactory.getLogger(UseCaseConfig.class).warn(
+                    "L'envoi d'e-mails est actif ET le jeton de réinitialisation est renvoyé dans la réponse HTTP. "
+                            + "Passez APP_EXPOSE_RESET_TOKEN=false : en l'état, un tiers peut prendre n'importe "
+                            + "quel compte dont il connaît l'adresse.");
+        }
         return new PasswordResetService(users, passwordHasher, secrets, notifier, transactions, clock,
                 properties.getSecurity().getResetTokenValidity(),
                 properties.getSecurity().isExposeResetTokenInResponse());

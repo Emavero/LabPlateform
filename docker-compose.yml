@@ -33,7 +33,19 @@ services:
       APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-false}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       # Démo sans serveur d'e-mail : le lien de réinitialisation est affiché à l'écran.
+      # À passer à false dès que l'envoi de courriels est actif.
       APP_EXPOSE_RESET_TOKEN: ${APP_EXPOSE_RESET_TOKEN:-true}
+      # Adresse publique : c'est elle qui rend cliquables les liens envoyés.
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      # Envoi des courriels. Éteint, rien n'est contacté.
+      APP_MAIL_ENABLED: ${APP_MAIL_ENABLED:-false}
+      APP_MAIL_FROM: ${APP_MAIL_FROM:-cyberMans <no-reply@cybermans.local>}
+      MAIL_HOST: ${MAIL_HOST:-mail}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_AUTH: ${MAIL_AUTH:-false}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
       APP_HYPERVISOR_MODE: simulated
       # Comptes promus administrateurs (séparés par des virgules).
       APP_ADMIN_EMAILS: ${APP_ADMIN_EMAILS:-}

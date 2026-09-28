@@ -663,8 +663,26 @@ change.** C'est exactement ce que fait déjà l'adaptateur Docker.
 
 ### Brancher un envoi d'e-mails
 
-Implémenter `PasswordResetNotifierPort` à la place de
-`LoggingPasswordResetNotifier`, puis passer `APP_EXPOSE_RESET_TOKEN=false`.
+Deux implémentations de `PasswordResetNotifierPort` cohabitent dans le dépôt,
+et `app.mail.enabled` choisit laquelle tient le port :
+`LoggingPasswordResetNotifier` (rien n'est envoyé) ou
+`SmtpPasswordResetNotifier`. Il suffit donc de renseigner le serveur SMTP
+(`MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_AUTH`,
+`MAIL_STARTTLS`), l'adresse publique `APP_PUBLIC_URL` — c'est elle qui rend le
+lien cliquable — puis de passer `APP_MAIL_ENABLED=true` **et**
+`APP_EXPOSE_RESET_TOKEN=false`. La racine de composition avertit au démarrage
+si les deux restent vrais.
+
+Pour essayer sans prestataire :
+`docker compose -f docker-compose.yml -f docker-compose.mail.yml up --build`
+lance Mailpit et sa boîte de réception sur <http://localhost:8025>.
+
+Deux points de l'adaptateur SMTP méritent d'être connus avant d'en écrire un
+autre (SMS, fournisseur transactionnel) : **un échec d'envoi n'est jamais
+propagé** — le service répond la même phrase que l'adresse existe ou non, et
+une erreur 500 ne surviendrait que pour les adresses connues, ce qui
+révélerait qui a un compte ; et **le jeton n'apparaît dans aucun journal**, il
+vaut un mot de passe le temps de sa validité.
 
 ### Ajouter une filière de cours
 

@@ -31,6 +31,24 @@ spring:
       max-file-size: ${APP_MEDIA_MAX_FILE_SIZE:256MB}
       max-request-size: ${APP_MEDIA_MAX_FILE_SIZE:256MB}
 
+  # Serveur d'envoi. Rien n'est contacté tant que app.mail.enabled est faux.
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_AUTH:false}
+          # STARTTLS : exigé par la plupart des services (Gmail, Brevo, Mailgun)
+          # sur le port 587. Un serveur local de test s'en passe.
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
+          connecttimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 management:
   endpoints:
     web:
@@ -41,6 +59,15 @@ management:
       show-details: never
 
 app:
+  # Adresse publique de l'application : c'est elle qui rend cliquables les liens
+  # envoyés par courriel. À changer derrière ngrok ou un nom de domaine.
+  public-url: ${APP_PUBLIC_URL:http://localhost:3000}
+  mail:
+    # Faux : le lien de réinitialisation s'affiche à l'écran (démonstration).
+    # Vrai : il part par SMTP, et app.security.expose-reset-token-in-response
+    # doit alors repasser à faux.
+    enabled: ${APP_MAIL_ENABLED:false}
+    from: ${APP_MAIL_FROM:cyberMans <no-reply@cybermans.local>}
   jwt:
     # Valeur de développement uniquement : définir APP_JWT_SECRET (32 octets minimum) en production.
     secret: ${APP_JWT_SECRET:dev-only-secret-key-change-me-please-32bytes-min}
