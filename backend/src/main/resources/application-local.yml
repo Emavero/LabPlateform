@@ -17,7 +17,10 @@ app:
     # En développement, la PKI est créée dans le dossier du projet (ignoré par git).
     directory: ${APP_VPN_DIRECTORY:./data/vpn}
   security:
-    expose-reset-token-in-response: true
+    # Vrai par défaut en développement — il n'y a pas de serveur d'e-mail —
+    # mais la variable reste maîtresse : sans cela, brancher un envoi réel en
+    # profil local laisserait le jeton dans la réponse HTTP malgré la consigne.
+    expose-reset-token-in-response: ${APP_EXPOSE_RESET_TOKEN:true}
   boxes:
     # Développement : les flags du catalogue sont affichés au démarrage.
     log-seeded-flags: true

@@ -21,6 +21,16 @@ public class AppProperties {
     private final Boxes boxes = new Boxes();
     private final Media media = new Media();
     private final Billing billing = new Billing();
+    private final Mail mail = new Mail();
+
+    /**
+     * Adresse publique de l'application, telle que la voit l'utilisateur.
+     * <p>
+     * Elle sert à fabriquer les liens envoyés par courriel : l'adresse interne
+     * du conteneur ne serait cliquable pour personne. Derrière ngrok ou un nom
+     * de domaine, c'est cette valeur qu'il faut changer.
+     */
+    private String publicUrl = "http://localhost:3000";
 
     public Jwt getJwt() {
         return jwt;
@@ -56,6 +66,18 @@ public class AppProperties {
 
     public Billing getBilling() {
         return billing;
+    }
+
+    public Mail getMail() {
+        return mail;
+    }
+
+    public String getPublicUrl() {
+        return publicUrl;
+    }
+
+    public void setPublicUrl(String publicUrl) {
+        this.publicUrl = publicUrl;
     }
 
     public static class Jwt {
@@ -179,6 +201,37 @@ public class AppProperties {
      * {@code card} le remplace pour la carte, dont les réseaux n'acceptent pas
      * le franc CFA.
      */
+    /**
+     * Envoi des courriels transactionnels.
+     * <p>
+     * Éteint par défaut : une plateforme d'essai n'a pas de serveur SMTP, et le
+     * lien de réinitialisation s'affiche alors à l'écran
+     * ({@code app.security.expose-reset-token-in-response}). Les deux ne
+     * doivent pas rester vrais ensemble une fois la plateforme ouverte.
+     */
+    public static class Mail {
+
+        private boolean enabled = false;
+        /** Expéditeur affiché. Certains serveurs exigent qu'il corresponde au compte SMTP. */
+        private String from = "cyberMans <no-reply@cybermans.local>";
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public void setFrom(String from) {
+            this.from = from;
+        }
+    }
+
     public static class Billing {
         private boolean enabled = true;
         private String mode = "simulated";

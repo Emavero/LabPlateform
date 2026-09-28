@@ -87,6 +87,34 @@ class DockerLinuxMachinesTest {
         assertEquals(List.of("docker", "rm", "-f", CONTAINER), last);
     }
 
+    /**
+     * Le conteneur est détruit juste après l'échec : son état et son journal
+     * doivent être recueillis avant, sinon il ne reste plus rien à examiner
+     * pour comprendre pourquoi il n'a jamais été prêt.
+     */
+    @Test
+    void machineJamaisPreteLaisseUneTraceAvantDEtreSupprimee() {
+        docker.fail("test", "");
+
+        assertThrows(ServiceUnavailableException.class, () -> machines.powerOn(stopped, PASSWORD));
+
+        int inspect = indexOf("inspect");
+        int logs = indexOf("logs");
+        int removal = docker.calls.size() - 1;
+        assertTrue(inspect >= 0, "l'état du conteneur n'a pas été relevé");
+        assertTrue(logs >= 0, "le journal du conteneur n'a pas été relevé");
+        assertTrue(inspect < removal && logs < removal, "relevés après la suppression : trop tard");
+    }
+
+    private int indexOf(String subCommand) {
+        for (int index = 0; index < docker.calls.size(); index++) {
+            if (docker.calls.get(index).contains(subCommand)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
     @Test
     void arreterSupprimeLeConteneurMemeSilEstDejaAbsent() {
         docker.fail("rm", "Error response from daemon: No such container: " + CONTAINER);

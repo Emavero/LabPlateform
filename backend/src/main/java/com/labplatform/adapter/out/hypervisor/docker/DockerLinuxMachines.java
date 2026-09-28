@@ -139,7 +139,27 @@ public class DockerLinuxMachines {
             }
             sleep();
         } while (System.nanoTime() < deadline);
+        // Le conteneur est détruit juste après cette exception : ce qu'il avait
+        // à dire disparaît avec lui. On le recueille donc maintenant, dans le
+        // journal du serveur — c'est la seule trace qui restera pour comprendre.
+        // Elle ne remonte pas à l'appelant : un joueur n'a rien à savoir de
+        // l'infrastructure, et le message affiché reste le même.
+        log.error("Le conteneur {} n'a pas écrit {} en {} : état « {} », dernières lignes : {}",
+                name, READY_MARKER, settings.readyTimeout(), containerState(name), lastLines(name));
         throw unavailable("La machine Linux n'a pas démarré dans le délai prévu. Réessayez.");
+    }
+
+    /** « running », « exited (code 1) »… ou une explication si l'inspection échoue. */
+    private String containerState(String name) {
+        CommandRunner.Result result = docker("inspect", "--format",
+                "{{.State.Status}} (code {{.State.ExitCode}}) {{.State.Error}}", name);
+        return result.succeeded() ? result.stdout().strip() : "inconnu — " + result.stderr().strip();
+    }
+
+    private String lastLines(String name) {
+        CommandRunner.Result logs = docker("logs", "--tail", "20", name);
+        String output = (logs.stdout() + logs.stderr()).strip();
+        return output.isEmpty() ? "(aucune)" : output.replace('\n', '|');
     }
 
     private void setPassword(String name, String password) {

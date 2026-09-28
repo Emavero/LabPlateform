@@ -1,0 +1,37 @@
+# Serveur d'e-mail local, pour voir partir les courriels sans en envoyer aucun.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.mail.yml up --build
+#
+# Les messages ne sortent jamais de la machine : Mailpit les intercepte et les
+# affiche sur http://localhost:8025. C'est la façon d'essayer le parcours
+# « mot de passe oublié » de bout en bout sans compte chez un prestataire, et
+# sans risquer d'écrire à une vraie adresse pendant une démonstration.
+name: labplatform
+
+services:
+  mail:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      # Boîte de réception à consulter dans le navigateur.
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    environment:
+      APP_MAIL_ENABLED: "true"
+      # Le jeton ne doit plus sortir dans la réponse HTTP : il part par courriel.
+      APP_EXPOSE_RESET_TOKEN: "false"
+      MAIL_HOST: mail
+      MAIL_PORT: 1025
+    depends_on:
+      mail:
+        condition: service_healthy
