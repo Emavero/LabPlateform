@@ -45,7 +45,7 @@ class ApiFlowIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].os").value("WINDOWS"))
                 .andExpect(jsonPath("$[1].os").value("LINUX"))
-                .andExpect(jsonPath("$[1].status").value("STOPPED"))
+                .andExpect(jsonPath("$[1].status").value("TERMINATED"))
                 .andExpect(jsonPath("$[1].connection").doesNotExist())
                 .andReturn();
         long linuxId = ((Number) JsonPath.read(list.getResponse().getContentAsString(), "$[1].id")).longValue();
@@ -62,7 +62,7 @@ class ApiFlowIntegrationTest {
 
         mvc.perform(post("/api/labs/vms/{id}/stop", linuxId).cookie(session))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("STOPPED"))
+                .andExpect(jsonPath("$.status").value("TERMINATED"))
                 .andExpect(jsonPath("$.connection").doesNotExist());
 
         Cookie intruder = register("intruder@example.com");

@@ -34,7 +34,7 @@ class DockerLinuxMachinesTest {
     void setUp() {
         docker = new FakeDocker();
         machines = new DockerLinuxMachines(settings(Duration.ofMillis(50)), docker);
-        stopped = VirtualMachine.restore(7L, 3L, OperatingSystem.LINUX, VmStatus.STOPPED, null, null);
+        stopped = VirtualMachine.restore(7L, 3L, OperatingSystem.LINUX, VmStatus.TERMINATED, null, null);
     }
 
     @Test

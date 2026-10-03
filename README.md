@@ -414,6 +414,28 @@ npm run build        # vérification des types + build de production
 
 Pour viser un autre backend : `VITE_API_PROXY_TARGET=http://hote:8080 npm run dev`.
 
+## Machine cible : démarrer et arrêter
+
+Le lab expose un bouton « Démarrer / Arrêter » : il allume une machine cible,
+suit son état pendant qu'elle démarre, et affiche son adresse interne une fois
+prête. Trois routes, toutes derrière la session :
+
+| Route | Effet |
+|---|---|
+| `POST /api/machine/start` | Allume la cible |
+| `POST /api/machine/stop` | L'éteint |
+| `GET /api/machine/status` | État (`PROVISIONING`, `STAGING`, `RUNNING`, `STOPPING`, `TERMINATED`) et adresse interne |
+
+Par défaut la cible est **simulée** : elle traverse réellement ses états de
+passage, sans aucune dépendance. Pour piloter une vraie instance Google Compute
+Engine — compte de service, rôle IAM, variables d'environnement, et l'accord
+nécessaire entre le sous-réseau GCP et le réseau annoncé par le profil VPN —
+voir [`docs/GCP.md`](docs/GCP.md).
+
+> L'adresse affichée est interne au lab : elle n'est joignable qu'avec le
+> profil `.ovpn` monté. Ce profil route désormais le réseau du lab, il n'y a
+> rien à ajouter à la main.
+
 ## Architecture du backend : hexagonale
 
 > Une documentation d'architecture complète, pensée pour l'accueil d'un

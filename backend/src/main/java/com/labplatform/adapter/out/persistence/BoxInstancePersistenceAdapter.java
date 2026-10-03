@@ -4,7 +4,7 @@ import com.labplatform.adapter.out.persistence.entity.BoxInstanceJpaEntity;
 import com.labplatform.adapter.out.persistence.repository.SpringDataBoxInstanceRepository;
 import com.labplatform.application.port.out.BoxInstanceRepositoryPort;
 import com.labplatform.domain.box.BoxInstance;
-import com.labplatform.domain.box.BoxInstanceStatus;
+import com.labplatform.domain.lab.VmStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -31,7 +31,7 @@ public class BoxInstancePersistenceAdapter implements BoxInstanceRepositoryPort 
 
     @Override
     public Optional<BoxInstance> findRunningByUser(Long userId) {
-        return repository.findFirstByUserIdAndStatus(userId, BoxInstanceStatus.RUNNING)
+        return repository.findFirstByUserIdAndStatus(userId, VmStatus.RUNNING)
                 .map(BoxInstancePersistenceAdapter::toDomain);
     }
 

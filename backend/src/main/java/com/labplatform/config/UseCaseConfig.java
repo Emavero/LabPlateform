@@ -15,6 +15,7 @@ import com.labplatform.application.port.out.AccessTokenIssuerPort;
 import com.labplatform.application.port.out.BoxRepositoryPort;
 import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.DomainEventPublisherPort;
+import com.labplatform.application.port.out.CloudInstancePort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.JournalPort;
 import com.labplatform.application.port.out.PasswordHasherPort;
@@ -48,6 +49,7 @@ import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.SupportService;
 import com.labplatform.application.service.AuthenticationService;
 import com.labplatform.application.service.LabService;
+import com.labplatform.application.service.TargetMachineService;
 import com.labplatform.application.service.PasswordResetService;
 import com.labplatform.application.service.VpnService;
 import com.labplatform.application.service.VpnSettings;
@@ -118,6 +120,11 @@ public class UseCaseConfig {
     public LabService labService(VirtualMachineRepositoryPort machines, HypervisorPort hypervisor,
                                  JournalPort journal, TransactionPort transactions, Clock clock) {
         return new LabService(machines, hypervisor, journal, transactions, clock);
+    }
+
+    @Bean
+    public TargetMachineService targetMachineService(CloudInstancePort instance, JournalPort journal, Clock clock) {
+        return new TargetMachineService(instance, journal, clock);
     }
 
     @Bean

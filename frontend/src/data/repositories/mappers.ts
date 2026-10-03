@@ -21,6 +21,7 @@ import type {
   Track,
   TrackCode,
 } from '@/domain/models/Course';
+import type { MachineStatus, TargetMachine } from '@/domain/models/TargetMachine';
 import type { Achievement, ActivityEntry, ActivityKind } from '@/domain/models/Profile';
 import type { LeaderboardEntry, PlayerProgress, Rank } from '@/domain/models/Progress';
 import type { Role, User, UserProfile } from '@/domain/models/User';
@@ -333,6 +334,17 @@ export function toProgress(dto: ProgressDto): PlayerProgress {
 
 export function toLeaderboard(dto: LeaderboardDto): LeaderboardEntry[] {
   return dto.entries.map((entry) => ({ ...entry }));
+}
+
+export interface TargetMachineDto {
+  status: MachineStatus;
+  statusName: string;
+  transitioning: boolean;
+  internalIp: string | null;
+}
+
+export function toTargetMachine(dto: TargetMachineDto): TargetMachine {
+  return { ...dto };
 }
 
 export function toTrack(dto: TrackDto): Track {

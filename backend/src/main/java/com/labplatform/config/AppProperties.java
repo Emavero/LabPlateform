@@ -22,6 +22,8 @@ public class AppProperties {
     private final Media media = new Media();
     private final Billing billing = new Billing();
     private final Mail mail = new Mail();
+    private final Gcp gcp = new Gcp();
+    private final Machine machine = new Machine();
 
     /**
      * Adresse publique de l'application, telle que la voit l'utilisateur.
@@ -54,6 +56,14 @@ public class AppProperties {
 
     public Hypervisor getHypervisor() {
         return hypervisor;
+    }
+
+    public Gcp getGcp() {
+        return gcp;
+    }
+
+    public Machine getMachine() {
+        return machine;
     }
 
     public Boxes getBoxes() {
@@ -483,6 +493,87 @@ public class AppProperties {
 
         public void setLeaderboardSize(int leaderboardSize) {
             this.leaderboardSize = leaderboardSize;
+        }
+    }
+
+    /**
+     * Projet Compute Engine. Partagé par la cible unique (app.machine) et par
+     * le mode d'hyperviseur « gcp » : les deux parlent au même projet, dans la
+     * même zone, avec les mêmes identifiants.
+     * <p>
+     * Les identifiants eux-mêmes ne figurent pas ici : ils viennent des
+     * identifiants par défaut de l'application (GOOGLE_APPLICATION_CREDENTIALS
+     * ou identité attachée à la machine), et ne transitent jamais par le client.
+     */
+    public static class Gcp {
+        private String projectId = "";
+        private String zone = "europe-west1-b";
+        private String instanceName = "";
+        /** Gabarit du nom d'instance d'une cible du catalogue ; {slug} est remplacé. */
+        private String targetName = "{slug}";
+        private Duration operationTimeout = Duration.ofSeconds(60);
+
+        public String getProjectId() {
+            return projectId;
+        }
+
+        public void setProjectId(String projectId) {
+            this.projectId = projectId;
+        }
+
+        public String getZone() {
+            return zone;
+        }
+
+        public void setZone(String zone) {
+            this.zone = zone;
+        }
+
+        public String getInstanceName() {
+            return instanceName;
+        }
+
+        public void setInstanceName(String instanceName) {
+            this.instanceName = instanceName;
+        }
+
+        public String getTargetName() {
+            return targetName;
+        }
+
+        public void setTargetName(String targetName) {
+            this.targetName = targetName;
+        }
+
+        public Duration getOperationTimeout() {
+            return operationTimeout;
+        }
+
+        public void setOperationTimeout(Duration operationTimeout) {
+            this.operationTimeout = operationTimeout;
+        }
+    }
+
+    /** Cible partagée pilotée par /api/machine : « simulated » ou « gcp ». */
+    public static class Machine {
+        private String provider = "simulated";
+        /** Adresse interne annoncée par la cible simulée. */
+        private String simulatedAddress = "10.10.10.10";
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public void setProvider(String provider) {
+            this.provider = provider;
+        }
+
+        public String getSimulatedAddress() {
+            return simulatedAddress;
+        }
+
+        public void setSimulatedAddress(String simulatedAddress) {
+            this.simulatedAddress = simulatedAddress;
         }
     }
 
