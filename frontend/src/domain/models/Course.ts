@@ -194,6 +194,18 @@ export function formatDuration(minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
 }
 
+/**
+ * Première section d'atelier, s'il y en a une.
+ * <p>
+ * Un atelier se fait sur la machine cible : c'est là, et pas ailleurs, qu'il
+ * faut pouvoir l'allumer. Le besoin se déduit du contenu du cours plutôt que
+ * d'une case à cocher de plus dans l'éditeur — un cours qui porte un atelier
+ * porte par là même ses commandes à exécuter.
+ */
+export function firstLabSection(course: Pick<Course, 'sections'>): CourseSection | undefined {
+  return course.sections.find((section) => section.kind === 'LAB');
+}
+
 /** Première section non terminée : là où l'on reprend sa lecture. */
 export function nextSection(course: Course): CourseSection | undefined {
   return course.sections.find((section) => !section.completed);

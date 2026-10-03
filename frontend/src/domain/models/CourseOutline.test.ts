@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { courseOutline, isSubtitle, sectionAnchor, sectionBlocks } from './CourseOutline';
+import { firstLabSection } from './Course';
 import type { CourseSection } from './Course';
 
-function section(slug: string, title: string, content: string): CourseSection {
+function section(
+  slug: string,
+  title: string,
+  content: string,
+  kind: CourseSection['kind'] = 'THEORY',
+): CourseSection {
   return {
     id: 1,
     slug,
     title,
-    kind: 'THEORY',
-    kindName: 'Théorie',
+    kind,
+    kindName: kind,
     position: 1,
     minutes: 10,
     content,
@@ -81,5 +87,27 @@ describe('sommaire d’un cours', () => {
 
   it('ancre une section sur son slug, pour que les liens partagés survivent', () => {
     expect(sectionAnchor({ slug: 'chaine-de-possession' })).toBe('section-chaine-de-possession');
+  });
+});
+
+describe('atelier d’un cours', () => {
+  it('trouve la première section d’atelier', () => {
+    const course = {
+      sections: [
+        section('intro', 'Intro', 'Texte.'),
+        section('atelier-1', 'Atelier 1', 'Commandes.', 'LAB'),
+        section('atelier-2', 'Atelier 2', 'Encore.', 'LAB'),
+      ],
+    };
+
+    // La première seulement : le bouton de machine ne doit pas se répéter, chaque
+    // copie interrogeant le serveur pour le même état.
+    expect(firstLabSection(course)?.slug).toBe('atelier-1');
+  });
+
+  it('ne trouve rien quand le cours est entièrement théorique', () => {
+    const course = { sections: [section('intro', 'Intro', 'Texte.')] };
+
+    expect(firstLabSection(course)).toBeUndefined();
   });
 });

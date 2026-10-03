@@ -1,6 +1,13 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { formatDuration, hasQuiz, nextSection, type CourseSection, type QuizResult } from '@/domain/models/Course';
+import {
+  firstLabSection,
+  formatDuration,
+  hasQuiz,
+  nextSection,
+  type CourseSection,
+  type QuizResult,
+} from '@/domain/models/Course';
 import {
   courseOutline,
   sectionAnchor,
@@ -11,6 +18,7 @@ import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { AttackPathPanel } from '../features/course/AttackPathPanel';
 import { CourseOutlinePanel } from '../features/course/CourseOutlinePanel';
 import { DesignersPanel } from '../features/course/DesignersPanel';
+import { MachineControl } from '../features/lab/MachineControl';
 import { QuizForm } from '../features/course/QuizForm';
 import { RealCasePanel } from '../features/course/RealCasePanel';
 import { VideoPlayer } from '../features/course/VideoPlayer';
@@ -19,6 +27,7 @@ import { useCourse } from '../hooks/useCourse';
 import { NotFoundPage } from './NotFoundPage';
 
 /** Ancres des sections que la page ajoute au contenu du cours. */
+const MACHINE_ID = 'machine-cible';
 const ATTACK_PATH_ID = 'chemin-d-attaque';
 const REAL_CASE_ID = 'cas-d-usage-reel';
 const DESIGNERS_ID = 'concepteurs-du-scenario';
@@ -37,8 +46,19 @@ export function CourseDetailPage() {
    */
   const outline = useMemo<OutlineEntry[]>(() => {
     if (!course) return [];
+    const sections = courseOutline(course);
+    // La machine s'insère juste avant l'atelier qu'elle sert, et non en fin de
+    // page : le sommaire doit refléter l'ordre de lecture, pas l'ordre dans
+    // lequel la page assemble ses morceaux.
+    const lab = firstLabSection(course);
+    if (lab) {
+      const at = sections.findIndex((entry) => entry.id === sectionAnchor(lab));
+      if (at >= 0) {
+        sections.splice(at, 0, { id: MACHINE_ID, label: t('machine.title'), level: 2 });
+      }
+    }
     return [
-      ...courseOutline(course),
+      ...sections,
       ...(course.attackPath ? [{ id: ATTACK_PATH_ID, label: t('course.attackPath'), level: 2 as const }] : []),
       ...(course.realCase ? [{ id: REAL_CASE_ID, label: t('course.realCase'), level: 2 as const }] : []),
       ...(course.designers.length > 0
@@ -78,6 +98,7 @@ export function CourseDetailPage() {
   }
 
   const resume = nextSection(course);
+  const labSlug = firstLabSection(course)?.slug;
   // La filière de l'URL peut être absente ou périmée : celle du cours fait foi.
   const backSlug = track || course.trackSlug;
 
@@ -123,15 +144,19 @@ export function CourseDetailPage() {
         <div className="course-layout__main">
           <div className="course-sections">
             {course.sections.map((section) => (
-              <SectionPanel
-                key={section.slug}
-                section={section}
-                pending={detail.pending === section.slug}
-                onToggle={() => void detail.toggle(section)}
-                result={detail.results[section.id]}
-                grading={detail.grading === section.slug}
-                onGrade={(answers) => void detail.gradeQuiz(section, answers)}
-              />
+              <Fragment key={section.slug}>
+                {/* Un atelier se fait sur la cible : le bouton est là où sont
+                    les commandes, pour n'avoir pas à quitter le cours. */}
+                {section.slug === labSlug && <MachineControl id={MACHINE_ID} />}
+                <SectionPanel
+                  section={section}
+                  pending={detail.pending === section.slug}
+                  onToggle={() => void detail.toggle(section)}
+                  result={detail.results[section.id]}
+                  grading={detail.grading === section.slug}
+                  onGrade={(answers) => void detail.gradeQuiz(section, answers)}
+                />
+              </Fragment>
             ))}
           </div>
 
