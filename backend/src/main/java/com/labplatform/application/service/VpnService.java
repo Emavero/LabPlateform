@@ -17,6 +17,7 @@ import com.labplatform.domain.journal.JournalKind;
 import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.user.Actor;
+import com.labplatform.domain.vpn.LabNetwork;
 import com.labplatform.domain.vpn.VpnEndpoint;
 import com.labplatform.domain.vpn.VpnProfile;
 import com.labplatform.domain.vpn.VpnProtocol;
@@ -91,8 +92,9 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
                 client = authority.findClient(profile.getCommonName())
                         .orElseThrow(() -> new ServiceUnavailableException("Certificat VPN introuvable après émission"));
             }
-            String content = renderer.render(profile.getCommonName(), endpoint, authority.caCertificate(),
-                    client, authority.tlsCryptKey());
+            String content = renderer.render(profile.getCommonName(), endpoint,
+                    LabNetwork.ofCidr(settings.labNetwork()), authority.caCertificate(), client,
+                    authority.tlsCryptKey());
             return new VpnProfileFile("cyberMans-lab-" + protocol.parameter() + ".ovpn", content);
         }
     }

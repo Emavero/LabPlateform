@@ -158,7 +158,31 @@ app:
     server-name: serveur
     command-timeout: 120s
     crl-refresh: 1d
+  # ---------------------------------------------------------------------------
+  # Google Compute Engine. Le projet, la zone et l'instance viennent de
+  # l'environnement ; les identifiants, eux, viennent des « identifiants par
+  # défaut de l'application » : GOOGLE_APPLICATION_CREDENTIALS pointant sur la
+  # clé du compte de service, ou l'identité attachée à la machine si la
+  # plateforme tourne elle-même sur GCP. Aucune clé n'est lue ici, et aucune ne
+  # sort du serveur. Voir docs/GCP.md.
+  # ---------------------------------------------------------------------------
+  gcp:
+    project-id: ${GCP_PROJECT_ID:}
+    zone: ${GCP_ZONE:europe-west1-b}
+    instance-name: ${GCP_INSTANCE_NAME:target-01}
+    # Nom d'instance d'une cible du catalogue qui n'en déclare pas : {slug} est
+    # remplacé par l'identifiant de la machine (« obsidian » → « target-obsidian »).
+    target-name: ${GCP_TARGET_NAME:target-{slug}}
+    operation-timeout: ${GCP_OPERATION_TIMEOUT:60s}
+
+  # Cible partagée pilotée par /api/machine : « simulated » (défaut, aucune
+  # dépendance) ou « gcp ».
+  machine:
+    provider: ${APP_MACHINE_PROVIDER:simulated}
+    simulated-address: ${APP_MACHINE_SIMULATED_ADDRESS:10.10.10.10}
+
   hypervisor:
+    # simulated | docker | gcp
     mode: ${APP_HYPERVISOR_MODE:simulated}
     default-username: labuser
     simulated-subnet-prefix: "10.42"

@@ -23,7 +23,7 @@ class VirtualMachineTest {
     void newMachineIsStoppedWithoutConnectionInfo() {
         VirtualMachine vm = VirtualMachine.provision(1L, OperatingSystem.LINUX);
 
-        assertEquals(VmStatus.STOPPED, vm.getStatus());
+        assertEquals(VmStatus.TERMINATED, vm.getStatus());
         assertTrue(vm.getConnection().isEmpty());
         assertTrue(vm.getStartedAt().isEmpty());
     }
@@ -46,7 +46,7 @@ class VirtualMachineTest {
 
         vm.markStopped();
 
-        assertEquals(VmStatus.STOPPED, vm.getStatus());
+        assertEquals(VmStatus.TERMINATED, vm.getStatus());
         assertTrue(vm.getConnection().isEmpty());
         assertTrue(vm.getStartedAt().isEmpty());
     }

@@ -1,19 +1,27 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort.ClientCredentials;
+import com.labplatform.domain.vpn.LabNetwork;
 import com.labplatform.domain.vpn.VpnEndpoint;
 import com.labplatform.domain.vpn.VpnProtocol;
 
 /**
- * Assemble un profil OpenVPN autonome : réglages client et certificats
- * intégrés, pour qu'un seul fichier suffise à se connecter.
+ * Assemble un profil OpenVPN autonome : réglages client, route vers le lab et
+ * certificats intégrés, pour qu'un seul fichier suffise à se connecter et à
+ * joindre les machines.
+ * <p>
+ * La route est écrite dans le profil plutôt que laissée au serveur : sans elle,
+ * le tunnel monte et l'adresse interne d'une cible — celle qu'affiche le bouton
+ * « Démarrer » — reste injoignable, panne silencieuse qui ressemble à une
+ * machine en panne. Un serveur qui pousse déjà la même route ne crée pas de
+ * conflit : OpenVPN installe la même entrée deux fois sans dommage.
  */
 public final class OvpnProfileRenderer {
 
     private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
     private static final String END_CERT = "-----END CERTIFICATE-----";
 
-    public String render(String commonName, VpnEndpoint endpoint, String caCertificate,
+    public String render(String commonName, VpnEndpoint endpoint, LabNetwork labNetwork, String caCertificate,
                          ClientCredentials credentials, String tlsCryptKey) {
         StringBuilder out = new StringBuilder();
         line(out, "# cyberMans Lab — profil VPN personnel (" + commonName + ")");
@@ -32,6 +40,9 @@ public final class OvpnProfileRenderer {
             // Prévient le serveur à la déconnexion : l'adresse VPN est libérée tout de suite.
             line(out, "explicit-exit-notify 1");
         }
+        // Seul le réseau du lab passe par le tunnel : le reste du trafic de
+        // l'apprenant continue de sortir par sa connexion habituelle.
+        line(out, "route " + labNetwork.address() + " " + labNetwork.netmask());
         line(out, "verb 3");
         block(out, "ca", caCertificate.strip());
         block(out, "cert", certificateOnly(credentials.certificatePem()));

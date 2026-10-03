@@ -1,7 +1,7 @@
 package com.labplatform.adapter.out.persistence.repository;
 
 import com.labplatform.adapter.out.persistence.entity.BoxInstanceJpaEntity;
-import com.labplatform.domain.box.BoxInstanceStatus;
+import com.labplatform.domain.lab.VmStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,5 +13,5 @@ public interface SpringDataBoxInstanceRepository extends JpaRepository<BoxInstan
 
     Optional<BoxInstanceJpaEntity> findByUserIdAndBoxId(Long userId, Long boxId);
 
-    Optional<BoxInstanceJpaEntity> findFirstByUserIdAndStatus(Long userId, BoxInstanceStatus status);
+    Optional<BoxInstanceJpaEntity> findFirstByUserIdAndStatus(Long userId, VmStatus status);
 }

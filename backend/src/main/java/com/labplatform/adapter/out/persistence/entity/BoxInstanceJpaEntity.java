@@ -1,6 +1,6 @@
 package com.labplatform.adapter.out.persistence.entity;
 
-import com.labplatform.domain.box.BoxInstanceStatus;
+import com.labplatform.domain.lab.VmStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,7 +29,7 @@ public class BoxInstanceJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
-    private BoxInstanceStatus status;
+    private VmStatus status;
 
     @Column(name = "address", length = 45)
     private String address;
@@ -44,7 +44,7 @@ public class BoxInstanceJpaEntity {
         // requis par JPA
     }
 
-    public BoxInstanceJpaEntity(Long id, Long userId, Long boxId, BoxInstanceStatus status, String address,
+    public BoxInstanceJpaEntity(Long id, Long userId, Long boxId, VmStatus status, String address,
                                 Instant startedAt, Instant expiresAt) {
         this.id = id;
         this.userId = userId;
@@ -67,7 +67,7 @@ public class BoxInstanceJpaEntity {
         return boxId;
     }
 
-    public BoxInstanceStatus getStatus() {
+    public VmStatus getStatus() {
         return status;
     }
 

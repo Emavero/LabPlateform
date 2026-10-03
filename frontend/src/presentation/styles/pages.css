@@ -3447,3 +3447,58 @@ button.back-link {
     border-left: 0;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Cible partagée : le bouton « Démarrer / Arrêter » et son état
+   --------------------------------------------------------------------------- */
+.machine-control__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.machine-control__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.machine-control__access {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* L'état se lit à la couleur avant de se lire au mot : vert en marche, orange
+   pendant un passage, neutre à l'arrêt. */
+.machine-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--raise);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  white-space: nowrap;
+}
+
+.machine-badge--running {
+  border-color: var(--running);
+  background: var(--running-soft);
+  color: var(--running);
+}
+
+.machine-badge--provisioning,
+.machine-badge--staging,
+.machine-badge--stopping {
+  border-color: var(--warning);
+  color: var(--warning);
+}

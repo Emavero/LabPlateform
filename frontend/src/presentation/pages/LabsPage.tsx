@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Alert, Button } from '../design-system';
+import { MachineControl } from '../features/lab/MachineControl';
 import { useVpnAccess } from '../hooks/useVpn';
 import { useI18n } from '../i18n/I18nContext';
 import { useLab } from '../hooks/useLab';
@@ -33,6 +34,9 @@ export function LabsPage() {
           {t('labs.vpnText', { network: vpn.access.labNetwork })}
         </Alert>
       )}
+      {/* La cible avant les machines d'attaque : c'est elle qu'on démarre en
+          premier, et c'est son adresse qu'on va chercher. */}
+      <MachineControl />
       <LabGrid lab={lab} />
     </div>
   );

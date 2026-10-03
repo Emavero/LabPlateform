@@ -673,6 +673,22 @@ export const fr = {
   'module.scenario-designer.title': 'Concepteur de scénarios',
   'module.scenario-designer.description':
     'Conception de scénarios d’exercice rejouables sur l’infrastructure du lab.',
+  'machine.title': 'Machine cible',
+  'machine.lead':
+    'La cible partagée du lab. Démarrez-la avant de travailler, et éteignez-la ensuite : elle est commune à tous.',
+  'machine.loading': 'Lecture de l’état de la machine',
+  'machine.loadError': 'Impossible de lire l’état de la machine',
+  'machine.start': 'Démarrer la machine',
+  'machine.stop': 'Arrêter la machine',
+  'machine.starting': 'Démarrage…',
+  'machine.stopping': 'Extinction…',
+  'machine.watching': 'L’état se met à jour tout seul, quelques secondes suffisent.',
+  'machine.gaveUpTitle': 'L’état n’a pas fini de changer',
+  'machine.gaveUpText':
+    'La machine est restée en transition plus de dix minutes. Le suivi automatique s’est arrêté ; relancez-le pour reprendre.',
+  'machine.internalIp': 'Adresse interne',
+  'machine.vpnReminder': 'Cette adresse n’est joignable qu’avec le VPN du lab monté.',
+  'machine.vpnLink': 'Télécharger mon profil',
   'lab.sinceTime': 'à {time}',
   'lab.sinceDate': 'le {date}',
   'difficulty.aria': 'Difficulté : {label}',

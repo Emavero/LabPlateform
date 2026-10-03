@@ -63,6 +63,10 @@ class VpnServiceTest {
 
         assertEquals("cyberMans-lab-udp.ovpn", file.fileName());
         assertTrue(file.content().contains("remote vpn.example.org 1194"));
+        // Sans cette route, le tunnel monte mais l'adresse interne d'une cible
+        // reste injoignable — et cela ressemble à une machine en panne.
+        assertTrue(file.content().contains("route 10.10.10.0 255.255.255.0"),
+                "le profil doit router le réseau du lab");
         assertTrue(file.content().contains("<key>\nKEY-" + profiles.get(1L).getCommonName()));
         assertEquals(1, authority.issued.size());
         assertTrue(profiles.get(1L).getCommonName().startsWith("cyberMans-u1-"));

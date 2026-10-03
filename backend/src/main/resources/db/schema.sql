@@ -418,3 +418,48 @@ CREATE TABLE IF NOT EXISTS course_designer (
 );
 
 CREATE INDEX IF NOT EXISTS ix_designer_course ON course_designer (course_id, position);
+
+-- ---------------------------------------------------------------------------
+-- États de passage des machines (PROVISIONING, STAGING, STOPPING)
+-- ---------------------------------------------------------------------------
+
+-- « STOPPED » devient « TERMINATED » : le vocabulaire est celui de Compute
+-- Engine, pour qu'un état lu chez l'hébergeur se range sans traduction.
+-- L'ordre compte : l'ancienne contrainte n'accepte pas TERMINATED, elle tombe
+-- donc avant la mise à jour, et la nouvelle vient après.
+ALTER TABLE virtual_machine DROP CONSTRAINT IF EXISTS ck_vm_state;
+
+UPDATE virtual_machine SET status = 'TERMINATED' WHERE status = 'STOPPED';
+
+-- L'invariant du domaine est inchangé : des accès existent si et seulement si
+-- la machine tourne. Un état de passage n'en a donc aucun — ni encore, ni déjà.
+-- En revanche started_at n'est plus contraint hors RUNNING, volontairement :
+-- une machine qui s'éteint garde son heure de démarrage jusqu'au bout de son
+-- extinction, et c'est elle qui dit depuis quand elle tournait.
+ALTER TABLE virtual_machine ADD CONSTRAINT ck_vm_state CHECK (
+    (status = 'RUNNING' AND host IS NOT NULL AND port IS NOT NULL AND protocol IS NOT NULL
+        AND access_username IS NOT NULL AND access_password IS NOT NULL AND started_at IS NOT NULL)
+    OR
+    (status IN ('PROVISIONING', 'STAGING', 'STOPPING', 'TERMINATED')
+        AND host IS NULL AND port IS NULL AND protocol IS NULL
+        AND access_username IS NULL AND access_password IS NULL)
+);
+
+-- Les cibles suivent le même vocabulaire : elles partagent VmStatus avec les
+-- machines d'attaque. Même ordre qu'au-dessus — les anciennes contraintes
+-- tombent avant la mise à jour des lignes.
+ALTER TABLE box_instance DROP CONSTRAINT IF EXISTS ck_instance_status;
+ALTER TABLE box_instance DROP CONSTRAINT IF EXISTS ck_instance_state;
+
+UPDATE box_instance SET status = 'TERMINATED' WHERE status = 'STOPPED';
+
+ALTER TABLE box_instance ADD CONSTRAINT ck_instance_status
+    CHECK (status IN ('PROVISIONING', 'STAGING', 'RUNNING', 'STOPPING', 'TERMINATED'));
+
+-- Une cible qui démarre n'a pas encore d'adresse : l'afficher ferait croire
+-- qu'on peut déjà s'y connecter.
+ALTER TABLE box_instance ADD CONSTRAINT ck_instance_state CHECK (
+    (status = 'RUNNING' AND address IS NOT NULL AND started_at IS NOT NULL AND expires_at IS NOT NULL)
+    OR
+    (status <> 'RUNNING' AND address IS NULL AND started_at IS NULL AND expires_at IS NULL)
+);

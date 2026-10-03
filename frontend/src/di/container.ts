@@ -9,6 +9,7 @@ import { HttpJournalRepository } from '@/data/repositories/HttpJournalRepository
 import { HttpBoxRepository } from '@/data/repositories/HttpBoxRepository';
 import { HttpCourseRepository } from '@/data/repositories/HttpCourseRepository';
 import { HttpLabRepository } from '@/data/repositories/HttpLabRepository';
+import { HttpMachineRepository } from '@/data/repositories/HttpMachineRepository';
 import { HttpProfileRepository } from '@/data/repositories/HttpProfileRepository';
 import { HttpReportRepository } from '@/data/repositories/HttpReportRepository';
 import { HttpScenarioRepository } from '@/data/repositories/HttpScenarioRepository';
@@ -32,6 +33,7 @@ import {
   ResetPasswordUseCase,
   RestoreSessionUseCase,
 } from '@/domain/usecases/auth';
+import { GetMachineStatusUseCase, RunMachineActionUseCase } from '@/domain/usecases/machine';
 import {
   GetVmConsoleUseCase,
   GetVmUseCase,
@@ -109,6 +111,11 @@ export interface Dependencies {
     readonly get: GetVmUseCase;
     readonly runAction: RunVmActionUseCase;
     readonly console: GetVmConsoleUseCase;
+  };
+  /** Cible partagée de la plateforme : le bouton « Démarrer / Arrêter ». */
+  readonly machine: {
+    readonly status: GetMachineStatusUseCase;
+    readonly runAction: RunMachineActionUseCase;
   };
   /** Abonnement du compte connecté : formule, offre, paiements. */
   readonly billing: {
@@ -209,6 +216,7 @@ export function createContainer(): Dependencies {
   const authRepository = new HttpAuthRepository(http);
   const accountRepository = new HttpAccountRepository(http);
   const labRepository = new HttpLabRepository(http);
+  const machineRepository = new HttpMachineRepository(http);
   const vpnRepository = new HttpVpnRepository(http);
   const boxRepository = new HttpBoxRepository(http);
   const scoreboardRepository = new HttpScoreboardRepository(http);
@@ -243,6 +251,10 @@ export function createContainer(): Dependencies {
       get: new GetVmUseCase(labRepository),
       runAction: new RunVmActionUseCase(new StartVmUseCase(labRepository), new StopVmUseCase(labRepository)),
       console: new GetVmConsoleUseCase(labRepository),
+    },
+    machine: {
+      status: new GetMachineStatusUseCase(machineRepository),
+      runAction: new RunMachineActionUseCase(machineRepository),
     },
     billing: {
       get: new GetBillingUseCase(billingRepository),
