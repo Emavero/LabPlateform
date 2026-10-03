@@ -36,6 +36,10 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         ) : null}
       </header>
 
+      <p className="course-card__topic">
+        <Icon name="layers" size={13} /> {course.topicName}
+      </p>
+
       <p className="course-card__summary">{course.summary}</p>
 
       <div className="course-card__progress">

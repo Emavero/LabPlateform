@@ -6,8 +6,8 @@ import com.labplatform.application.port.in.admin.BoxDraft;
 import com.labplatform.application.port.in.admin.CourseDraft;
 import com.labplatform.application.port.in.admin.PublishedBox;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.SectionKind;
-import com.labplatform.domain.academy.Track;
 import com.labplatform.domain.box.Box;
 import com.labplatform.domain.box.Difficulty;
 import com.labplatform.domain.box.FlagKind;
@@ -29,19 +29,76 @@ public final class AdminDtos {
     private AdminDtos() {
     }
 
-    /** Cours saisi dans l'éditeur. */
+    /**
+     * Cours saisi dans l'éditeur. La filière n'est pas transmise : le
+     * sous-domaine la porte.
+     */
     public record CourseDraftRequest(
             @NotBlank(message = "Le titre est obligatoire")
             @Size(max = 128, message = "Le titre est limité à 128 caractères") String title,
-            @NotNull(message = "La filière est obligatoire") Track track,
+            @NotNull(message = "Le sous-domaine est obligatoire") CourseTopic topic,
             @NotNull(message = "Le niveau est obligatoire") CourseLevel level,
             @Size(max = 512, message = "Le résumé est limité à 512 caractères") String summary,
             @NotEmpty(message = "Un cours comporte au moins une section")
-            @Valid List<SectionDraftRequest> sections) {
+            @Valid List<SectionDraftRequest> sections,
+            @Valid BriefingRequest briefing) {
 
         public CourseDraft toDraft() {
-            return new CourseDraft(title, track, level, summary,
-                    sections.stream().map(SectionDraftRequest::toDraft).toList());
+            return new CourseDraft(title, topic, level, summary,
+                    sections.stream().map(SectionDraftRequest::toDraft).toList(),
+                    briefing == null ? CourseDraft.BriefingDraft.empty() : briefing.toDraft());
+        }
+    }
+
+    /** Chemin d'attaque, cas d'usage réel et concepteurs : tout est facultatif. */
+    public record BriefingRequest(
+            @Size(max = 1024, message = "Le résumé du chemin d'attaque est limité à 1024 caractères")
+            String attackSummary,
+            @Valid List<StageRequest> stages,
+            @Valid CaseRequest realCase,
+            @Valid List<DesignerRequest> designers) {
+
+        CourseDraft.BriefingDraft toDraft() {
+            return new CourseDraft.BriefingDraft(attackSummary,
+                    stages == null ? List.of() : stages.stream().map(StageRequest::toDraft).toList(),
+                    realCase == null ? null : realCase.toDraft(),
+                    designers == null ? List.of() : designers.stream().map(DesignerRequest::toDraft).toList());
+        }
+    }
+
+    /**
+     * Étape de la chaîne d'attaque. Rien n'est obligatoire ici : une ligne
+     * laissée vide est écartée, seule une ligne à moitié remplie est refusée —
+     * et c'est le domaine qui le dit.
+     */
+    public record StageRequest(
+            @Size(max = 128, message = "Le nom de l'étape est limité à 128 caractères") String name,
+            @Size(max = 1024, message = "La description est limitée à 1024 caractères") String description,
+            @Size(max = 128, message = "La technique est limitée à 128 caractères") String technique) {
+
+        CourseDraft.StageDraft toDraft() {
+            return new CourseDraft.StageDraft(name, description, technique);
+        }
+    }
+
+    public record CaseRequest(
+            @Size(max = 128, message = "Le secteur est limité à 128 caractères") String sector,
+            @Size(max = 2048, message = "La situation est limitée à 2048 caractères") String situation,
+            @Size(max = 1024, message = "L'enjeu est limité à 1024 caractères") String stake,
+            @Size(max = 1024, message = "L'issue est limitée à 1024 caractères") String outcome) {
+
+        CourseDraft.CaseDraft toDraft() {
+            return new CourseDraft.CaseDraft(sector, situation, stake, outcome);
+        }
+    }
+
+    public record DesignerRequest(
+            @Size(max = 128, message = "Le nom est limité à 128 caractères") String name,
+            @Size(max = 128, message = "Le rôle est limité à 128 caractères") String role,
+            @Size(max = 512, message = "L'adresse de l'avatar est trop longue") String avatarUrl) {
+
+        CourseDraft.DesignerDraft toDraft() {
+            return new CourseDraft.DesignerDraft(name, role, avatarUrl);
         }
     }
 

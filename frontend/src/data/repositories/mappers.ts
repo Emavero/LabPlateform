@@ -16,6 +16,8 @@ import type {
   CourseSummary,
   LearningProgress,
   SectionKind,
+  Topic,
+  TopicCode,
   Track,
   TrackCode,
 } from '@/domain/models/Course';
@@ -135,6 +137,9 @@ export interface CourseSummaryDto {
   track: TrackCode;
   trackName: string;
   trackSlug: string;
+  topic: TopicCode;
+  topicName: string;
+  topicSlug: string;
   level: CourseLevel;
   levelName: string;
   summary: string;
@@ -152,6 +157,9 @@ export interface CourseDto {
   track: TrackCode;
   trackName: string;
   trackSlug: string;
+  topic: TopicCode;
+  topicName: string;
+  topicSlug: string;
   level: CourseLevel;
   levelName: string;
   summary: string;
@@ -177,6 +185,17 @@ export interface CourseDto {
       choices: { id: number; label: string; correct: boolean | null }[];
     }[];
   }[];
+  /** Absents quand l'auteur ne les a pas écrits. */
+  attackPath: { summary: string; stages: AttackStageDto[] } | null;
+  realCase: { sector: string; situation: string; stake: string; outcome: string } | null;
+  designers: { name: string; role: string; avatarUrl: string | null; initials: string }[];
+}
+
+export interface AttackStageDto {
+  position: number;
+  name: string;
+  description: string;
+  technique: string | null;
 }
 
 export interface TrackDto {
@@ -184,6 +203,14 @@ export interface TrackDto {
   slug: string;
   name: string;
   description: string;
+  topics: TopicDto[];
+}
+
+export interface TopicDto {
+  topic: TopicCode;
+  slug: string;
+  name: string;
+  track: TrackCode;
 }
 
 export interface LearningProgressDto {
@@ -309,7 +336,7 @@ export function toLeaderboard(dto: LeaderboardDto): LeaderboardEntry[] {
 }
 
 export function toTrack(dto: TrackDto): Track {
-  return { ...dto };
+  return { ...dto, topics: dto.topics.map((topic): Topic => ({ ...topic })) };
 }
 
 export function toCourseSummary(dto: CourseSummaryDto): CourseSummary {
@@ -321,6 +348,11 @@ export function toCourse(dto: CourseDto): Course {
     ...dto,
     publishedAt: new Date(dto.publishedAt),
     sections: dto.sections.map((section) => ({ ...section })),
+    attackPath: dto.attackPath
+      ? { summary: dto.attackPath.summary, stages: dto.attackPath.stages.map((stage) => ({ ...stage })) }
+      : null,
+    realCase: dto.realCase ? { ...dto.realCase } : null,
+    designers: dto.designers.map((designer) => ({ ...designer })),
   };
 }
 

@@ -11,6 +11,7 @@ import com.labplatform.application.port.in.analytics.ContentInsight;
 import com.labplatform.application.port.in.analytics.UsageSegment;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
@@ -90,7 +91,8 @@ class AdminAnalyticsServiceTest {
     private static Course course(String slug, Track track) {
         List<CourseSection> sections = List.of(
                 CourseSection.of(null, "s1", "Section 1", SectionKind.THEORY, 1, 10, "Contenu"));
-        return Course.create(slug, slug, track, CourseLevel.FUNDAMENTAL, "Résumé.", LONG_AGO, sections);
+        return Course.create(slug, slug, CourseTopic.of(track).get(0), CourseLevel.FUNDAMENTAL, "Résumé.", LONG_AGO,
+                sections);
     }
 
     private void record(long userId, JournalKind kind, String subject, Instant at) {

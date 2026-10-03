@@ -12,6 +12,7 @@ import com.labplatform.application.fakes.InMemoryRatings;
 import com.labplatform.application.port.in.profile.ActivityEntry;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
@@ -81,7 +82,8 @@ class ProfileServiceTest {
     }
 
     private static Course course(String slug, Track track) {
-        return Course.create(slug, slug, track, CourseLevel.FUNDAMENTAL, "Résumé.", NOW.minusSeconds(86_400),
+        return Course.create(slug, slug, CourseTopic.of(track).get(0), CourseLevel.FUNDAMENTAL, "Résumé.",
+                NOW.minusSeconds(86_400),
                 List.of(CourseSection.of(null, "section-1", "Section 1", SectionKind.THEORY, 1, 10, "Contenu")));
     }
 

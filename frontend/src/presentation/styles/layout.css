@@ -22,7 +22,7 @@
   flex-direction: column;
   width: var(--sidebar-width);
   padding: 1.5rem 1rem 1rem;
-  background: linear-gradient(180deg, rgba(13, 14, 21, 0.96), rgba(11, 12, 16, 0.96));
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--line);
   backdrop-filter: var(--blur);
 }
@@ -77,7 +77,7 @@
 /* Élément actif : pilule arrondie rétroéclairée */
 .nav-link--active,
 .nav-link--active:hover {
-  color: #fff;
+  color: var(--text);
   background: linear-gradient(90deg, rgba(139, 124, 255, 0.22), rgba(76, 141, 255, 0.1));
   border-color: rgba(139, 124, 255, 0.5);
   box-shadow:
@@ -211,7 +211,7 @@
     gap: 0.75rem;
     height: 60px;
     padding: 0 1rem;
-    background: rgba(11, 12, 16, 0.88);
+    background: var(--overlay);
     border-bottom: 1px solid var(--line);
     backdrop-filter: var(--blur);
   }
@@ -236,7 +236,7 @@
     position: fixed;
     inset: 60px 0 0;
     z-index: 25;
-    background: rgba(5, 6, 10, 0.6);
+    background: var(--scrim);
   }
 
   .shell__main {
@@ -367,17 +367,24 @@
   font-size: 0.875rem;
 }
 
-/* ---------- Bascule de langue ----------
-   Ancrée en haut à droite, à l'opposé du logo. Fixe, donc au même endroit quel
-   que soit le défilement : sur grand écran elle occupe la marge au-dessus du
-   contenu, sur mobile elle tombe au bout de la barre du haut.
-   Le sélecteur est doublé de `.icon-btn` pour l'emporter sur la taille fixe
-   des boutons-icônes : celui-ci porte un mot en plus de son icône. */
-.icon-btn.language-toggle {
+/* ---------- Réglages de lecture (thème, langue) ----------
+   Ancrés en haut à droite, à l'opposé du logo. Fixes, donc au même endroit
+   quel que soit le défilement : sur grand écran ils occupent la marge au-dessus
+   du contenu, sur mobile ils tombent au bout de la barre du haut.
+   Les deux boutons sont doublés de `.icon-btn` pour l'emporter sur la taille
+   fixe des boutons-icônes : ils portent une pilule, pas un carré de 32 px. */
+.header-actions {
   position: fixed;
   top: 0.5rem;
   right: clamp(1rem, 4vw, 3rem);
   z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.icon-btn.language-toggle,
+.icon-btn.theme-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -390,8 +397,10 @@
   backdrop-filter: var(--blur);
 }
 
-.icon-btn.language-toggle:hover {
+.icon-btn.language-toggle:hover,
+.icon-btn.theme-toggle:hover {
   border-color: var(--line-strong);
+  color: var(--text);
 }
 
 /* Le code de la langue cible accompagne le globe : deux langues se
@@ -403,8 +412,8 @@
 }
 
 @media (max-width: 960px) {
-  .icon-btn.language-toggle {
-    /* Centrée dans la barre du haut, haute de 60 px. */
+  .header-actions {
+    /* Centrées dans la barre du haut, haute de 60 px. */
     top: 13px;
     right: 1rem;
   }

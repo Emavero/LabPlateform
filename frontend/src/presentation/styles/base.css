@@ -10,6 +10,12 @@ body {
   min-height: 100%;
 }
 
+/* Les liens du sommaire d'un cours glissent jusqu'au titre plutôt que d'y
+   sauter : on garde ainsi le fil de là où l'on était. */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background:
     radial-gradient(1200px 600px at 85% -10%, rgba(76, 141, 255, 0.08), transparent 60%),
@@ -86,7 +92,7 @@ pre {
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
   background: var(--violet);
-  color: #0b0c10;
+  color: var(--on-accent);
   font-weight: 600;
   text-decoration: none;
 }
@@ -96,6 +102,10 @@ pre {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

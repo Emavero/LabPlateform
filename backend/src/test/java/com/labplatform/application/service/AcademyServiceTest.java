@@ -9,6 +9,7 @@ import com.labplatform.application.port.in.academy.CourseView;
 import com.labplatform.application.port.in.academy.LearningProgress;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
@@ -58,7 +59,8 @@ class AcademyServiceTest {
                 .mapToObj(i -> CourseSection.of(null, "section-" + i, "Section " + i, SectionKind.THEORY, i, 10,
                         "Contenu " + i))
                 .toList();
-        return Course.create(slug, title, track, level, "Résumé.", NOW.minusSeconds(86_400), content);
+        return Course.create(slug, title, CourseTopic.of(track).get(0), level, "Résumé.",
+                NOW.minusSeconds(86_400), content);
     }
 
     @Test

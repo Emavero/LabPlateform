@@ -13,6 +13,7 @@ import com.labplatform.application.port.in.admin.CourseDraft;
 import com.labplatform.application.port.in.admin.CourseDraft.SectionDraft;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionKind;
 import com.labplatform.domain.academy.Track;
@@ -63,7 +64,8 @@ class CourseAdminServiceTest {
     }
 
     private static CourseDraft draft(String title, SectionDraft... sections) {
-        return new CourseDraft(title, Track.DEFENSE, CourseLevel.EASY, "Résumé du cours.", List.of(sections));
+        return new CourseDraft(title, CourseTopic.HARDENING, CourseLevel.EASY, "Résumé du cours.",
+                List.of(sections));
     }
 
     private static SectionDraft section(Long id, String title) {
@@ -160,7 +162,7 @@ class CourseAdminServiceTest {
 
     @Test
     void aVideoOnlySectionIsAccepted() {
-        Course created = admin.createCourse(ADMIN, new CourseDraft("Vidéo", Track.FORENSICS, CourseLevel.EASY, null,
+        Course created = admin.createCourse(ADMIN, new CourseDraft("Vidéo", CourseTopic.MEMORY_ANALYSIS, CourseLevel.EASY, null,
                 List.of(new SectionDraft(null, "Démonstration", SectionKind.THEORY, 8, null,
                         "https://www.youtube.com/watch?v=abc"))));
 
@@ -174,7 +176,7 @@ class CourseAdminServiceTest {
     void aVideoHostedOnThePlatformIsAccepted() {
         String hosted = "/api/media/" + "0123456789abcdef".repeat(2);
 
-        Course created = admin.createCourse(ADMIN, new CourseDraft("Hébergée", Track.FORENSICS, CourseLevel.EASY,
+        Course created = admin.createCourse(ADMIN, new CourseDraft("Hébergée", CourseTopic.MEMORY_ANALYSIS, CourseLevel.EASY,
                 null, List.of(new SectionDraft(null, "Démonstration", SectionKind.THEORY, 8, null, hosted))));
 
         assertEquals(hosted, created.getSections().get(0).videoUrl());
@@ -184,7 +186,7 @@ class CourseAdminServiceTest {
     void anArbitraryInternalPathIsNotAVideo() {
         // Un chemin interne qui n'est pas un fichier téléversé est refusé.
         assertThrows(InvalidInputException.class, () -> admin.createCourse(ADMIN,
-                new CourseDraft("Piégée", Track.FORENSICS, CourseLevel.EASY, null,
+                new CourseDraft("Piégée", CourseTopic.MEMORY_ANALYSIS, CourseLevel.EASY, null,
                         List.of(new SectionDraft(null, "Section", SectionKind.THEORY, 5, "Texte.",
                                 "/api/vpn/profile")))));
     }
@@ -192,14 +194,14 @@ class CourseAdminServiceTest {
     @Test
     void aVideoAddressThatIsNotHttpIsRefused() {
         assertThrows(InvalidInputException.class, () -> admin.createCourse(ADMIN,
-                new CourseDraft("Piégé", Track.FORENSICS, CourseLevel.EASY, null,
+                new CourseDraft("Piégé", CourseTopic.MEMORY_ANALYSIS, CourseLevel.EASY, null,
                         List.of(new SectionDraft(null, "Section", SectionKind.THEORY, 5, "Texte.",
                                 "javascript:alert(1)")))));
     }
 
     @Test
     void anEmptyVideoAddressMeansNoVideo() {
-        Course created = admin.createCourse(ADMIN, new CourseDraft("Sans vidéo", Track.DEFENSE, CourseLevel.EASY, null,
+        Course created = admin.createCourse(ADMIN, new CourseDraft("Sans vidéo", CourseTopic.HARDENING, CourseLevel.EASY, null,
                 List.of(new SectionDraft(null, "Section", SectionKind.THEORY, 5, "Texte.", "  "))));
 
         assertNull(created.getSections().get(0).videoUrl());

@@ -1,4 +1,4 @@
-import type { CourseDraft, QuestionDraft } from '../models/Admin';
+import type { CaseDraft, CourseDraft, DesignerDraft, QuestionDraft, StageDraft } from '../models/Admin';
 
 /** Vidéo hébergée par la plateforme : l'adresse que renvoie le téléversement. */
 const HOSTED_VIDEO = /^\/api\/media\/[0-9a-f]{32}$/;
@@ -11,6 +11,7 @@ const HOSTED_VIDEO = /^\/api\/media\/[0-9a-f]{32}$/;
 export const TITLE_MAX_LENGTH = 128;
 export const SUMMARY_MAX_LENGTH = 512;
 export const SECTION_MAX_MINUTES = 600;
+export const ATTACK_SUMMARY_MAX_LENGTH = 1024;
 
 export interface DraftErrors {
   readonly title?: string;
@@ -18,6 +19,10 @@ export interface DraftErrors {
   readonly sections?: string;
   /** Erreurs par section, indexées par position dans la liste. */
   readonly bySection: Readonly<Record<number, string>>;
+  /** Chemin d'attaque, cas d'usage réel, concepteurs : un message chacun. */
+  readonly attackPath?: string;
+  readonly realCase?: string;
+  readonly designers?: string;
 }
 
 export function validateDraft(draft: CourseDraft): DraftErrors {
@@ -50,7 +55,59 @@ export function validateDraft(draft: CourseDraft): DraftErrors {
       : undefined,
     sections: draft.sections.length === 0 ? 'Un cours comporte au moins une section.' : undefined,
     bySection,
+    attackPath: attackPathError(draft),
+    realCase: realCaseError(draft.realCase),
+    designers: designersError(draft.designers),
   };
+}
+
+/** Lignes laissées entièrement vides : l'auteur n'a rien saisi, rien à signaler. */
+function isEmptyStage(stage: StageDraft): boolean {
+  return !stage.name.trim() && !stage.description.trim() && !stage.technique.trim();
+}
+
+function isEmptyDesigner(designer: DesignerDraft): boolean {
+  return !designer.name.trim() && !designer.role.trim() && !designer.avatarUrl.trim();
+}
+
+/**
+ * Un chemin d'attaque tient ou tombe entier : un résumé sans étapes n'illustre
+ * aucune chaîne, et des étapes sans résumé ne disent pas de quoi elles sont la
+ * chaîne.
+ */
+function attackPathError(draft: CourseDraft): string | undefined {
+  const summary = draft.attackSummary.trim();
+  const filled = draft.stages.filter((stage) => !isEmptyStage(stage));
+
+  if (summary.length > ATTACK_SUMMARY_MAX_LENGTH) {
+    return `Le résumé du chemin d'attaque est limité à ${ATTACK_SUMMARY_MAX_LENGTH} caractères.`;
+  }
+  if (summary && filled.length === 0) return 'Ajoutez au moins une étape, ou retirez le résumé.';
+  if (!summary && filled.length > 0) return 'Décrivez en une phrase ce que ces étapes enchaînent.';
+
+  for (const [index, stage] of filled.entries()) {
+    const numbered = `Étape ${index + 1} : `;
+    if (!stage.name.trim()) return `${numbered}le nom est obligatoire.`;
+    if (!stage.description.trim()) return `${numbered}la description est obligatoire.`;
+  }
+  return undefined;
+}
+
+/** Un cas d'usage se décrit entièrement ou pas du tout. */
+function realCaseError(realCase: CaseDraft): string | undefined {
+  const values = [realCase.sector, realCase.situation, realCase.stake, realCase.outcome].map((v) => v.trim());
+  const filled = values.filter(Boolean).length;
+  if (filled === 0 || filled === 4) return undefined;
+  return 'Remplissez les quatre champs du cas d’usage, ou laissez-les tous vides.';
+}
+
+function designersError(designers: readonly DesignerDraft[]): string | undefined {
+  for (const [index, designer] of designers.filter((d) => !isEmptyDesigner(d)).entries()) {
+    const numbered = `Concepteur ${index + 1} : `;
+    if (!designer.name.trim()) return `${numbered}le nom est obligatoire.`;
+    if (!designer.role.trim()) return `${numbered}le rôle est obligatoire.`;
+  }
+  return undefined;
 }
 
 function isVideoUrl(url: string): boolean {
@@ -74,5 +131,9 @@ function quizError(questions: readonly QuestionDraft[]): string | undefined {
 }
 
 export function draftHasErrors(errors: DraftErrors): boolean {
-  return Boolean(errors.title || errors.summary || errors.sections) || Object.keys(errors.bySection).length > 0;
+  return (
+    Boolean(errors.title || errors.summary || errors.sections) ||
+    Boolean(errors.attackPath || errors.realCase || errors.designers) ||
+    Object.keys(errors.bySection).length > 0
+  );
 }

@@ -14,6 +14,10 @@ import java.util.regex.Pattern;
  * Cours d'une filière, découpé en sections. L'agrégat possède ses sections :
  * c'est lui qui les ordonne, qui répond de leur existence et qui calcule
  * l'avancement d'un apprenant.
+ * <p>
+ * La filière n'est pas un champ : elle se déduit du sous-domaine, qui la
+ * connaît. Un cours ne peut donc pas se contredire — pas de « Analyse mémoire »
+ * rangé en Défense.
  */
 public class Course {
 
@@ -22,21 +26,23 @@ public class Course {
     private final Long id;
     private final String slug;
     private final String title;
-    private final Track track;
+    private final CourseTopic topic;
     private final CourseLevel level;
     private final String summary;
     private final Instant publishedAt;
     private final List<CourseSection> sections;
+    private final CourseBriefing briefing;
 
-    private Course(Long id, String slug, String title, Track track, CourseLevel level, String summary,
-                   Instant publishedAt, List<CourseSection> sections) {
+    private Course(Long id, String slug, String title, CourseTopic topic, CourseLevel level, String summary,
+                   Instant publishedAt, List<CourseSection> sections, CourseBriefing briefing) {
         this.id = id;
         this.slug = requireSlug(slug);
         this.title = Objects.requireNonNull(title, "title");
-        this.track = Objects.requireNonNull(track, "track");
+        this.topic = Objects.requireNonNull(topic, "topic");
         this.level = Objects.requireNonNull(level, "level");
         this.summary = Objects.requireNonNull(summary, "summary");
         this.publishedAt = Objects.requireNonNull(publishedAt, "publishedAt");
+        this.briefing = briefing == null ? CourseBriefing.empty() : briefing;
         this.sections = Objects.requireNonNull(sections, "sections").stream()
                 .sorted(Comparator.comparingInt(CourseSection::position))
                 .toList();
@@ -45,14 +51,26 @@ public class Course {
         }
     }
 
-    public static Course create(String slug, String title, Track track, CourseLevel level, String summary,
+    public static Course create(String slug, String title, CourseTopic topic, CourseLevel level, String summary,
                                 Instant publishedAt, List<CourseSection> sections) {
-        return new Course(null, slug, title, track, level, summary, publishedAt, sections);
+        return create(slug, title, topic, level, summary, publishedAt, sections, CourseBriefing.empty());
     }
 
-    public static Course restore(Long id, String slug, String title, Track track, CourseLevel level, String summary,
-                                 Instant publishedAt, List<CourseSection> sections) {
-        return new Course(Objects.requireNonNull(id, "id"), slug, title, track, level, summary, publishedAt, sections);
+    public static Course create(String slug, String title, CourseTopic topic, CourseLevel level, String summary,
+                                Instant publishedAt, List<CourseSection> sections, CourseBriefing briefing) {
+        return new Course(null, slug, title, topic, level, summary, publishedAt, sections, briefing);
+    }
+
+    public static Course restore(Long id, String slug, String title, CourseTopic topic, CourseLevel level,
+                                 String summary, Instant publishedAt, List<CourseSection> sections) {
+        return restore(id, slug, title, topic, level, summary, publishedAt, sections, CourseBriefing.empty());
+    }
+
+    public static Course restore(Long id, String slug, String title, CourseTopic topic, CourseLevel level,
+                                 String summary, Instant publishedAt, List<CourseSection> sections,
+                                 CourseBriefing briefing) {
+        return new Course(Objects.requireNonNull(id, "id"), slug, title, topic, level, summary, publishedAt, sections,
+                briefing);
     }
 
     /** Section de ce cours, ou 404 : une section d'un autre cours n'existe pas ici. */
@@ -92,8 +110,17 @@ public class Course {
         return title;
     }
 
+    /** Filière, telle que le sous-domaine la désigne. */
     public Track getTrack() {
-        return track;
+        return topic.track();
+    }
+
+    public CourseTopic getTopic() {
+        return topic;
+    }
+
+    public CourseBriefing getBriefing() {
+        return briefing;
     }
 
     public CourseLevel getLevel() {

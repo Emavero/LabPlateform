@@ -1,5 +1,5 @@
 import type { Difficulty } from './Box';
-import type { CourseLevel, SectionKind, TrackCode } from './Course';
+import type { CourseLevel, SectionKind, TopicCode } from './Course';
 import type { OperatingSystem } from './VirtualMachine';
 
 /** Chiffres du tableau de bord d'administration. */
@@ -46,13 +46,53 @@ export interface SectionDraft {
   readonly questions: readonly QuestionDraft[];
 }
 
+/** Étape de la chaîne d'attaque saisie. Sa position vient de l'ordre de la liste. */
+export interface StageDraft {
+  readonly name: string;
+  readonly description: string;
+  readonly technique: string;
+}
+
+/** Mise en situation : chez qui, quoi, quel enjeu, quelle issue. */
+export interface CaseDraft {
+  readonly sector: string;
+  readonly situation: string;
+  readonly stake: string;
+  readonly outcome: string;
+}
+
+/** Concepteur du scénario. L'avatar est facultatif : à défaut, les initiales. */
+export interface DesignerDraft {
+  readonly name: string;
+  readonly role: string;
+  readonly avatarUrl: string;
+}
+
+/**
+ * Cours en cours de saisie.
+ * <p>
+ * La filière ne s'y trouve pas : le sous-domaine la porte. L'éditeur fait
+ * choisir la filière avant le sous-domaine, mais ce n'est là qu'une façon de
+ * raccourcir la liste — seul le second est enregistré.
+ */
 export interface CourseDraft {
   readonly title: string;
-  readonly track: TrackCode;
+  readonly topic: TopicCode;
   readonly level: CourseLevel;
   readonly summary: string;
   readonly sections: readonly SectionDraft[];
+  /** Chemin d'attaque, cas d'usage, concepteurs : facultatifs d'un bout à l'autre. */
+  readonly attackSummary: string;
+  readonly stages: readonly StageDraft[];
+  readonly realCase: CaseDraft;
+  readonly designers: readonly DesignerDraft[];
 }
+
+export const EMPTY_STAGE: StageDraft = { name: '', description: '', technique: '' };
+
+export const EMPTY_CASE: CaseDraft = { sector: '', situation: '', stake: '', outcome: '' };
+
+export const EMPTY_DESIGNER: DesignerDraft = { name: '', role: '', avatarUrl: '' };
 
 export const EMPTY_SECTION: SectionDraft = {
   id: null,
@@ -66,10 +106,14 @@ export const EMPTY_SECTION: SectionDraft = {
 
 export const EMPTY_DRAFT: CourseDraft = {
   title: '',
-  track: 'FORENSICS',
+  topic: 'EVIDENCE_HANDLING',
   level: 'FUNDAMENTAL',
   summary: '',
   sections: [EMPTY_SECTION],
+  attackSummary: '',
+  stages: [],
+  realCase: EMPTY_CASE,
+  designers: [],
 };
 
 /**
@@ -81,7 +125,6 @@ export const COURSE_LEVELS: readonly CourseLevel[] = ['FUNDAMENTAL', 'EASY', 'ME
 
 export const SECTION_KINDS: readonly SectionKind[] = ['THEORY', 'LAB', 'QUIZ'];
 
-export const TRACK_CODES: readonly TrackCode[] = ['FORENSICS', 'DEFENSE'];
 
 /** Machine du catalogue en cours de saisie. */
 export interface BoxDraft {

@@ -1,4 +1,24 @@
 export type TrackCode = 'FORENSICS' | 'DEFENSE';
+
+/**
+ * Sous-domaine d'une filière. Miroir de domain/academy/CourseTopic côté
+ * serveur : c'est lui qui dit à quelle filière chacun appartient, la liste des
+ * boutons de filtre vient donc de l'API et non d'ici.
+ */
+export type TopicCode =
+  | 'EVIDENCE_HANDLING'
+  | 'MEMORY_ANALYSIS'
+  | 'DISK_FORENSICS'
+  | 'LOG_ANALYSIS'
+  | 'NETWORK_FORENSICS'
+  | 'TIMELINE'
+  | 'MALWARE_ANALYSIS'
+  | 'HARDENING'
+  | 'SIEM_SOC'
+  | 'FIREWALLS'
+  | 'INCIDENT_RESPONSE'
+  | 'THREAT_HUNTING'
+  | 'IDENTITY_ACCESS';
 export type CourseLevel = 'FUNDAMENTAL' | 'EASY' | 'MEDIUM' | 'HARD';
 export type SectionKind = 'THEORY' | 'LAB' | 'QUIZ';
 
@@ -8,6 +28,16 @@ export interface Track {
   readonly slug: string;
   readonly name: string;
   readonly description: string;
+  /** Sous-domaines de la filière : les filtres de la page des cours. */
+  readonly topics: readonly Topic[];
+}
+
+/** Sous-domaine : un bouton de filtre, sous sa filière. */
+export interface Topic {
+  readonly topic: TopicCode;
+  readonly slug: string;
+  readonly name: string;
+  readonly track: TrackCode;
 }
 
 /** Cours dans une liste : pas de contenu, juste de quoi choisir. */
@@ -17,6 +47,9 @@ export interface CourseSummary {
   readonly track: TrackCode;
   readonly trackName: string;
   readonly trackSlug: string;
+  readonly topic: TopicCode;
+  readonly topicName: string;
+  readonly topicSlug: string;
   readonly level: CourseLevel;
   readonly levelName: string;
   readonly summary: string;
@@ -82,12 +115,45 @@ export function isQuizComplete(section: CourseSection, answers: QuizAnswers): bo
   return section.questions.every((question) => (answers[question.id]?.length ?? 0) > 0);
 }
 
+/** Étape d'une chaîne d'attaque. La technique n'est pas toujours référencée. */
+export interface AttackStage {
+  readonly position: number;
+  readonly name: string;
+  readonly description: string;
+  readonly technique: string | null;
+}
+
+/** Chemin d'attaque du cours : le vecteur, puis la suite d'étapes. */
+export interface AttackPath {
+  readonly summary: string;
+  readonly stages: readonly AttackStage[];
+}
+
+/** Mise en situation : chez qui, quoi, quel enjeu, quelle issue. */
+export interface RealCase {
+  readonly sector: string;
+  readonly situation: string;
+  readonly stake: string;
+  readonly outcome: string;
+}
+
+/** Concepteur du scénario. Sans avatar, la fiche montre ses initiales. */
+export interface CourseDesigner {
+  readonly name: string;
+  readonly role: string;
+  readonly avatarUrl: string | null;
+  readonly initials: string;
+}
+
 export interface Course {
   readonly slug: string;
   readonly title: string;
   readonly track: TrackCode;
   readonly trackName: string;
   readonly trackSlug: string;
+  readonly topic: TopicCode;
+  readonly topicName: string;
+  readonly topicSlug: string;
   readonly level: CourseLevel;
   readonly levelName: string;
   readonly summary: string;
@@ -96,6 +162,10 @@ export interface Course {
   readonly completed: boolean;
   readonly publishedAt: Date;
   readonly sections: readonly CourseSection[];
+  /** Absents tant que l'auteur ne les a pas écrits : la page s'en passe. */
+  readonly attackPath: AttackPath | null;
+  readonly realCase: RealCase | null;
+  readonly designers: readonly CourseDesigner[];
 }
 
 /** Avancement sur une filière entière. */
