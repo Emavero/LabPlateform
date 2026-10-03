@@ -57,5 +57,77 @@
   --fast: 140ms;
   --medium: 260ms;
 
+  /* Profondeurs : ce qui se creuse sous la surface, ce qui s'en détache. */
+  --raise: rgba(255, 255, 255, 0.03);
+  --raise-soft: rgba(255, 255, 255, 0.02);
+  --sunken: rgba(11, 12, 16, 0.5);
+  --sunken-strong: rgba(13, 14, 21, 0.75);
+  --overlay: rgba(11, 12, 16, 0.88);
+  --scrim: rgba(5, 6, 10, 0.6);
+  --sidebar-bg: linear-gradient(180deg, rgba(13, 14, 21, 0.96), rgba(11, 12, 16, 0.96));
+  --field-focus-bg: rgba(17, 18, 30, 0.9);
+
+  /* Textes posés sur un fond coloré : leur contraste dépend du thème. */
+  --on-accent: #0b0c10;
+  --on-success: #d9fff0;
+  --on-danger: #ffc2cd;
+
+  /* Terminal et lecteur vidéo : sombres dans les deux thèmes, par métier. */
+  --code-bg: #07080c;
+  --code-text: #b9c0d8;
+  --media-bg: #000;
+
   --sidebar-width: 264px;
+}
+
+/* ---------- Thème clair ----------
+   Le thème ne vit que dans ces jetons : aucun composant ne lit `data-theme`,
+   aucune règle de mise en page n'est dupliquée. Les accents changent de valeur
+   plutôt que de teinte — le violet doit foncer pour rester lisible sur blanc,
+   là où il devait éclaircir pour l'être sur noir. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f5f6fb;
+  --bg-panel: #ffffff;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --surface-hover: rgba(94, 74, 222, 0.07);
+
+  --line: rgba(74, 58, 168, 0.16);
+  --line-strong: rgba(74, 58, 168, 0.34);
+
+  --text: #171a28;
+  --text-muted: #565b76;
+  --text-faint: #8a8fa6;
+
+  --violet: #5e4ade;
+  --violet-soft: rgba(94, 74, 222, 0.12);
+  --blue: #2563d8;
+  --accent-gradient: linear-gradient(135deg, #5e4ade 0%, #2563d8 100%);
+  --glow: 0 0 0 1px rgba(94, 74, 222, 0.35), 0 8px 22px -12px rgba(94, 74, 222, 0.5);
+  --glow-focus: 0 0 0 1px var(--violet), 0 0 0 4px rgba(94, 74, 222, 0.18);
+
+  --running: #0f8f63;
+  --running-soft: rgba(15, 143, 99, 0.12);
+  --danger: #d21d43;
+  --danger-soft: rgba(210, 29, 67, 0.1);
+  --warning: #a8620a;
+
+  --raise: rgba(23, 26, 40, 0.035);
+  --raise-soft: rgba(23, 26, 40, 0.022);
+  --sunken: rgba(23, 26, 40, 0.05);
+  --sunken-strong: rgba(255, 255, 255, 0.86);
+  --overlay: rgba(255, 255, 255, 0.9);
+  --scrim: rgba(23, 26, 40, 0.34);
+  --sidebar-bg: linear-gradient(180deg, #ffffff, #f1f2f9);
+  --field-focus-bg: #ffffff;
+
+  /* Le violet clair devient sombre : le texte posé dessus doit s'inverser. */
+  --on-accent: #ffffff;
+  --on-success: #0a5c40;
+  --on-danger: #8a1029;
+
+  --blur: blur(14px) saturate(120%);
+  --shadow: 0 20px 48px -30px rgba(23, 26, 40, 0.35);
 }

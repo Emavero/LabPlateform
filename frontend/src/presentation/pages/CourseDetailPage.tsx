@@ -1,20 +1,53 @@
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { formatDuration, hasQuiz, nextSection, type CourseSection, type QuizResult } from '@/domain/models/Course';
+import {
+  courseOutline,
+  sectionAnchor,
+  sectionBlocks,
+  type OutlineEntry,
+} from '@/domain/models/CourseOutline';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { AttackPathPanel } from '../features/course/AttackPathPanel';
+import { CourseOutlinePanel } from '../features/course/CourseOutlinePanel';
+import { DesignersPanel } from '../features/course/DesignersPanel';
 import { QuizForm } from '../features/course/QuizForm';
+import { RealCasePanel } from '../features/course/RealCasePanel';
 import { VideoPlayer } from '../features/course/VideoPlayer';
 import { useI18n } from '../i18n/I18nContext';
 import { useCourse } from '../hooks/useCourse';
-import { TRACK_PAGES } from '../navigation/navigation';
 import { NotFoundPage } from './NotFoundPage';
 
-/** Fiche d'un cours : le contenu de chaque section, et la case à cocher. */
+/** Ancres des sections que la page ajoute au contenu du cours. */
+const ATTACK_PATH_ID = 'chemin-d-attaque';
+const REAL_CASE_ID = 'cas-d-usage-reel';
+const DESIGNERS_ID = 'concepteurs-du-scenario';
+
+/** Fiche d'un cours : son contenu, son sommaire, et ce qui l'entoure. */
 export function CourseDetailPage() {
   const { t } = useI18n();
   const { track = '', slug = '' } = useParams();
   const detail = useCourse(slug);
+  const course = detail.course;
 
-  if (detail.loading && !detail.course) {
+  /**
+   * Le sommaire mêle ce que le cours contient — sections et sous-titres, que le
+   * domaine sait extraire — et ce que la page ajoute, dont les intitulés sont
+   * traduits. D'où l'assemblage ici plutôt que dans le domaine.
+   */
+  const outline = useMemo<OutlineEntry[]>(() => {
+    if (!course) return [];
+    return [
+      ...courseOutline(course),
+      ...(course.attackPath ? [{ id: ATTACK_PATH_ID, label: t('course.attackPath'), level: 2 as const }] : []),
+      ...(course.realCase ? [{ id: REAL_CASE_ID, label: t('course.realCase'), level: 2 as const }] : []),
+      ...(course.designers.length > 0
+        ? [{ id: DESIGNERS_ID, label: t('course.designers'), level: 2 as const }]
+        : []),
+    ];
+  }, [course, t]);
+
+  if (detail.loading && !course) {
     return (
       <div className="page">
         <div className="empty">
@@ -26,7 +59,7 @@ export function CourseDetailPage() {
   if (detail.error?.kind === 'not_found') return <NotFoundPage />;
   // Sans cours chargé, l'erreur occupe la page ; une fois chargé, un échec de
   // bascule s'affiche en ligne pour ne pas faire disparaître le contenu.
-  if (!detail.course) {
+  if (!course) {
     return (
       <div className="page">
         <Alert
@@ -44,9 +77,9 @@ export function CourseDetailPage() {
     );
   }
 
-  const course = detail.course;
   const resume = nextSection(course);
-  const backSlug = TRACK_PAGES[track] ? track : course.trackSlug;
+  // La filière de l'URL peut être absente ou périmée : celle du cours fait foi.
+  const backSlug = track || course.trackSlug;
 
   return (
     <div className="page">
@@ -65,6 +98,13 @@ export function CourseDetailPage() {
           </p>
           <h1 className="page__title">{course.title}</h1>
           <p className="page__lead">{course.summary}</p>
+          {/* Le sous-domaine mène au filtre correspondant : on repart de la page
+              des cours avec le même angle que celui qu'on vient de lire. */}
+          <p className="course-topic">
+            <Link className="topic-chip topic-chip--link" to={`/cours/${course.trackSlug}?domaine=${course.topicSlug}`}>
+              <Icon name="layers" size={14} /> {course.topicName}
+            </Link>
+          </p>
         </div>
         {course.completed ? (
           <span className="badge badge--pwned">
@@ -79,18 +119,28 @@ export function CourseDetailPage() {
 
       {detail.error && <Alert tone="error">{detail.error.message}</Alert>}
 
-      <div className="course-sections">
-        {course.sections.map((section) => (
-          <SectionPanel
-            key={section.slug}
-            section={section}
-            pending={detail.pending === section.slug}
-            onToggle={() => void detail.toggle(section)}
-            result={detail.results[section.id]}
-            grading={detail.grading === section.slug}
-            onGrade={(answers) => void detail.gradeQuiz(section, answers)}
-          />
-        ))}
+      <div className="course-layout">
+        <div className="course-layout__main">
+          <div className="course-sections">
+            {course.sections.map((section) => (
+              <SectionPanel
+                key={section.slug}
+                section={section}
+                pending={detail.pending === section.slug}
+                onToggle={() => void detail.toggle(section)}
+                result={detail.results[section.id]}
+                grading={detail.grading === section.slug}
+                onGrade={(answers) => void detail.gradeQuiz(section, answers)}
+              />
+            ))}
+          </div>
+
+          {course.attackPath && <AttackPathPanel id={ATTACK_PATH_ID} path={course.attackPath} />}
+          {course.realCase && <RealCasePanel id={REAL_CASE_ID} realCase={course.realCase} />}
+          {course.designers.length > 0 && <DesignersPanel id={DESIGNERS_ID} designers={course.designers} />}
+        </div>
+
+        <CourseOutlinePanel entries={outline} />
       </div>
     </div>
   );
@@ -112,8 +162,11 @@ function SectionPanel({
   onGrade: (answers: Readonly<Record<number, readonly number[]>>) => void;
 }) {
   const { t } = useI18n();
+  const blocks = sectionBlocks(section);
+
   return (
     <Panel
+      id={sectionAnchor(section)}
       className={['course-section', section.completed && 'course-section--done'].filter(Boolean).join(' ')}
       eyebrow={t('course.sectionMeta', {
         position: section.position,
@@ -143,11 +196,20 @@ function SectionPanel({
       }
     >
       {section.videoUrl && <VideoPlayer url={section.videoUrl} title={section.title} />}
-      {/* Le contenu est du texte préformaté : les commandes doivent rester lisibles telles quelles. */}
-      {section.content.trim() && <pre className="course-section__content">{section.content}</pre>}
-      {hasQuiz(section) && (
-        <QuizForm section={section} result={result} grading={grading} onSubmit={onGrade} />
+      {/* Le texte reste préformaté : les commandes doivent rester lisibles telles
+          quelles. Seuls les sous-titres en sortent, pour que le sommaire les vise. */}
+      {blocks.map((block, index) =>
+        block.kind === 'subtitle' ? (
+          <h3 className="course-section__subtitle" id={block.id} key={block.id}>
+            {block.label}
+          </h3>
+        ) : (
+          <pre className="course-section__content" key={`text-${index}`}>
+            {block.text}
+          </pre>
+        ),
       )}
+      {hasQuiz(section) && <QuizForm section={section} result={result} grading={grading} onSubmit={onGrade} />}
     </Panel>
   );
 }

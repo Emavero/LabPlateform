@@ -41,7 +41,7 @@ class AdminApiIntegrationTest {
         Cookie learner = register("apprenant1@example.com");
 
         MvcResult created = mvc.perform(createCourse(admin, """
-                        {"title":"Analyser un journal Windows","track":"FORENSICS","level":"EASY",
+                        {"title":"Analyser un journal Windows","topic":"LOG_ANALYSIS","level":"EASY",
                          "summary":"Lire les journaux d'événements.",
                          "sections":[
                            {"title":"Introduction","kind":"THEORY","minutes":10,"content":"Du texte.",
@@ -70,7 +70,7 @@ class AdminApiIntegrationTest {
         mvc.perform(put("/api/admin/courses/{slug}", "analyser-un-journal-windows").cookie(admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Analyser un journal Windows","track":"FORENSICS","level":"MEDIUM",
+                                {"title":"Analyser un journal Windows","topic":"LOG_ANALYSIS","level":"MEDIUM",
                                  "summary":"Version remaniée.",
                                  "sections":[{"id":%d,"title":"Prise en main","kind":"THEORY","minutes":12,
                                               "content":"Texte revu."}]}""".formatted(sectionId.longValue())))
@@ -96,7 +96,7 @@ class AdminApiIntegrationTest {
         Cookie learner = register("candidat@example.com");
 
         MvcResult created = mvc.perform(createCourse(admin, """
-                        {"title":"Quiz de collecte","track":"FORENSICS","level":"EASY","summary":"",
+                        {"title":"Quiz de collecte","topic":"LOG_ANALYSIS","level":"EASY","summary":"",
                          "sections":[{"title":"Évaluation","kind":"QUIZ","minutes":10,"content":"Répondez.",
                            "questions":[
                              {"statement":"Premier geste ?","choices":[
@@ -151,7 +151,7 @@ class AdminApiIntegrationTest {
 
         mvc.perform(get("/api/admin/overview").cookie(learner)).andExpect(status().isForbidden());
         mvc.perform(createCourse(learner, """
-                {"title":"Cours pirate","track":"DEFENSE","level":"EASY","summary":"",
+                {"title":"Cours pirate","topic":"HARDENING","level":"EASY","summary":"",
                  "sections":[{"title":"S","kind":"THEORY","minutes":5,"content":"x"}]}"""))
                 .andExpect(status().isForbidden());
         mvc.perform(delete("/api/admin/courses/{slug}", "durcissement-des-systemes").cookie(learner))
@@ -175,11 +175,11 @@ class AdminApiIntegrationTest {
         Cookie admin = register("admin@example.com");
 
         mvc.perform(createCourse(admin, """
-                {"title":"Sans section","track":"DEFENSE","level":"EASY","summary":"","sections":[]}"""))
+                {"title":"Sans section","topic":"HARDENING","level":"EASY","summary":"","sections":[]}"""))
                 .andExpect(status().isBadRequest());
 
         mvc.perform(createCourse(admin, """
-                {"title":"Vidéo piégée","track":"DEFENSE","level":"EASY","summary":"",
+                {"title":"Vidéo piégée","topic":"HARDENING","level":"EASY","summary":"",
                  "sections":[{"title":"S","kind":"THEORY","minutes":5,"content":"x",
                               "videoUrl":"javascript:alert(1)"}]}"""))
                 .andExpect(status().isBadRequest());
@@ -194,6 +194,88 @@ class AdminApiIntegrationTest {
         return post("/api/courses/{slug}/sections/{section}/quiz", slug, section).cookie(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(answers);
+    }
+
+    @Test
+    void aCourseKeepsItsAttackPathRealCaseAndDesignersThroughTheDatabase() throws Exception {
+        Cookie admin = register("admin@example.com");
+        Cookie learner = register("apprenant4@example.com");
+
+        MvcResult created = mvc.perform(createCourse(admin, """
+                        {"title":"Chaîne complète","topic":"MEMORY_ANALYSIS","level":"MEDIUM","summary":"Résumé.",
+                         "sections":[{"title":"Introduction","kind":"THEORY","minutes":10,"content":"Du texte."}],
+                         "briefing":{
+                           "attackSummary":"De la pièce jointe à l'exfiltration.",
+                           "stages":[
+                             {"name":"Hameçonnage","description":"Une pièce jointe.","technique":"T1566.001"},
+                             {"name":"Persistance","description":"Une tâche planifiée."},
+                             {"name":"","description":""}],
+                           "realCase":{"sector":"Cabinet comptable","situation":"Un poste lent un vendredi.",
+                                       "stake":"300 dossiers clients.","outcome":"Onze notifications au lieu de 300."},
+                           "designers":[
+                             {"name":"Awa Diallo","role":"Analyste forensique"},
+                             {"name":"Marc Lefèvre","role":"Expert judiciaire",
+                              "avatarUrl":"https://exemple.test/marc.png"}]}}"""))
+                .andExpect(status().isCreated())
+                .andReturn();
+        Number sectionId = JsonPath.read(created.getResponse().getContentAsString(), "$.sections[0].id");
+
+        // L'apprenant lit le même dossier : rien n'est réservé à l'administration ici.
+        mvc.perform(get("/api/courses/{slug}", "chaine-complete").cookie(learner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.topic").value("MEMORY_ANALYSIS"))
+                .andExpect(jsonPath("$.topicSlug").value("analyse-memoire"))
+                .andExpect(jsonPath("$.track").value("FORENSICS"))
+                .andExpect(jsonPath("$.attackPath.summary").value("De la pièce jointe à l'exfiltration."))
+                // La ligne laissée vide est écartée, et les positions sont renumérotées.
+                .andExpect(jsonPath("$.attackPath.stages.length()").value(2))
+                .andExpect(jsonPath("$.attackPath.stages[0].position").value(1))
+                .andExpect(jsonPath("$.attackPath.stages[0].technique").value("T1566.001"))
+                .andExpect(jsonPath("$.attackPath.stages[1].position").value(2))
+                .andExpect(jsonPath("$.attackPath.stages[1].technique").doesNotExist())
+                .andExpect(jsonPath("$.realCase.sector").value("Cabinet comptable"))
+                .andExpect(jsonPath("$.realCase.outcome").value("Onze notifications au lieu de 300."))
+                .andExpect(jsonPath("$.designers.length()").value(2))
+                .andExpect(jsonPath("$.designers[0].name").value("Awa Diallo"))
+                // Sans avatar, la page présente le concepteur par ses initiales.
+                .andExpect(jsonPath("$.designers[0].avatarUrl").doesNotExist())
+                .andExpect(jsonPath("$.designers[0].initials").value("AD"))
+                .andExpect(jsonPath("$.designers[1].avatarUrl").value("https://exemple.test/marc.png"));
+
+        // Une refonte qui retire le dossier le retire vraiment : pas de rémanence.
+        mvc.perform(put("/api/admin/courses/{slug}", "chaine-complete").cookie(admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Chaîne complète","topic":"MEMORY_ANALYSIS","level":"MEDIUM",
+                                 "summary":"Résumé.",
+                                 "sections":[{"id":%s,"title":"Introduction","kind":"THEORY","minutes":10,
+                                              "content":"Du texte."}]}""".formatted(sectionId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attackPath").doesNotExist())
+                .andExpect(jsonPath("$.realCase").doesNotExist())
+                .andExpect(jsonPath("$.designers.length()").value(0));
+    }
+
+    @Test
+    void aSubDomainThatDoesNotExistIsRefused() throws Exception {
+        Cookie admin = register("admin@example.com");
+
+        mvc.perform(createCourse(admin, """
+                        {"title":"Sous-domaine inventé","topic":"STEGANOGRAPHIE","level":"EASY","summary":"",
+                         "sections":[{"title":"Section","kind":"THEORY","minutes":5,"content":"Texte."}]}"""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void anAttackPathSummaryWithoutAnyStageIsRefused() throws Exception {
+        Cookie admin = register("admin@example.com");
+
+        // Le domaine refuse un résumé qui n'enchaîne rien ; l'API doit le dire.
+        mvc.perform(createCourse(admin, """
+                        {"title":"Chaîne vide","topic":"HARDENING","level":"EASY","summary":"",
+                         "sections":[{"title":"Section","kind":"THEORY","minutes":5,"content":"Texte."}],
+                         "briefing":{"attackSummary":"Une chaîne annoncée mais pas décrite.","stages":[]}}"""))
+                .andExpect(status().isBadRequest());
     }
 
     private static RequestBuilder createCourse(Cookie session, String body) {

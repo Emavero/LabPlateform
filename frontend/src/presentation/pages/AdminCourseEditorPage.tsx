@@ -1,17 +1,29 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  EMPTY_CASE,
+  EMPTY_DESIGNER,
   EMPTY_DRAFT,
   COURSE_LEVELS,
   EMPTY_QUESTION,
   EMPTY_SECTION,
+  EMPTY_STAGE,
   SECTION_KINDS,
-  TRACK_CODES,
+  type CaseDraft,
   type CourseDraft,
+  type DesignerDraft,
   type QuestionDraft,
   type SectionDraft,
+  type StageDraft,
 } from '@/domain/models/Admin';
-import type { Course, CourseLevel, SectionKind, TrackCode } from '@/domain/models/Course';
+import type {
+  Course,
+  CourseLevel,
+  SectionKind,
+  TopicCode,
+  Track,
+} from '@/domain/models/Course';
+import { validateDraft } from '@/domain/validation/courseDraft';
 import { toAppError, type AppError } from '@/domain/errors/AppError';
 import { Alert, Button, Icon, Panel, Spinner, TextField } from '../design-system';
 import { VideoUpload } from '../features/course/VideoUpload';
@@ -24,27 +36,34 @@ export function AdminCourseEditorPage() {
   const { slug } = useParams();
   const editing = slug !== undefined && slug !== 'nouveau';
   const navigate = useNavigate();
-  const { admin } = useDependencies();
+  const { admin, courses } = useDependencies();
 
   const [draft, setDraft] = useState<CourseDraft>(EMPTY_DRAFT);
-  const [loading, setLoading] = useState(editing);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!editing || !slug) return;
     setLoading(true);
     setError(null);
     try {
-      // Lecture d'administration : c'est la seule qui révèle les bonnes réponses.
-      setDraft(toDraft(await admin.getCourse.execute(slug)));
+      // Les filières et leurs sous-domaines viennent du serveur : les recopier
+      // ici reviendrait à tenir une deuxième liste, qui finirait par mentir.
+      const [allTracks, course] = await Promise.all([
+        courses.tracks.execute(),
+        // Lecture d'administration : c'est la seule qui révèle les bonnes réponses.
+        editing && slug ? admin.getCourse.execute(slug) : Promise.resolve(null),
+      ]);
+      setTracks(allTracks);
+      if (course) setDraft(toDraft(course));
     } catch (e) {
       setError(toAppError(e));
     } finally {
       setLoading(false);
     }
-  }, [admin.getCourse, editing, slug]);
+  }, [admin.getCourse, courses.tracks, editing, slug]);
 
   useEffect(() => {
     void load();
@@ -64,6 +83,25 @@ export function AdminCourseEditorPage() {
 
   const removeSection = (index: number) =>
     patch({ sections: draft.sections.filter((_, i) => i !== index) });
+
+  const patchStage = (index: number, changes: Partial<StageDraft>) =>
+    patch({ stages: draft.stages.map((stage, i) => (i === index ? { ...stage, ...changes } : stage)) });
+
+  const patchDesigner = (index: number, changes: Partial<DesignerDraft>) =>
+    patch({
+      designers: draft.designers.map((designer, i) => (i === index ? { ...designer, ...changes } : designer)),
+    });
+
+  const patchCase = (changes: Partial<CaseDraft>) => patch({ realCase: { ...draft.realCase, ...changes } });
+
+  /** Déplace une étape d'un cran : l'ordre de la liste fait l'ordre de la chaîne. */
+  const moveStage = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= draft.stages.length) return;
+    const stages = [...draft.stages];
+    [stages[index], stages[target]] = [stages[target], stages[index]];
+    patch({ stages });
+  };
 
   /** Déplace une section d'un cran : l'ordre de la liste fait l'ordre de lecture. */
   const moveSection = (index: number, direction: -1 | 1) => {
@@ -102,6 +140,17 @@ export function AdminCourseEditorPage() {
   }
 
   const fieldErrors = error?.fieldErrors ?? {};
+  // La filière du cours est celle de son sous-domaine : rien à tenir à jour.
+  const selectedTrack = tracks.find((track) => track.topics.some((topic) => topic.topic === draft.topic));
+  // Les règles du dossier sont celles du serveur : les dire ici évite d'envoyer
+  // un formulaire qu'il refusera.
+  const errors = validateDraft(draft);
+
+  /** Changer de filière emmène vers son premier sous-domaine : l'ancien n'y existe pas. */
+  const selectTrack = (slug: string) => {
+    const first = tracks.find((track) => track.slug === slug)?.topics[0];
+    if (first) patch({ topic: first.topic });
+  };
 
   return (
     <div className="page">
@@ -122,7 +171,7 @@ export function AdminCourseEditorPage() {
         <Alert tone="success" title={t('editor.saved')}>
           {t('editor.savedText')}{' '}
           <code>
-            /cours/{draft.track === 'FORENSICS' ? 'forensique' : 'defense'}/{saved}
+            /cours/{selectedTrack?.slug ?? ''}/{saved}
           </code>
         </Alert>
       )}
@@ -136,21 +185,40 @@ export function AdminCourseEditorPage() {
             error={fieldErrors.title}
             hint={t('editor.titleHint')}
           />
+          {/* La filière n'est pas enregistrée : elle sert à raccourcir la liste des
+              sous-domaines, qui est ce que le cours porte vraiment. */}
           <div className="editor-row">
             <label className="field">
               <span className="field__label">{t('editor.track')}</span>
               <select
                 className="field__input"
-                value={draft.track}
-                onChange={(e) => patch({ track: e.target.value as TrackCode })}
+                value={selectedTrack?.slug ?? ''}
+                onChange={(e) => selectTrack(e.target.value)}
               >
-                {TRACK_CODES.map((code) => (
-                  <option key={code} value={code}>
-                    {t(`track.${code}`)}
+                {tracks.map((track) => (
+                  <option key={track.slug} value={track.slug}>
+                    {track.name}
                   </option>
                 ))}
               </select>
             </label>
+            <label className="field">
+              <span className="field__label">{t('editor.topic')}</span>
+              <select
+                className="field__input"
+                value={draft.topic}
+                onChange={(e) => patch({ topic: e.target.value as TopicCode })}
+              >
+                {(selectedTrack?.topics ?? []).map((topic) => (
+                  <option key={topic.topic} value={topic.topic}>
+                    {topic.name}
+                  </option>
+                ))}
+              </select>
+              <span className="field__hint">{t('editor.topicHint')}</span>
+            </label>
+          </div>
+          <div className="editor-row">
             <label className="field">
               <span className="field__label">{t('editor.level')}</span>
               <select
@@ -261,9 +329,180 @@ export function AdminCourseEditorPage() {
                 onChange={(e) => patchSection(index, { content: e.target.value })}
                 placeholder={t('editor.contentPlaceholder')}
               />
+              {/* Le sommaire de la page de cours se construit tout seul : il faut
+                  donc dire ici comment on y fait apparaître un sous-titre. */}
+              <span className="field__hint">{t('editor.contentHint')}</span>
             </label>
           </Panel>
         ))}
+
+        {/* Le dossier du cours : chaîne d'attaque étudiée, situation réelle où
+            elle se rencontre, et ceux qui l'ont écrite. Tout est facultatif —
+            un cours reste publiable sans, et la page de cours s'en passe. */}
+        <Panel
+          title={t('editor.attackPath')}
+          description={t('editor.attackPathHint')}
+          actions={
+            <Button variant="ghost" size="sm" icon="route" onClick={() => patch({ stages: [...draft.stages, EMPTY_STAGE] })}>
+              {t('editor.addStage')}
+            </Button>
+          }
+        >
+          {errors.attackPath && <Alert tone="error">{errors.attackPath}</Alert>}
+          <label className="field">
+            <span className="field__label">{t('editor.attackSummary')}</span>
+            <textarea
+              className="field__input editor-textarea"
+              rows={3}
+              value={draft.attackSummary}
+              onChange={(e) => patch({ attackSummary: e.target.value })}
+              placeholder={t('editor.attackSummaryPlaceholder')}
+            />
+          </label>
+
+          {draft.stages.map((stage, index) => (
+            <div className="editor-sub" key={index}>
+              <div className="editor-sub__head">
+                <p className="field__label">{t('editor.stage', { number: index + 1 })}</p>
+                <span className="editor-actions">
+                  <Button variant="ghost" size="sm" onClick={() => moveStage(index, -1)} disabled={index === 0}>
+                    ↑
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveStage(index, 1)}
+                    disabled={index === draft.stages.length - 1}
+                  >
+                    ↓
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => patch({ stages: draft.stages.filter((_, i) => i !== index) })}
+                  >
+                    {t('editor.remove')}
+                  </Button>
+                </span>
+              </div>
+              <div className="editor-row">
+                <TextField
+                  label={t('editor.stageName')}
+                  value={stage.name}
+                  onChange={(e) => patchStage(index, { name: e.target.value })}
+                  placeholder={t('editor.stageNamePlaceholder')}
+                />
+                <TextField
+                  label={t('editor.stageTechnique')}
+                  value={stage.technique}
+                  onChange={(e) => patchStage(index, { technique: e.target.value })}
+                  placeholder={t('editor.stageTechniquePlaceholder')}
+                  hint={t('editor.stageTechniqueHint')}
+                />
+              </div>
+              <label className="field">
+                <span className="field__label">{t('editor.stageDescription')}</span>
+                <textarea
+                  className="field__input editor-textarea"
+                  rows={2}
+                  value={stage.description}
+                  onChange={(e) => patchStage(index, { description: e.target.value })}
+                />
+              </label>
+            </div>
+          ))}
+        </Panel>
+
+        <Panel title={t('editor.realCase')} description={t('editor.realCaseHint')}>
+          {errors.realCase && <Alert tone="error">{errors.realCase}</Alert>}
+          <TextField
+            label={t('editor.caseSector')}
+            value={draft.realCase.sector}
+            onChange={(e) => patchCase({ sector: e.target.value })}
+            placeholder={t('editor.caseSectorPlaceholder')}
+          />
+          <label className="field">
+            <span className="field__label">{t('course.caseSituation')}</span>
+            <textarea
+              className="field__input editor-textarea"
+              rows={3}
+              value={draft.realCase.situation}
+              onChange={(e) => patchCase({ situation: e.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span className="field__label">{t('course.caseStake')}</span>
+            <textarea
+              className="field__input editor-textarea"
+              rows={2}
+              value={draft.realCase.stake}
+              onChange={(e) => patchCase({ stake: e.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span className="field__label">{t('course.caseOutcome')}</span>
+            <textarea
+              className="field__input editor-textarea"
+              rows={2}
+              value={draft.realCase.outcome}
+              onChange={(e) => patchCase({ outcome: e.target.value })}
+            />
+          </label>
+        </Panel>
+
+        <Panel
+          title={t('editor.designers')}
+          description={t('editor.designersHint')}
+          actions={
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="user"
+              onClick={() => patch({ designers: [...draft.designers, EMPTY_DESIGNER] })}
+            >
+              {t('editor.addDesigner')}
+            </Button>
+          }
+        >
+          {errors.designers && <Alert tone="error">{errors.designers}</Alert>}
+          {draft.designers.length === 0 && <p className="empty">{t('editor.noDesigner')}</p>}
+          {draft.designers.map((designer, index) => (
+            <div className="editor-sub" key={index}>
+              <div className="editor-sub__head">
+                <p className="field__label">{t('editor.designer', { number: index + 1 })}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => patch({ designers: draft.designers.filter((_, i) => i !== index) })}
+                >
+                  {t('editor.remove')}
+                </Button>
+              </div>
+              <div className="editor-row">
+                <TextField
+                  label={t('editor.designerName')}
+                  value={designer.name}
+                  onChange={(e) => patchDesigner(index, { name: e.target.value })}
+                />
+                <TextField
+                  label={t('editor.designerRole')}
+                  value={designer.role}
+                  onChange={(e) => patchDesigner(index, { role: e.target.value })}
+                  placeholder={t('editor.designerRolePlaceholder')}
+                />
+              </div>
+              <TextField
+                label={t('editor.designerAvatar')}
+                value={designer.avatarUrl}
+                onChange={(e) => patchDesigner(index, { avatarUrl: e.target.value })}
+                placeholder={t('editor.designerAvatarPlaceholder')}
+                hint={t('editor.designerAvatarHint')}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+          ))}
+        </Panel>
 
         <div className="editor-footer">
           <Button variant="ghost" icon="book" onClick={addSection}>
@@ -379,9 +618,21 @@ function QuestionsEditor({
 function toDraft(course: Course): CourseDraft {
   return {
     title: course.title,
-    track: course.track,
+    topic: course.topic,
     level: course.level,
     summary: course.summary,
+    attackSummary: course.attackPath?.summary ?? '',
+    stages: (course.attackPath?.stages ?? []).map((stage) => ({
+      name: stage.name,
+      description: stage.description,
+      technique: stage.technique ?? '',
+    })),
+    realCase: course.realCase ?? EMPTY_CASE,
+    designers: course.designers.map((designer) => ({
+      name: designer.name,
+      role: designer.role,
+      avatarUrl: designer.avatarUrl ?? '',
+    })),
     sections: course.sections.map((section) => ({
       id: section.id,
       title: section.title,

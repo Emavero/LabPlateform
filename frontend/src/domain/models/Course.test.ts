@@ -31,6 +31,9 @@ const course: Course = {
   track: 'FORENSICS',
   trackName: 'Forensique',
   trackSlug: 'forensique',
+  topic: 'EVIDENCE_HANDLING',
+  topicName: 'Collecte et preuve',
+  topicSlug: 'collecte-et-preuve',
   level: 'FUNDAMENTAL',
   levelName: 'Fondamental',
   summary: 'Résumé.',
@@ -38,6 +41,9 @@ const course: Course = {
   sectionsCompleted: 1,
   completed: false,
   publishedAt: new Date('2026-09-01T00:00:00Z'),
+  attackPath: null,
+  realCase: null,
+  designers: [],
   sections: [section(1, true), section(2, false), section(3, false)],
 };
 

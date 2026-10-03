@@ -57,8 +57,8 @@ public class InMemoryCourses implements CourseRepositoryPort {
             sections.add(new CourseSection(sectionId, section.slug(), section.title(), section.kind(),
                     section.position(), section.minutes(), section.content(), section.videoUrl()));
         }
-        Course stored = Course.restore(id, course.getSlug(), course.getTitle(), course.getTrack(), course.getLevel(),
-                course.getSummary(), course.getPublishedAt(), sections);
+        Course stored = Course.restore(id, course.getSlug(), course.getTitle(), course.getTopic(),
+                course.getLevel(), course.getSummary(), course.getPublishedAt(), sections, course.getBriefing());
         store.put(id, stored);
         return stored;
     }

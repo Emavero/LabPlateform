@@ -63,7 +63,7 @@
   padding: 1.35rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(13, 14, 21, 0.75);
+  background: var(--sunken-strong);
   transition:
     border-color var(--medium) var(--ease),
     box-shadow var(--medium) var(--ease);
@@ -122,7 +122,7 @@
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--raise-soft);
 }
 
 .vm-card__meta dt {
@@ -182,14 +182,14 @@
 }
 
 .access__grid .copy-field__value {
-  color: #d9fff0;
+  color: var(--on-success);
 }
 
 .terminal {
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
-  background: #07080c;
+  background: var(--code-bg);
 }
 
 .terminal__bar {
@@ -198,7 +198,7 @@
   gap: 0.75rem;
   padding: 0.5rem 0.8rem;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--raise-soft);
 }
 
 .terminal__dots {
@@ -270,8 +270,8 @@
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: #07080c;
-  color: #b9c0d8;
+  background: var(--code-bg);
+  color: var(--code-text);
   font-size: 0.8rem;
   line-height: 1.7;
   white-space: pre-wrap;
@@ -388,7 +388,7 @@
   padding: 0.9rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--raise-soft);
   color: var(--text-muted);
 }
 
@@ -431,7 +431,7 @@
   padding: 0.7rem 0.9rem;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.6);
+  background: var(--sunken);
   cursor: pointer;
   text-align: left;
   transition:
@@ -473,7 +473,7 @@
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--raise-soft);
 }
 
 .vpn-facts dt {
@@ -519,7 +519,7 @@
   margin-bottom: 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.6);
+  background: var(--sunken);
 }
 
 .tabs__tab {
@@ -581,7 +581,7 @@
   padding: 1.35rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(13, 14, 21, 0.75);
+  background: var(--sunken-strong);
   transition:
     border-color var(--medium) var(--ease),
     box-shadow var(--medium) var(--ease);
@@ -1007,7 +1007,7 @@
   padding: 1.35rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(13, 14, 21, 0.75);
+  background: var(--sunken-strong);
   transition: border-color var(--medium) var(--ease);
 }
 
@@ -1144,7 +1144,7 @@
 }
 
 .rating__option--active {
-  color: #fff;
+  color: var(--text);
   border-color: rgba(139, 124, 255, 0.5);
   background: var(--violet-soft);
 }
@@ -1302,7 +1302,7 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: #000;
+  background: var(--media-bg);
 }
 
 .video__frame {
@@ -1539,7 +1539,7 @@ button.back-link {
   padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .writeup--mine {
@@ -1594,7 +1594,7 @@ button.back-link {
   padding: 0.9rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .quiz__question--right {
@@ -1665,7 +1665,7 @@ button.back-link {
   padding: 0.75rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .quiz-editor__row {
@@ -1746,7 +1746,7 @@ button.back-link {
   padding: 0.3rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
   justify-self: start;
 }
 
@@ -1793,7 +1793,7 @@ button.back-link {
   padding: 0.9rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 /* Moyen proposé mais non configuré : visible et inerte, jamais trompeur. */
@@ -2048,7 +2048,7 @@ button.back-link {
   padding: 0.25rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .window-picker__option {
@@ -2272,7 +2272,7 @@ button.back-link {
   border: 1px solid var(--line);
   border-left-width: 3px;
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.4);
+  background: var(--sunken);
 }
 
 /* La teinte double l'icône et le mot ; elle ne les remplace pas. */
@@ -2368,7 +2368,7 @@ button.back-link {
   padding: 0.25rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .language-picker__option {
@@ -2532,7 +2532,7 @@ button.back-link {
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.5);
+  background: var(--sunken);
 }
 
 .thread__item--mine {
@@ -3004,7 +3004,7 @@ button.back-link {
   padding: 0.8rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(11, 12, 16, 0.4);
+  background: var(--sunken);
 }
 
 .step-editor legend {
@@ -3019,4 +3019,431 @@ button.back-link {
    s'étirerait sur toute la largeur du groupe. */
 .step-editor > button {
   justify-self: start;
+}
+
+/* ---------------------------------------------------------------------------
+   Catalogue des cours : filtres par filière, puis par sous-domaine
+   --------------------------------------------------------------------------- */
+.catalogue-filters {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.catalogue-filters__tracks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Les deux filières sont le choix principal : elles se voient de loin. */
+.track-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+
+.track-chip:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.track-chip--active {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: var(--violet-soft);
+  box-shadow: var(--glow);
+}
+
+.track-chip__count,
+.topic-chip__count {
+  padding: 0.05rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--raise);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.track-chip--active .track-chip__count,
+.topic-chip--active .topic-chip__count {
+  color: var(--text);
+}
+
+/* Les sous-domaines n'apparaissent qu'une fois la filière choisie : ils sont un
+   second niveau, et le disent par leur taille. */
+.catalogue-filters__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-left: 0.2rem;
+}
+
+.topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+
+.topic-chip:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+.topic-chip--active {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.topic-chip--link {
+  color: var(--violet);
+}
+
+.catalogue-count {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.course-card__topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+}
+
+.course-topic {
+  margin-top: 0.7rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Page d'un cours : contenu à gauche, sommaire à droite
+   --------------------------------------------------------------------------- */
+.course-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 232px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.course-layout__main {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+/* Le sommaire suit la lecture : collé en haut, il reste visible pendant qu'on
+   descend dans le cours. */
+.course-toc {
+  position: sticky;
+  top: 1rem;
+  padding: 1rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+}
+
+.course-toc__title {
+  margin-bottom: 0.6rem;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.course-toc__list {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.course-toc__link {
+  display: block;
+  padding: 0.3rem 0.5rem 0.3rem 0.65rem;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.35;
+  text-decoration: none;
+  transition:
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+
+.course-toc__link:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.course-toc__link--sub {
+  padding-left: 1.35rem;
+  color: var(--text-faint);
+}
+
+.course-toc__link--active {
+  color: var(--violet);
+  border-left-color: var(--violet);
+  background: var(--violet-soft);
+}
+
+/* Un lien d'ancre amène sous la barre du haut : la marge de défilement replace
+   le titre visé dans la page plutôt que collé au bord. */
+.course-section,
+.attack-chain,
+.real-case,
+.designers,
+.course-section__subtitle {
+  scroll-margin-top: 80px;
+}
+
+.course-section__subtitle {
+  margin-top: 1.2rem;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+  font-size: var(--step-1);
+}
+
+/* ---------------------------------------------------------------------------
+   Chemin d'attaque : la chaîne, étape par étape
+   --------------------------------------------------------------------------- */
+.attack-chain__list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: stage;
+}
+
+.attack-chain__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 0.9rem;
+  padding-bottom: 1.2rem;
+}
+
+/* Le trait qui relie les étapes : c'est lui qui fait voir une chaîne plutôt
+   qu'une liste. Il s'arrête à la dernière. */
+.attack-chain__step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 34px;
+  bottom: 0;
+  left: 17px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--line-strong), var(--line));
+}
+
+.attack-chain__step:last-child {
+  padding-bottom: 0;
+}
+
+.attack-chain__marker {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--sunken);
+  color: var(--violet);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.attack-chain__body {
+  min-width: 0;
+  padding-top: 0.3rem;
+}
+
+.attack-chain__name {
+  font-size: var(--step-0);
+}
+
+.attack-chain__description {
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.55;
+}
+
+.attack-chain__technique {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+/* ---------------------------------------------------------------------------
+   Cas d'usage réel et concepteurs
+   --------------------------------------------------------------------------- */
+.real-case__grid {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+
+.real-case__grid dt {
+  margin-bottom: 0.25rem;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.real-case__grid dd {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.designers__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.designer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+
+.designer__avatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Sans photo, les initiales : elles disent au moins de qui il s'agit. */
+.designer__avatar--initials {
+  display: grid;
+  place-items: center;
+  background: var(--violet-soft);
+  color: var(--violet);
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: 600;
+}
+
+.designer__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.designer__role {
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------
+   Éditeur : sous-bloc répétable (étape, concepteur)
+   --------------------------------------------------------------------------- */
+.editor-sub {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--raise-soft);
+}
+
+.editor-sub__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* ---------- Écrans étroits ----------
+   Le sommaire passe au-dessus du contenu et devient une bande horizontale :
+   les sous-titres y seraient trop nombreux, seuls les titres restent. */
+@media (max-width: 1100px) {
+  .course-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .course-toc {
+    position: static;
+    order: -1;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .course-toc__list {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .course-toc__link {
+    padding: 0.3rem 0.65rem;
+    border-left: 0;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+
+  .course-toc__link--sub {
+    display: none;
+  }
+
+  .course-toc__link--active {
+    border-left: 0;
+  }
 }

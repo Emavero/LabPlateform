@@ -7,6 +7,7 @@ import com.labplatform.application.fakes.InMemoryCourses;
 import com.labplatform.application.fakes.InMemoryQuizzes;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.Quiz;
 import com.labplatform.domain.academy.QuizChoice;
@@ -53,7 +54,7 @@ class QuizTest {
         academy = new AcademyService(courses, completions, quizzes, journal, Fakes.NO_TRANSACTION,
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
-        Course saved = courses.save(Course.create("traces", "Traces", Track.FORENSICS, CourseLevel.FUNDAMENTAL,
+        Course saved = courses.save(Course.create("traces", "Traces", CourseTopic.EVIDENCE_HANDLING, CourseLevel.FUNDAMENTAL,
                 "Résumé.", NOW, List.of(
                         CourseSection.of(null, "lecon", "Leçon", SectionKind.THEORY, 1, 10, "Contenu"),
                         CourseSection.of(null, "quiz", "Quiz", SectionKind.QUIZ, 2, 10, "Répondez."))));

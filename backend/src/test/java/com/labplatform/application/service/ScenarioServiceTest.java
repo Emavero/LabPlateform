@@ -10,6 +10,7 @@ import com.labplatform.application.port.in.scenario.ScenarioDraft;
 import com.labplatform.application.port.in.scenario.ScenarioView;
 import com.labplatform.domain.academy.Course;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
 import com.labplatform.domain.academy.CourseSection;
 import com.labplatform.domain.academy.SectionCompletion;
 import com.labplatform.domain.academy.SectionKind;
@@ -69,7 +70,7 @@ class ScenarioServiceTest {
         proBoxId = boxes.save(Box.create("citadelle", "Citadelle", OperatingSystem.LINUX, Difficulty.HARD,
                 "Synopsis.", "10.10.10.20", "cyberMans", NOW, false, true, Flag.ofSecret(USER_FLAG),
                 Flag.ofSecret(ROOT_FLAG))).getId();
-        course = courses.save(Course.create("triage", "Triage mémoire", Track.FORENSICS, CourseLevel.FUNDAMENTAL,
+        course = courses.save(Course.create("triage", "Triage mémoire", CourseTopic.MEMORY_ANALYSIS, CourseLevel.FUNDAMENTAL,
                 "Résumé.", NOW, List.of(CourseSection.of(null, "intro", "Introduction", SectionKind.THEORY, 1, 20, "Texte."))));
     }
 
@@ -143,7 +144,7 @@ class ScenarioServiceTest {
     /** Une étape « suivre ce cours » ne se valide pas à la première page lue. */
     @Test
     void unCoursCompteTermineSeulementQuandToutesSesSectionsLeSont() {
-        courses.save(Course.restore(course.getId(), course.getSlug(), course.getTitle(), course.getTrack(),
+        courses.save(Course.restore(course.getId(), course.getSlug(), course.getTitle(), course.getTopic(),
                 course.getLevel(), course.getSummary(), course.getPublishedAt(),
                 List.of(CourseSection.of(1L, "intro", "Introduction", SectionKind.THEORY, 1, 20, "Texte."),
                         CourseSection.of(2L, "suite", "Suite", SectionKind.THEORY, 2, 20, "Texte."))));

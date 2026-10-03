@@ -68,15 +68,10 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
   { label: 'nav.dashboard', to: '/', icon: 'dashboard', end: true, roles: PLAYER },
   { label: 'nav.machines', to: '/machines', icon: 'target', roles: PLAYER },
   { label: 'nav.scoreboard', to: '/scoreboard', icon: 'trophy', roles: PLAYER },
-  {
-    label: 'nav.courses',
-    icon: 'book',
-    roles: PLAYER,
-    children: [
-      { label: 'nav.forensics', to: '/cours/forensique', icon: 'search' },
-      { label: 'nav.defense', to: '/cours/defense', icon: 'shield' },
-    ],
-  },
+  // « Cours » mène à la page globale, où les deux filières sont des filtres.
+  // C'était un groupe de deux entrées : un menu qui obligeait à choisir sa
+  // filière avant d'avoir vu le catalogue.
+  { label: 'nav.courses', to: '/cours', icon: 'book', roles: PLAYER },
   { label: 'nav.labs', to: '/labs', icon: 'server', roles: PLAYER },
   { label: 'nav.vpn', to: '/vpn', icon: 'vpn', roles: PLAYER },
   { label: 'nav.exposure', to: '/modules/exposure-analysis', icon: 'radar', roles: PLAYER },

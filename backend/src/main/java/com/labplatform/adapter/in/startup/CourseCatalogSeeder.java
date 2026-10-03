@@ -1,10 +1,15 @@
 package com.labplatform.adapter.in.startup;
 
 import com.labplatform.application.port.out.CourseRepositoryPort;
+import com.labplatform.domain.academy.AttackPath;
+import com.labplatform.domain.academy.AttackStage;
 import com.labplatform.domain.academy.Course;
+import com.labplatform.domain.academy.CourseBriefing;
+import com.labplatform.domain.academy.CourseDesigner;
 import com.labplatform.domain.academy.CourseLevel;
+import com.labplatform.domain.academy.CourseTopic;
+import com.labplatform.domain.academy.RealWorldCase;
 import com.labplatform.domain.academy.SectionKind;
-import com.labplatform.domain.academy.Track;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
@@ -74,8 +79,8 @@ public class CourseCatalogSeeder implements ApplicationRunner {
     // ---------------------------------------------------------------- Forensique
 
     private static Course forensicsFundamentals(Instant now) {
-        return Course.create("bases-de-l-investigation", "Bases de l'investigation numérique", Track.FORENSICS,
-                CourseLevel.FUNDAMENTAL,
+        return Course.create("bases-de-l-investigation", "Bases de l'investigation numérique",
+                CourseTopic.EVIDENCE_HANDLING, CourseLevel.FUNDAMENTAL,
                 "Ce qu'il faut faire, et surtout ne pas faire, dans les premières minutes d'un incident : "
                         + "préserver les traces avant de chercher à comprendre.",
                 now.minus(Duration.ofDays(40)),
@@ -145,25 +150,33 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 3. Pourquoi monter une image en lecture seule ne suffit-il pas à garantir
                                    l'intégrité si vous n'avez pas calculé d'empreinte au préalable ?
-                                """))); 
+                                """)),
+                evidenceBriefing());
     }
 
     private static Course forensicsMemory(Instant now) {
-        return Course.create("analyse-memoire", "Analyse de la mémoire vive", Track.FORENSICS, CourseLevel.MEDIUM,
+        return Course.create("analyse-memoire", "Analyse de la mémoire vive", CourseTopic.MEMORY_ANALYSIS,
+                CourseLevel.MEDIUM,
                 "Capturer la mémoire d'un système suspect et y retrouver processus injectés, connexions "
                         + "et secrets restés en clair.",
                 now.minus(Duration.ofDays(18)),
                 List.of(
                         CourseSection.of(null, "capture", "Capturer sans altérer", SectionKind.THEORY, 1, 15,
                                 """
+                                ## Pourquoi l'altération est inévitable
+
                                 Capturer la mémoire d'une machine allumée modifie fatalement cette mémoire :
                                 l'outil de capture s'y trouve lui aussi. L'objectif n'est pas l'absence
                                 d'altération, impossible, mais sa documentation.
+
+                                ## Le geste, pas à pas
 
                                 On écrit la capture sur un support externe, on note l'outil et sa version,
                                 l'heure de début et de fin, et on calcule l'empreinte dès la fin du transfert.
                                 Sous Linux, un module dédié (LiME) produit une image brute ; sous Windows, un
                                 outil signé, lancé depuis un support en lecture seule.
+
+                                ## Ce qui rend une capture exploitable
 
                                 Une capture sans son fichier de journalisation vaut beaucoup moins : c'est lui
                                 qui explique ce que l'on voit d'anormal dans l'image.
@@ -173,11 +186,15 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                 """
                                 Dans une image mémoire, on cherche d'abord des incohérences, pas des signatures.
 
+                                ## Les signes qui comptent
+
                                 Un processus dont le parent est mort ou incohérent (un navigateur lancé par un
                                 tableur), un exécutable dont le chemin n'existe pas sur le disque, une zone
                                 mémoire à la fois inscriptible et exécutable, une bibliothèque chargée depuis un
                                 répertoire temporaire : chacun de ces signes se justifie parfois, mais leur
                                 accumulation, jamais.
+
+                                ## Pourquoi croire l'image plutôt que le système
 
                                 La liste des processus obtenue depuis l'image est souvent plus fiable que celle
                                 affichée par le système compromis, puisqu'un rootkit filtre la seconde et
@@ -219,11 +236,12 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 3. Pourquoi une capture mémoire peut-elle contenir une clé de chiffrement de
                                    disque que le disque lui-même ne livrera jamais ?
-                                """)));
+                                """)),
+                memoryBriefing());
     }
 
     private static Course forensicsTimeline(Instant now) {
-        return Course.create("chronologie-d-incident", "Reconstituer la chronologie", Track.FORENSICS,
+        return Course.create("chronologie-d-incident", "Reconstituer la chronologie", CourseTopic.TIMELINE,
                 CourseLevel.HARD,
                 "Croiser journaux, horodatages de fichiers et artefacts système pour établir ce qui s'est "
                         + "passé, dans quel ordre, et par où c'est entré.",
@@ -299,13 +317,14 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 3. Pourquoi une tâche planifiée est-elle une meilleure preuve de persistance
                                    qu'un processus en cours d'exécution ?
-                                """)));
+                                """)),
+                timelineBriefing());
     }
 
     // ------------------------------------------------------------------- Défense
 
     private static Course defenseHardening(Instant now) {
-        return Course.create("durcissement-des-systemes", "Durcir un système exposé", Track.DEFENSE,
+        return Course.create("durcissement-des-systemes", "Durcir un système exposé", CourseTopic.HARDENING,
                 CourseLevel.FUNDAMENTAL,
                 "Réduire la surface d'attaque d'un serveur : services, comptes, accès distants et mises à "
                         + "jour, dans l'ordre où cela paie le plus.",
@@ -377,11 +396,12 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 3. Vous ne pouvez appliquer qu'une seule mesure ce soir sur cent serveurs
                                    exposés. Laquelle, et sur quel critère ?
-                                """)));
+                                """)),
+                hardeningBriefing());
     }
 
     private static Course defenseDetection(Instant now) {
-        return Course.create("detection-et-journaux", "Détecter : journaux et règles", Track.DEFENSE,
+        return Course.create("detection-et-journaux", "Détecter : journaux et règles", CourseTopic.SIEM_SOC,
                 CourseLevel.MEDIUM,
                 "Centraliser les journaux utiles, écrire des règles qui se déclenchent sur des faits, et "
                         + "mesurer ce qu'elles coûtent en faux positifs.",
@@ -449,11 +469,13 @@ public class CourseCatalogSeeder implements ApplicationRunner {
 
                                 3. Quel intérêt à conserver les journaux ailleurs que sur la machine
                                    surveillée, alors que c'est plus coûteux ?
-                                """)));
+                                """)),
+                detectionBriefing());
     }
 
     private static Course defenseResponse(Instant now) {
-        return Course.create("reponse-a-incident", "Répondre à un incident", Track.DEFENSE, CourseLevel.HARD,
+        return Course.create("reponse-a-incident", "Répondre à un incident", CourseTopic.INCIDENT_RESPONSE,
+                CourseLevel.HARD,
                 "Contenir sans détruire les preuves, éradiquer la cause plutôt que le symptôme, et "
                         + "rétablir en sachant pourquoi cela ne recommencera pas.",
                 now.minus(Duration.ofDays(3)),
@@ -520,6 +542,274 @@ public class CourseCatalogSeeder implements ApplicationRunner {
                                    Qu'a-t-on manqué, et où cherchez-vous ?
 
                                 3. Pourquoi renouveler les secrets même sans preuve qu'ils ont été lus ?
-                                """)));
+                                """)),
+                responseBriefing());
+    }
+
+    // ------------------------------------------------- Dossiers des cours
+    //
+    // Chaque cours porte un chemin d'attaque, un cas d'usage réel et ses
+    // concepteurs. C'est du contenu, pas de la configuration : il est écrit ici
+    // comme le sont les sections, et l'éditeur d'administration le reprend.
+    //
+    // Les avatars sont laissés vides : la page présente alors un concepteur par
+    // ses initiales. Un administrateur peut y mettre une adresse d'image.
+
+    private static CourseBriefing evidenceBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("Une pièce jointe ouverte sur un poste de bureau, puis un attaquant qui s'installe et "
+                                + "efface derrière lui. Le cours remonte cette chaîne à l'envers : ce qui a été "
+                                + "touché, dans quel ordre, et ce qu'il en reste de prouvable.",
+                        List.of(
+                                stage(1, "Hameçonnage ciblé",
+                                        "Un devis en pièce jointe, au nom d'un fournisseur connu. Le document "
+                                                + "demande l'activation des macros pour « afficher les montants ».",
+                                        "T1566.001 — Pièce jointe malveillante"),
+                                stage(2, "Exécution de la charge",
+                                        "La macro télécharge et lance un implant en mémoire. Rien n'est écrit sur "
+                                                + "le disque à ce stade : c'est ce qui rend la capture mémoire "
+                                                + "décisive avant tout redémarrage.",
+                                        "T1059.005 — Interpréteur de commandes"),
+                                stage(3, "Persistance",
+                                        "Une tâche planifiée et une clé de registre relancent l'implant à chaque "
+                                                + "ouverture de session. Deux points d'ancrage plutôt qu'un, pour "
+                                                + "survivre au retrait du premier.",
+                                        "T1053.005 — Tâche planifiée"),
+                                stage(4, "Effacement des traces",
+                                        "Les journaux de sécurité sont vidés et les horodatages des fichiers "
+                                                + "déposés sont recopiés sur ceux d'un binaire système. L'absence "
+                                                + "de trace devient elle-même une trace.",
+                                        "T1070.001 — Suppression des journaux"))),
+                RealWorldCase.of("Cabinet comptable, 40 postes",
+                        "Un vendredi de clôture, une comptable signale que son poste « rame » depuis l'ouverture "
+                                + "d'un devis reçu le matin. Le prestataire informatique, appelé en renfort, "
+                                + "commence par redémarrer la machine puis lance un antivirus : la mémoire est "
+                                + "perdue, et avec elle l'implant qui n'existait que là.",
+                        "Les déclarations de 300 clients sont sur ce poste, et l'obligation de notification court à "
+                                + "partir du moment où la compromission est connue. Sans preuve de ce qui a été "
+                                + "consulté, c'est la totalité du portefeuille qu'il faut déclarer.",
+                        "La chaîne de possession, tenue à partir du deuxième poste touché, a permis de délimiter "
+                                + "l'accès à un seul répertoire. La notification a porté sur onze clients au lieu de "
+                                + "trois cents."),
+                List.of(
+                        designer(1, "Awa Diallo", "Analyste forensique, réponse à incident"),
+                        designer(2, "Marc Lefèvre", "Expert judiciaire près la cour d'appel")));
+    }
+
+    private static CourseBriefing memoryBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("Un attaquant qui ne touche pas au disque : sa charge vit dans le processus d'un "
+                                + "logiciel légitime. Tout ce qui le démasque est en mémoire, et disparaît à "
+                                + "l'extinction.",
+                        List.of(
+                                stage(1, "Accès initial par service exposé",
+                                        "Un service d'accès distant accepte encore un mot de passe réutilisé "
+                                                + "ailleurs. Aucun fichier n'est déposé : la session suffit.",
+                                        "T1078 — Comptes valides"),
+                                stage(2, "Injection dans un processus de confiance",
+                                        "Le code est écrit dans l'espace mémoire d'un processus signé, qui garde "
+                                                + "son nom et sa signature. La liste des processus ne montre rien "
+                                                + "d'anormal.",
+                                        "T1055 — Injection de processus"),
+                                stage(3, "Récolte de secrets en clair",
+                                        "Mots de passe, jetons de session et clés privées sont lus dans la mémoire "
+                                                + "d'autres processus, là où le chiffrement du disque ne protège "
+                                                + "plus rien.",
+                                        "T1003 — Vol d'identifiants"),
+                                stage(4, "Canal de commande discret",
+                                        "Les instructions passent par des requêtes HTTPS vers un domaine "
+                                                + "récemment enregistré, au rythme d'une toutes les dix minutes.",
+                                        "T1071.001 — Protocole applicatif"))),
+                RealWorldCase.of("Éditeur de logiciel, 250 salariés",
+                        "Le centre de supervision remonte une alerte faible : un processus système ouvre une "
+                                + "connexion sortante vers un domaine créé la semaine précédente. Le poste est sain "
+                                + "pour l'antivirus, aucun fichier suspect n'est trouvé. La capture mémoire, prise "
+                                + "avant l'isolement, contient l'implant entier et la liste des dépôts de code "
+                                + "clonés.",
+                        "Le code source du produit et les clés de signature des mises à jour sont sur le réseau "
+                                + "atteint. Une signature volée permettrait de livrer un logiciel malveillant à "
+                                + "toute la base de clients.",
+                        "Les chaînes retrouvées en mémoire ont donné les dépôts consultés et l'heure exacte du "
+                                + "dernier accès. Les clés de signature, sur un support hors ligne, n'avaient pas "
+                                + "été atteintes — ce qui a évité le rappel de toutes les mises à jour."),
+                List.of(
+                        designer(1, "Awa Diallo", "Analyste forensique, réponse à incident"),
+                        designer(2, "Ibrahim Touré", "Ingénieur rétro-ingénierie")));
+    }
+
+    private static CourseBriefing timelineBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("Une intrusion étalée sur six semaines, dont chaque geste est isolément banal. C'est "
+                                + "l'ordre des gestes qui la dénonce, et cet ordre ne se lit que sur une "
+                                + "chronologie unique.",
+                        List.of(
+                                stage(1, "Reconnaissance lente",
+                                        "Des connexions au portail extranet, une par jour, depuis des adresses "
+                                                + "différentes. Chacune passe sous le seuil d'alerte.",
+                                        "T1595 — Balayage actif"),
+                                stage(2, "Premier accès et attente",
+                                        "Un compte de prestataire est utilisé une nuit, puis plus rien pendant "
+                                                + "onze jours. L'attente est délibérée : elle sort de la fenêtre de "
+                                                + "corrélation des règles.",
+                                        "T1078.004 — Comptes dans le nuage"),
+                                stage(3, "Déplacement latéral",
+                                        "Trois sauts en deux heures, chacun avec un compte différent, vers le "
+                                                + "serveur de sauvegarde. Les journaux existent, mais sur trois "
+                                                + "machines aux horloges décalées de plusieurs minutes.",
+                                        "T1021 — Services distants"),
+                                stage(4, "Effacement sélectif",
+                                        "Seules les entrées de la nuit du premier accès sont retirées. Le trou "
+                                                + "dans la séquence des identifiants d'événement est ce qui "
+                                                + "trahit la manipulation.",
+                                        "T1070 — Effacement d'indicateurs"))),
+                RealWorldCase.of("Collectivité territoriale, 1 200 agents",
+                        "Les sauvegardes sont chiffrées un lundi matin. La question posée à l'équipe n'est pas "
+                                + "« comment » mais « depuis quand » : tant que la date d'entrée n'est pas établie, "
+                                + "aucune sauvegarde ne peut être déclarée saine, donc aucune ne peut être "
+                                + "restaurée.",
+                        "Trois semaines d'état civil et de facturation d'eau dépendent du choix de la sauvegarde. "
+                                + "Restaurer une image déjà compromise, c'est remettre l'attaquant en place avec "
+                                + "les données.",
+                        "La chronologie croisée — journaux de pare-feu, horodatages NTFS, historique du "
+                                + "contrôleur de domaine — a daté le premier accès à quarante et un jours. La "
+                                + "sauvegarde du quarante-cinquième jour a été retenue, et vérifiée avant "
+                                + "remontée."),
+                List.of(
+                        designer(1, "Marc Lefèvre", "Expert judiciaire près la cour d'appel"),
+                        designer(2, "Sofia Benali", "Responsable de la réponse à incident")));
+    }
+
+    private static CourseBriefing hardeningBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("La chaîne que le durcissement casse, et à quel maillon. Chaque étape ci-dessous "
+                                + "correspond à une porte que ce cours apprend à fermer, dans l'ordre où cela "
+                                + "paie le plus.",
+                        List.of(
+                                stage(1, "Découverte du service oublié",
+                                        "Un balayage d'Internet trouve une interface d'administration laissée "
+                                                + "ouverte après une migration. Elle ne figure dans aucun "
+                                                + "inventaire.",
+                                        "T1595.002 — Balayage de vulnérabilités"),
+                                stage(2, "Authentification par force brute",
+                                        "Le compte par défaut n'a pas été renommé et aucune limitation de tentatives "
+                                                + "n'est en place. Quatre mille essais passent en une heure.",
+                                        "T1110 — Force brute"),
+                                stage(3, "Élévation locale",
+                                        "Un noyau non mis à jour depuis onze mois donne les droits "
+                                                + "d'administration. Le correctif existait depuis neuf mois.",
+                                        "T1068 — Exploitation pour élévation"),
+                                stage(4, "Installation d'un accès permanent",
+                                        "Une clé publique est ajoutée au compte de service, et le service de mise "
+                                                + "à jour automatique est désactivé pour que la porte reste "
+                                                + "ouverte.",
+                                        "T1098.004 — Ajout de clés autorisées"))),
+                RealWorldCase.of("Commerce en ligne, 60 salariés",
+                        "Un audit avant renouvellement d'assurance recense les machines exposées. Il en trouve "
+                                + "dix-sept, là où l'équipe en déclarait neuf : deux serveurs de recette montés "
+                                + "pour une démonstration, jamais éteints, avec une copie de la base de "
+                                + "production.",
+                        "La base contient les commandes et les adresses de livraison de 80 000 clients. L'écart "
+                                + "entre l'inventaire déclaré et la réalité est, à lui seul, un motif de refus de "
+                                + "garantie.",
+                        "Les deux serveurs ont été retirés d'Internet le jour même. Le durcissement du reste — "
+                                + "services inutiles coupés, accès distant derrière un point d'entrée unique, "
+                                + "correctifs remis à jour — a ramené la surface exposée de dix-sept services à "
+                                + "quatre."),
+                List.of(
+                        designer(1, "Sofia Benali", "Responsable de la réponse à incident"),
+                        designer(2, "Yao Kouassi", "Administrateur systèmes et durcissement")));
+    }
+
+    private static CourseBriefing detectionBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("Une attaque qui se déroule entièrement dans le champ des journaux existants, et que "
+                                + "personne ne voit : les faits étaient enregistrés, aucune règle ne les "
+                                + "rapprochait.",
+                        List.of(
+                                stage(1, "Pulvérisation de mots de passe",
+                                        "Un seul mot de passe courant, essayé sur huit cents comptes. Chaque "
+                                                + "compte n'enregistre qu'un échec : sous le seuil de "
+                                                + "verrouillage, et sous celui de l'alerte.",
+                                        "T1110.003 — Pulvérisation de mots de passe"),
+                                stage(2, "Connexion réussie hors horaires",
+                                        "Un compte de la comptabilité se connecte à 3 h 20, depuis un pays où "
+                                                + "l'entreprise n'a pas d'activité. L'événement est journalisé, et "
+                                                + "noyé dans quarante mille lignes.",
+                                        "T1078 — Comptes valides"),
+                                stage(3, "Règle de boîte aux lettres",
+                                        "Une règle déplace vers un dossier archivé tout message contenant "
+                                                + "« virement » ou « IBAN ». Le titulaire ne verra plus passer les "
+                                                + "demandes de confirmation.",
+                                        "T1564.008 — Règles de messagerie"),
+                                stage(4, "Fraude au virement",
+                                        "Un faux changement de coordonnées bancaires est envoyé à un client, "
+                                                + "depuis la boîte légitime, dans un fil de discussion réel.",
+                                        "T1534 — Hameçonnage interne"))),
+                RealWorldCase.of("Industrie mécanique, 400 salariés",
+                        "Un client appelle pour confirmer un changement d'IBAN que personne n'a demandé. Les "
+                                + "journaux de la messagerie contenaient, depuis dix jours, la connexion nocturne "
+                                + "et la création de la règle — mais aucune règle de détection ne portait sur ces "
+                                + "deux événements.",
+                        "Trois virements sont déjà partis, pour 240 000 euros. Le délai de rappel bancaire se "
+                                + "compte en heures, pas en jours : chaque heure passée à chercher dans les "
+                                + "journaux est une heure perdue pour le rappel.",
+                        "Deux règles ont été écrites après coup : création de règle de messagerie par un compte "
+                                + "non administrateur, et connexion réussie depuis un pays jamais vu pour ce "
+                                + "compte. Elles ont depuis déclenché deux fois, dont une vraie tentative, "
+                                + "arrêtée en vingt minutes."),
+                List.of(
+                        designer(1, "Yao Kouassi", "Administrateur systèmes et durcissement"),
+                        designer(2, "Claire Mendy", "Analyste SOC, ingénierie de détection")));
+    }
+
+    private static CourseBriefing responseBriefing() {
+        return new CourseBriefing(
+                AttackPath.of("Un rançongiciel déployé par un opérateur qui est entré trois semaines plus tôt. Ce "
+                                + "cours suit la chaîne du point de vue de celui qui doit l'arrêter pendant "
+                                + "qu'elle se déroule.",
+                        List.of(
+                                stage(1, "Accès acheté à un courtier",
+                                        "L'opérateur n'a pas conduit l'intrusion initiale : il a acheté un accès "
+                                                + "déjà en place, par un implant installé un mois plus tôt.",
+                                        "T1133 — Services distants externes"),
+                                stage(2, "Prise du contrôleur de domaine",
+                                        "Un compte d'administration de sauvegarde, membre des administrateurs du "
+                                                + "domaine, donne la main sur l'annuaire entier en une nuit.",
+                                        "T1078.002 — Comptes de domaine"),
+                                stage(3, "Destruction des sauvegardes",
+                                        "Les points de restauration et les copies locales sont supprimés avant "
+                                                + "tout chiffrement. C'est l'étape qui décide du rapport de force, "
+                                                + "et elle précède l'attaque visible.",
+                                        "T1490 — Blocage de la restauration"),
+                                stage(4, "Chiffrement et double extorsion",
+                                        "Les fichiers sont chiffrés un samedi à 2 h, après exfiltration de "
+                                                + "quarante gigaoctets. La menace de publication vaut autant que "
+                                                + "le chiffrement.",
+                                        "T1486 — Données chiffrées pour impact"))),
+                RealWorldCase.of("Clinique privée, 180 lits",
+                        "Le dossier patient informatisé est inaccessible à 6 h du matin ; les blocs opératoires "
+                                + "ouvrent à 7 h 30. L'équipe doit décider, sans savoir jusqu'où l'attaquant est "
+                                + "allé, si l'on isole tout le réseau — ce qui arrête aussi l'imagerie et les "
+                                + "pompes connectées.",
+                        "Le passage au dossier papier est tenable une demi-journée, pas une semaine. Isoler trop "
+                                + "large arrête des soins ; isoler trop peu laisse le chiffrement se propager aux "
+                                + "services encore sains.",
+                        "Le confinement par segment, décidé en quarante minutes sur la base des seuls "
+                                + "identifiants de comptes compromis, a préservé l'imagerie et la pharmacie. La "
+                                + "reprise a pris six jours, sans rançon versée : une sauvegarde hors ligne, "
+                                + "hebdomadaire, avait échappé à l'étape 3."),
+                List.of(
+                        designer(1, "Sofia Benali", "Responsable de la réponse à incident"),
+                        designer(2, "Claire Mendy", "Analyste SOC, ingénierie de détection"),
+                        designer(3, "Marc Lefèvre", "Expert judiciaire près la cour d'appel")));
+    }
+
+    private static AttackStage stage(int position, String name, String description, String technique) {
+        return AttackStage.of(null, position, name, description, technique);
+    }
+
+    /** Sans avatar : la page présente le concepteur par ses initiales. */
+    private static CourseDesigner designer(int position, String name, String role) {
+        return CourseDesigner.of(null, position, name, role, null);
     }
 }

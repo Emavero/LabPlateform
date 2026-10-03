@@ -93,13 +93,40 @@ function boxBody(draft: BoxDraft) {
   };
 }
 
-/** Le serveur attend une vidéo absente plutôt qu'une chaîne vide. */
+/**
+ * Le serveur attend une vidéo absente plutôt qu'une chaîne vide, et un dossier
+ * absent plutôt qu'un dossier de champs vides — c'est lui qui décide si un
+ * chemin d'attaque ou un cas d'usage est décrit, d'après ce qu'il reçoit.
+ */
 function body(draft: CourseDraft) {
   return {
     title: draft.title.trim(),
-    track: draft.track,
+    topic: draft.topic,
     level: draft.level,
     summary: draft.summary.trim(),
+    briefing: {
+      attackSummary: draft.attackSummary.trim() || null,
+      stages: draft.stages
+        .filter((stage) => stage.name.trim() || stage.description.trim())
+        .map((stage) => ({
+          name: stage.name.trim(),
+          description: stage.description.trim(),
+          technique: stage.technique.trim() || null,
+        })),
+      realCase: {
+        sector: draft.realCase.sector.trim() || null,
+        situation: draft.realCase.situation.trim() || null,
+        stake: draft.realCase.stake.trim() || null,
+        outcome: draft.realCase.outcome.trim() || null,
+      },
+      designers: draft.designers
+        .filter((designer) => designer.name.trim() || designer.role.trim())
+        .map((designer) => ({
+          name: designer.name.trim(),
+          role: designer.role.trim(),
+          avatarUrl: designer.avatarUrl.trim() || null,
+        })),
+    },
     sections: draft.sections.map((section) => ({
       id: section.id,
       title: section.title.trim(),

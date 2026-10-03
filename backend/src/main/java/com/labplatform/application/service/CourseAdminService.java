@@ -11,8 +11,13 @@ import com.labplatform.application.port.out.OwnRepositoryPort;
 import com.labplatform.application.port.out.SectionCompletionRepositoryPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.UserRepositoryPort;
+import com.labplatform.domain.academy.AttackPath;
+import com.labplatform.domain.academy.AttackStage;
 import com.labplatform.domain.academy.Course;
+import com.labplatform.domain.academy.CourseBriefing;
+import com.labplatform.domain.academy.CourseDesigner;
 import com.labplatform.domain.academy.CourseSection;
+import com.labplatform.domain.academy.RealWorldCase;
 import com.labplatform.domain.academy.QuizChoice;
 import com.labplatform.domain.academy.QuizQuestion;
 import com.labplatform.domain.shared.ConflictException;
@@ -77,8 +82,8 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
             if (courses.findBySlug(slug).isPresent()) {
                 throw new ConflictException("Un cours porte déjà ce titre");
             }
-            return saveQuizzes(courses.save(Course.create(slug, draft.title().trim(), draft.track(), draft.level(),
-                    summaryOf(draft), clock.instant(), sectionsOf(draft, Map.of()))), draft);
+            return saveQuizzes(courses.save(Course.create(slug, draft.title().trim(), draft.topic(), draft.level(),
+                    summaryOf(draft), clock.instant(), sectionsOf(draft, Map.of()), briefingOf(draft))), draft);
         });
     }
 
@@ -94,8 +99,8 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
             Map<Long, CourseSection> known = existing.getSections().stream()
                     .collect(Collectors.toMap(CourseSection::id, Function.identity()));
             return saveQuizzes(courses.save(Course.restore(existing.getId(), existing.getSlug(),
-                    draft.title().trim(), draft.track(), draft.level(), summaryOf(draft), existing.getPublishedAt(),
-                    sectionsOf(draft, known))), draft);
+                    draft.title().trim(), draft.topic(), draft.level(), summaryOf(draft), existing.getPublishedAt(),
+                    sectionsOf(draft, known), briefingOf(draft))), draft);
         });
     }
 
@@ -176,6 +181,49 @@ public class CourseAdminService implements ManageCoursesUseCase, GetAdminOvervie
     private static String contentOf(CourseDraft.SectionDraft section) {
         // Une section peut n'être qu'une vidéo : le texte est alors facultatif.
         return section.content() == null ? "" : section.content();
+    }
+
+    /**
+     * Dossier du cours tel qu'il sort de l'éditeur.
+     * <p>
+     * Les positions viennent de l'ordre des listes, pas d'un champ à saisir :
+     * réordonner une chaîne d'attaque doit se faire en déplaçant des lignes, pas
+     * en renumérotant. Les lignes laissées vides sont écartées ici, pour qu'un
+     * formulaire à moitié rempli ne soit pas un refus.
+     */
+    private static CourseBriefing briefingOf(CourseDraft draft) {
+        CourseDraft.BriefingDraft briefing = draft.briefing();
+        List<AttackStage> stages = new ArrayList<>();
+        for (CourseDraft.StageDraft stage : briefing.stages()) {
+            if (isBlank(stage.name()) && isBlank(stage.description())) {
+                continue;
+            }
+            stages.add(AttackStage.of(null, stages.size() + 1, stage.name(), stage.description(), stage.technique()));
+        }
+        List<CourseDesigner> designers = new ArrayList<>();
+        for (CourseDraft.DesignerDraft designer : briefing.designers()) {
+            if (isBlank(designer.name()) && isBlank(designer.role())) {
+                continue;
+            }
+            designers.add(CourseDesigner.of(null, designers.size() + 1, designer.name(), designer.role(),
+                    designer.avatarUrl()));
+        }
+        // Un résumé sans étape ne décrit pas de chaîne : le domaine le refuse, et
+        // l'éditeur ne doit pas pouvoir l'enregistrer par distraction.
+        AttackPath attackPath = isBlank(briefing.attackSummary()) && stages.isEmpty()
+                ? AttackPath.none()
+                : AttackPath.of(briefing.attackSummary(), stages);
+        CourseDraft.CaseDraft realCase = briefing.realCase();
+        return new CourseBriefing(attackPath,
+                realCase == null
+                        ? RealWorldCase.none()
+                        : RealWorldCase.of(realCase.sector(), realCase.situation(), realCase.stake(),
+                                realCase.outcome()),
+                designers);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private static String summaryOf(CourseDraft draft) {
