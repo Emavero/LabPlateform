@@ -16,14 +16,14 @@ import { useTargetMachine } from '../../hooks/useTargetMachine';
  * accompagnée du rappel du VPN : sans tunnel monté, cette adresse ne mène nulle
  * part, et l'afficher seule ferait conclure à une machine en panne.
  */
-export function MachineControl() {
+export function MachineControl({ id }: { id?: string } = {}) {
   const { t } = useI18n();
   const target = useTargetMachine();
   const machine = target.machine;
 
   if (target.loading && !machine) {
     return (
-      <Panel title={t('machine.title')}>
+      <Panel id={id} title={t('machine.title')}>
         <div className="empty">
           <Spinner size={20} label={t('machine.loading')} />
         </div>
@@ -33,7 +33,7 @@ export function MachineControl() {
 
   if (!machine) {
     return (
-      <Panel title={t('machine.title')}>
+      <Panel id={id} title={t('machine.title')}>
         <Alert
           tone="error"
           title={t('machine.loadError')}
@@ -55,6 +55,7 @@ export function MachineControl() {
 
   return (
     <Panel
+      id={id}
       className="machine-control"
       title={t('machine.title')}
       description={t('machine.lead')}
