@@ -90,7 +90,7 @@ export function DashboardPage() {
         title={t('home.lab')}
         description={t('home.labHint')}
         actions={
-          <Link className="btn btn--ghost btn--sm" to="/labs">
+          <Link className="btn btn--ghost btn--sm" to="/machines">
             <Icon name="server" size={16} />
             <span>{t('home.openLab')}</span>
           </Link>

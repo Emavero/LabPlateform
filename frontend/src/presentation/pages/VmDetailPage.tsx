@@ -44,8 +44,8 @@ function VmDetail({ id }: { id: number }) {
 
   return (
     <div className="page">
-      <Link className="text-link back-link" to="/labs">
-        <Icon name="arrowLeft" size={16} /> {t('nav.labs')}
+      <Link className="text-link back-link" to="/machines">
+        <Icon name="arrowLeft" size={16} /> {t('nav.machines')}
       </Link>
       <header className="page__header">
         <div>

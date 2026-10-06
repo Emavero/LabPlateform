@@ -3,17 +3,29 @@ import type { BoxFilter } from '@/domain/models/Box';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { BoxCard } from '../features/box/BoxCard';
 import { ProgressPanel } from '../features/box/ProgressPanel';
+import { MachineControl } from '../features/lab/MachineControl';
 import { useI18n } from '../i18n/I18nContext';
 import { useBoxes } from '../hooks/useBoxes';
+import { useLab } from '../hooks/useLab';
 import { useProgress } from '../hooks/useProgress';
 import { useVpnAccess } from '../hooks/useVpn';
+import { LabGrid } from './DashboardPage';
 
 const FILTERS: readonly BoxFilter[] = ['ALL', 'TODO', 'PWNED'];
 
-/** Catalogue des machines à compromettre. */
+/**
+ * Tout ce qui tourne : les cibles à compromettre, et les machines depuis
+ * lesquelles on les attaque.
+ * <p>
+ * Les deux vivaient sur deux pages — « Machines » et « Infrastructure du lab » —
+ * qui répétaient le même rappel de VPN et obligeaient à aller-retour pour
+ * démarrer un poste de travail avant de choisir une cible. C'est une seule
+ * activité, elle tient sur une seule page.
+ */
 export function MachinesPage() {
   const { t } = useI18n();
   const catalogue = useBoxes();
+  const lab = useLab();
   const { progress } = useProgress();
   const vpn = useVpnAccess();
 
@@ -61,6 +73,14 @@ export function MachinesPage() {
           {t('machines.vpnText', { network: vpn.access.labNetwork })}
         </Alert>
       )}
+
+      {/* La cible partagée, puis les machines de travail : on allume avant
+          d'attaquer, et c'est l'adresse de la première qu'on vise. */}
+      <MachineControl />
+
+      <Panel title={t('machines.workstations')} description={t('machines.workstationsHint')}>
+        <LabGrid lab={lab} />
+      </Panel>
 
       <div className="tabs" role="tablist" aria-label={t('machines.filterGroup')}>
         {FILTERS.map((filter) => (

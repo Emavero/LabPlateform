@@ -1,4 +1,5 @@
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { AttackPathDiagram } from '../features/exposure/AttackPathDiagram';
 import { PathTrail } from '../features/exposure/PathTrail';
 import { useI18n } from '../i18n/I18nContext';
 import { useExposure } from '../hooks/useExposure';
@@ -34,6 +35,7 @@ export function AttackPathsPage() {
       )}
 
       <Panel title={t('paths.method')}>
+        <AttackPathDiagram />
         <p className="method">
           <Icon name="info" size={14} /> {t('paths.methodText')}
         </p>

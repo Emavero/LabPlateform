@@ -1,5 +1,6 @@
 import { countByLevel, firstDoor, EXPOSURE_LEVELS } from '@/domain/models/Exposure';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
+import { ExposureDiagram } from '../features/exposure/ExposureDiagram';
 import { StatTile } from '../features/analytics/StatTile';
 import { ExposureCard } from '../features/exposure/ExposureCard';
 import { useI18n } from '../i18n/I18nContext';
@@ -97,6 +98,9 @@ export function ExposurePage() {
                 </Panel>
 
                 <Panel title={t('exposure.method')}>
+                  {/* Le schéma d'abord : il répond à « à quoi ça sert » avant
+                      que le paragraphe ne réponde à « comment ça marche ». */}
+                  <ExposureDiagram />
                   <p className="method">
                     <Icon name="info" size={14} /> {t('exposure.methodText')}
                   </p>

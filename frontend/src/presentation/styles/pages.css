@@ -3502,3 +3502,268 @@ button.back-link {
   border-color: var(--warning);
   color: var(--warning);
 }
+
+/* ---------------------------------------------------------------------------
+   Schémas d'explication : à quoi sert un module, avant comment il marche
+   --------------------------------------------------------------------------- */
+.schema {
+  margin: 0 0 1rem;
+  /* Le schéma réagit à la largeur de son panneau, pas à celle de la fenêtre :
+     il vit parfois dans une colonne étroite d'une page pourtant large. */
+  container-type: inline-size;
+}
+
+/* Trois étapes en ligne, qui passent en colonne quand la place manque : la
+   flèche bascule alors du côté vers le bas, sans autre règle à écrire. */
+.schema__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.schema__step {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+
+/* L'étape du milieu porte le calcul : c'est elle qu'on regarde. */
+.schema__step--accent {
+  border-color: var(--line-strong);
+  background: var(--violet-soft);
+}
+
+.schema__step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.schema__list {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.4;
+}
+
+.schema__list--weights li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.schema__plus,
+.schema__minus {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.schema__plus {
+  color: var(--danger);
+}
+
+/* Une cible retirée s'expose moins : le seul poids qui soulage. */
+.schema__minus {
+  color: var(--running);
+}
+
+.schema__arrow {
+  align-self: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 1px;
+  background: var(--line-strong);
+  position: relative;
+}
+
+.schema__arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-left: 6px solid var(--line-strong);
+}
+
+.schema__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schema__level {
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: var(--step--1);
+}
+
+.schema__level--critical {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.schema__level--high {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.schema__level--moderate {
+  color: var(--text-muted);
+}
+
+.schema__level--low {
+  border-color: var(--running);
+  color: var(--running);
+}
+
+.schema__caption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+/* ---------- Chaîne des chemins d'attaque ---------- */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.chain__node {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+
+.chain__node--goal {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.chain__name {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.chain__effort {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+/* Le lien porte la remise : c'est elle, et non la flèche, qui explique. */
+.chain__link {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0 0.3rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  text-align: center;
+}
+
+.chain__link::before {
+  content: '';
+  width: 100%;
+  min-width: 48px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.chain__discount {
+  color: var(--running);
+  font-family: var(--font-mono);
+}
+
+.chain__compare {
+  /* Bornée : étirée sur toute la largeur, le nombre s'éloigne trop de son
+     libellé pour qu'on les relie du regard. */
+  width: 100%;
+  max-width: 34rem;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+
+.chain__compare th,
+.chain__compare td {
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  font-weight: 400;
+}
+
+.chain__compare tr:first-child th,
+.chain__compare tr:first-child td {
+  border-top: 0;
+}
+
+.chain__compare th {
+  color: var(--text-muted);
+}
+
+.chain__sum,
+.chain__total {
+  font-family: var(--font-mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.chain__sum {
+  color: var(--text-faint);
+}
+
+.chain__total {
+  color: var(--text);
+}
+
+/* Les deux détours coûtent moins que l'assaut : c'est tout le propos. */
+.chain__row--best .chain__total {
+  color: var(--running);
+  font-weight: 600;
+}
+
+/* Panneau étroit : les étapes s'empilent, et la flèche se retourne vers le bas.
+   Sans cela elle continuerait de pointer sur le côté, dans le vide, là où
+   l'étape suivante est en fait passée à la ligne. */
+@container (max-width: 560px) {
+  .schema__flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .schema__arrow {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+}

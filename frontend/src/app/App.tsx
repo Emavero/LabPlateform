@@ -15,7 +15,6 @@ import { DashboardPage } from '@/presentation/pages/DashboardPage';
 import { EventsPage } from '@/presentation/pages/EventsPage';
 import { ExposurePage } from '@/presentation/pages/ExposurePage';
 import { ForgotPasswordPage } from '@/presentation/pages/ForgotPasswordPage';
-import { LabsPage } from '@/presentation/pages/LabsPage';
 import { LoginPage } from '@/presentation/pages/LoginPage';
 import { MachinesPage } from '@/presentation/pages/MachinesPage';
 import { NotFoundPage } from '@/presentation/pages/NotFoundPage';
@@ -75,7 +74,9 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                       <Route path="/profil" element={<ProfilePage />} />
                       <Route path="/abonnement" element={<SubscriptionPage />} />
                       <Route path="/abonnement/retour" element={<PaymentReturnPage />} />
-                      <Route path="/labs" element={<LabsPage />} />
+                      {/* « Infrastructure du lab » a rejoint « Machines » : les liens
+                        déjà partagés continuent d'aboutir. */}
+                    <Route path="/labs" element={<Navigate to="/machines" replace />} />
                       <Route path="/labs/:id" element={<VmDetailPage />} />
                       <Route path="/vpn" element={<VpnPage />} />
                       <Route path="/modules/events" element={<EventsPage />} />

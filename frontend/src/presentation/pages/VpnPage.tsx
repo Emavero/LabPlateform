@@ -261,7 +261,7 @@ function ConnectionGuidePanel({ fileName }: { fileName: string }) {
           ))}
         </ol>
         <Alert tone="info" title={t('vpn.next')}>
-          {t('vpn.nextBefore')} <Link to="/labs">{t('nav.labs')}</Link> {t('vpn.nextAfter')}
+          {t('vpn.nextBefore')} <Link to="/machines">{t('nav.machines')}</Link> {t('vpn.nextAfter')}
         </Alert>
       </div>
     </Panel>
