@@ -115,8 +115,9 @@
 \subsection{Ce qui change par rapport à la première version}
 \label{sec:changements}
 
-Ce document corrige quatre points qui empêchaient le lab de fonctionner une
-fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
+Ce document corrige six points qui empêchaient le lab de fonctionner --- quatre
+dans son branchement sur la plateforme, deux dans l'installation même du serveur
+VPN --- et deux qui relevaient de la sécurité.
 
 \begin{enumerate}
     \item \textbf{IP externe statique} (§\ref{sec:ip-pourquoi}). Sans réservation, chaque arrêt
@@ -141,6 +142,16 @@ fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
           DVWA sur \emph{toutes} les interfaces, IP publique comprise. Seul le
           pare-feu GCP l'en empêche : une seule barrière devant une application
           volontairement vulnérable. On en ajoute une seconde, locale.
+    \item \textbf{Installation d'OpenVPN} (§\ref{sec:openvpn-install}). Le
+          script d'angristan a été réécrit : il attend maintenant une
+          sous-commande. \code{sudo ./openvpn-install.sh} seul affiche son aide
+          et n'installe rien, sans erreur ni code de sortie non nul --- on croit
+          avoir installé le serveur, et tout le reste du lab échoue.
+    \item \textbf{Emplacement du \texttt{.ovpn}} (§\ref{sec:ovpn}). Lancé par
+          \texttt{sudo}, le script écrit le profil dans le répertoire personnel
+          de l'utilisateur, pas dans \texttt{/root/}. La commande de
+          récupération de la première version échouait donc sur un fichier
+          inexistant.
 \end{enumerate}
 
 \subsection{Convention de lecture}
@@ -459,11 +470,53 @@ gcloud compute ssh lab-htb-single --zone=us-central1-a
 \begin{lstlisting}
 curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
 chmod +x openvpn-install.sh
-sudo ./openvpn-install.sh
 \end{lstlisting}
 
-\subsection{Réponses}
+\attention{Le script attend désormais une \textbf{sous-commande}. Lancé seul,
+\code{sudo ./openvpn-install.sh} se contente d'afficher son aide et
+\textbf{n'installe rien} --- en silence, et avec un code de sortie 0, donc sans
+rien qui ressemble à une erreur. C'est le piège : on croit avoir installé
+OpenVPN, et la suite du lab échoue sans raison apparente.}
+
+Deux manières de faire. La première ne pose aucune question et se rejoue à
+l'identique :
+
+\begin{lstlisting}
+sudo ./openvpn-install.sh install \
+    --endpoint VOTRE.IP.STATIQUE \
+    --port 1194 --protocol udp \
+    --no-client-ipv6 \
+    --no-route-internet \
+    --client lab-htb
+\end{lstlisting}
+
+\begin{description}[leftmargin=0cm, style=nextline]
+  \item[\code{--endpoint}] L'adresse écrite dans le \texttt{.ovpn}. C'est elle
+        qui règle le problème du NAT 1:1 : la donner explicitement évite que le
+        script détecte l'adresse interne (\code{10.128.0.2}) et produise un
+        profil injoignable depuis Internet. Mettez l'\textbf{IP statique} de la
+        section~\ref{sec:ip-reservation}.
+  \item[\code{--no-route-internet}] Seul le réseau du lab passe par le tunnel.
+        Sans cette option, \emph{tout} le trafic de l'apprenant --- sa
+        navigation comprise --- sort par la VM : vous payez l'egress GCP, et une
+        e2-micro devient le goulot d'étranglement de la promotion. C'est aussi
+        ce que fait HackTheBox, qui ne route que ses sous-réseaux de lab.
+  \item[\code{--client lab-htb}] Le nom du premier profil, donc le nom du
+        fichier : \texttt{lab-htb.ovpn}.
+\end{description}
+
+La seconde relance le questionnaire d'autrefois, utile pour voir les choix
+défiler :
+
+\begin{lstlisting}
+sudo ./openvpn-install.sh interactive
+\end{lstlisting}
+
+\subsection{Réponses au questionnaire}
 \label{sec:openvpn-reponses}
+
+Uniquement si vous avez choisi \code{interactive} --- la forme non interactive
+ci-dessus ne demande rien.
 
 \begin{itemize}
     \item \textbf{IP address} : l'\textbf{IP statique} de la section~\ref{sec:ip-reservation} --- impératif
@@ -472,9 +525,10 @@ sudo ./openvpn-install.sh
     \item \textbf{Client name} : \texttt{lab-htb}
 \end{itemize}
 
-\attention{À cause du NAT 1:1 de GCP, le script détecte l'IP \textbf{interne}
+\attention{À cause du NAT 1:1 de GCP, le script propose l'IP \textbf{interne}
 (\code{10.128.0.2}). Saisissez l'IP publique \textbf{à la main}, sinon le
-\texttt{.ovpn} pointera vers une adresse injoignable depuis Internet.}
+\texttt{.ovpn} pointera vers une adresse injoignable depuis Internet. C'est
+exactement ce que \code{--endpoint} évite dans la forme non interactive.}
 
 \screenshotplaceholder{Terminal VM : questionnaire du script OpenVPN}
 
@@ -535,15 +589,26 @@ conteneur. Désormais, même si la règle de pare-feu GCP venait à sauter, le p
 \section{Récupération du \texttt{.ovpn}}
 \label{sec:ovpn}
 
-Le script écrit le profil dans \texttt{/root/} :
+Le script annonce le chemin en dernière ligne :
+\texttt{The configuration file has been written to \ldots}. Lisez-la, elle est
+la source de vérité.
+
+Lancé avec \texttt{sudo} depuis une session \texttt{gcloud compute ssh}, le
+script écrit le profil dans \textbf{votre} répertoire personnel --- il suit
+\texttt{SUDO\_USER} --- et non dans \texttt{/root/}. Il vous en donne aussi la
+propriété. Un seul transfert suffit donc, sans \texttt{sudo} ni passage par
+\texttt{/tmp} :
 
 \begin{lstlisting}[style=wincmd]
-gcloud compute ssh lab-htb-single --zone=us-central1-a --command="sudo cp /root/lab-htb.ovpn /tmp/ && sudo chmod 644 /tmp/lab-htb.ovpn"
+gcloud compute scp lab-htb-single:~/lab-htb.ovpn ./lab-htb.ovpn --zone=us-central1-a
 \end{lstlisting}
 
-\begin{lstlisting}[style=wincmd]
-gcloud compute scp lab-htb-single:/tmp/lab-htb.ovpn ./lab-htb.ovpn --zone=us-central1-a
-\end{lstlisting}
+\attention{Si vous avez lancé le script depuis un \emph{shell} déjà root
+(\texttt{sudo -i} puis \texttt{./openvpn-install.sh \ldots}), alors
+\texttt{SUDO\_USER} vaut \texttt{root} et le profil est bien dans
+\texttt{/root/}. Il faut alors le sortir avant de le transférer :
+\texttt{sudo cp /root/lab-htb.ovpn /tmp/ \&\& sudo chmod 644
+/tmp/lab-htb.ovpn}.}
 
 \subsection{Vérification du contenu}
 \label{sec:ovpn-verif}
