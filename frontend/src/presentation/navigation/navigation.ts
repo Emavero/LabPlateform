@@ -89,6 +89,7 @@ export const PRIMARY_NAV: readonly NavEntry[] = [
       { label: 'nav.adminCourses', to: '/admin/cours', icon: 'book' },
       { label: 'nav.adminMachines', to: '/admin/machines', icon: 'target' },
       { label: 'nav.scenarios', to: '/admin/scenarios', icon: 'scenario' },
+      { label: 'nav.adminVpn', to: '/admin/vpn', icon: 'vpn' },
       { label: 'nav.support', to: '/admin/support', icon: 'support' },
     ],
   },

@@ -6,6 +6,7 @@ import { AdminCourseEditorPage } from '@/presentation/pages/AdminCourseEditorPag
 import { AdminCoursesPage } from '@/presentation/pages/AdminCoursesPage';
 import { AdminScenariosPage } from '@/presentation/pages/AdminScenariosPage';
 import { AdminSupportPage } from '@/presentation/pages/AdminSupportPage';
+import { AdminVpnPage } from '@/presentation/pages/AdminVpnPage';
 import { AttackPathsPage } from '@/presentation/pages/AttackPathsPage';
 import { AdminDashboardPage } from '@/presentation/pages/AdminDashboardPage';
 import { BoxDetailPage } from '@/presentation/pages/BoxDetailPage';
@@ -94,6 +95,7 @@ export function App({ dependencies }: { dependencies: Dependencies }) {
                       <Route path="/admin/machines" element={<AdminBoxesPage />} />
                       <Route path="/admin/cours/:slug" element={<AdminCourseEditorPage />} />
                       <Route path="/admin/support" element={<AdminSupportPage />} />
+                    <Route path="/admin/vpn" element={<AdminVpnPage />} />
                       <Route path="/admin/scenarios" element={<AdminScenariosPage />} />
                     </Route>
 

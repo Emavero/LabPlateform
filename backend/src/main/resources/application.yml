@@ -144,6 +144,14 @@ app:
   # Accès VPN façon Hack The Box : chaque utilisateur télécharge son profil .ovpn.
   vpn:
     enabled: ${APP_VPN_ENABLED:false}
+    # D'où vient le profil remis à l'apprenant.
+    #   generated : la plateforme émet un certificat par personne (easy-rsa).
+    #               Révocable individuellement, mais demande une autorité de
+    #               certification à tenir.
+    #   uploaded  : l'administrateur dépose un .ovpn depuis l'écran
+    #               d'administration, et tous téléchargent le même. Rien à
+    #               tenir, mais plus de révocation par personne. Voir docs/VPN.md.
+    source: ${APP_VPN_SOURCE:generated}
     # Adresse publique de la passerelle OpenVPN (IP, nom de domaine ou adresse ngrok).
     udp-host: ${APP_VPN_UDP_HOST:}
     udp-port: ${APP_VPN_UDP_PORT:1194}

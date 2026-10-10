@@ -11,6 +11,7 @@ import com.labplatform.application.port.out.SecretGeneratorPort;
 import com.labplatform.application.port.out.TransactionPort;
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort;
 import com.labplatform.application.port.out.VpnCertificateAuthorityPort.ClientCredentials;
+import com.labplatform.application.port.out.LabVpnProfilePort;
 import com.labplatform.application.port.out.VpnProfileRepositoryPort;
 import com.labplatform.domain.journal.JournalEvent;
 import com.labplatform.domain.journal.JournalKind;
@@ -18,12 +19,14 @@ import com.labplatform.domain.shared.InvalidInputException;
 import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.user.Actor;
 import com.labplatform.domain.vpn.LabNetwork;
+import com.labplatform.domain.vpn.LabVpnProfile;
 import com.labplatform.domain.vpn.VpnEndpoint;
 import com.labplatform.domain.vpn.VpnProfile;
 import com.labplatform.domain.vpn.VpnProtocol;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Locale;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +42,7 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     private static final int SUFFIX_LENGTH = 10;
 
     private final VpnProfileRepositoryPort profiles;
+    private final LabVpnProfilePort deposited;
     private final VpnCertificateAuthorityPort authority;
     private final SecretGeneratorPort secrets;
     private final JournalPort journal;
@@ -49,10 +53,12 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     /** Deux téléchargements simultanés du même utilisateur ne doivent émettre qu'un certificat. */
     private final ConcurrentMap<Long, Object> userLocks = new ConcurrentHashMap<>();
 
-    public VpnService(VpnProfileRepositoryPort profiles, VpnCertificateAuthorityPort authority,
+    public VpnService(VpnProfileRepositoryPort profiles,
+                      LabVpnProfilePort deposited, VpnCertificateAuthorityPort authority,
                       SecretGeneratorPort secrets, JournalPort journal, TransactionPort transactions, Clock clock,
                       VpnSettings settings) {
         this.profiles = profiles;
+        this.deposited = deposited;
         this.authority = authority;
         this.secrets = secrets;
         this.journal = journal;
@@ -64,7 +70,14 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     @Override
     public VpnAccess getAccess(Actor actor) {
         if (!settings.enabled()) {
-            return new VpnAccess(false, Optional.empty(), List.of(), settings.labNetwork());
+            return new VpnAccess(false, Optional.empty(), List.of(), settings.labNetwork(), sourceName());
+        }
+        if (settings.isUploaded()) {
+            // Rien n'est émis par personne : ce qui compte est qu'un profil
+            // existe, et depuis quand. Aucun point d'entrée à proposer non
+            // plus — le fichier porte le sien.
+            return new VpnAccess(true, deposited.find().map(LabVpnProfile::uploadedAt), List.of(),
+                    settings.labNetwork(), sourceName());
         }
         return accessOf(profiles.findByUserId(actor.userId()));
     }
@@ -72,6 +85,9 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
     @Override
     public VpnProfileFile download(Actor actor, VpnProtocol protocol) {
         requireEnabled();
+        if (settings.isUploaded()) {
+            return depositedProfile();
+        }
         VpnEndpoint endpoint = settings.endpoints().stream()
                 .filter(e -> e.protocol() == protocol)
                 .findFirst()
@@ -115,6 +131,19 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
         return authority.revocationList();
     }
 
+    /**
+     * Le profil déposé par l'administration, servi tel quel.
+     * <p>
+     * Le même fichier pour tout le monde : il n'y a rien à émettre, rien à
+     * retenir par utilisateur, et le protocole demandé est ignoré — c'est le
+     * fichier qui porte son serveur et son transport.
+     */
+    private VpnProfileFile depositedProfile() {
+        LabVpnProfile profile = deposited.find().orElseThrow(() -> new ServiceUnavailableException(
+                "Aucun profil VPN n'a encore été déposé par l'administration"));
+        return new VpnProfileFile(profile.fileName(), profile.content());
+    }
+
     private VpnProfile issueFor(Long userId) {
         String commonName = VpnProfile.commonNameFor(userId, randomSuffix());
         authority.issueClient(commonName);
@@ -132,8 +161,13 @@ public class VpnService implements GetVpnAccessUseCase, DownloadVpnProfileUseCas
         return token.substring(0, SUFFIX_LENGTH);
     }
 
+    private String sourceName() {
+        return settings.source().name().toLowerCase(Locale.ROOT);
+    }
+
     private VpnAccess accessOf(Optional<VpnProfile> profile) {
-        return new VpnAccess(true, profile.map(VpnProfile::getIssuedAt), settings.endpoints(), settings.labNetwork());
+        return new VpnAccess(true, profile.map(VpnProfile::getIssuedAt), settings.endpoints(),
+                settings.labNetwork(), sourceName());
     }
 
     private void requireEnabled() {

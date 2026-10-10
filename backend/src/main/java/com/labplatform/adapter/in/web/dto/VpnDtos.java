@@ -15,7 +15,7 @@ public final class VpnDtos {
 
     /** issuedAt vaut null tant que l'utilisateur n'a jamais téléchargé son profil. */
     public record VpnAccessResponse(boolean enabled, Instant issuedAt, List<VpnEndpointResponse> endpoints,
-                                    String labNetwork) {
+                                    String labNetwork, String source) {
 
         public static VpnAccessResponse from(VpnAccess access) {
             return new VpnAccessResponse(
@@ -24,7 +24,8 @@ public final class VpnDtos {
                     access.endpoints().stream()
                             .map(e -> new VpnEndpointResponse(e.protocol().parameter(), e.host(), e.port()))
                             .toList(),
-                    access.labNetwork());
+                    access.labNetwork(),
+                    access.source());
         }
     }
 }

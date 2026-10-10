@@ -1,3 +1,4 @@
+import type { LabVpnProfile } from '../models/Vpn';
 import { AppError } from '../errors/AppError';
 import { mediaError, type AdminOverview, type BoxDraft, type CourseDraft, type PublishedBox, type UploadedMedia } from '../models/Admin';
 import type { Course } from '../models/Course';
@@ -96,5 +97,35 @@ export class GetCourseForEditingUseCase {
 
   execute(slug: string): Promise<Course> {
     return this.admin.getCourse(slug);
+  }
+}
+
+/**
+ * Profil VPN mis à disposition des apprenants.
+ * <p>
+ * Un seul fichier pour toute la plateforme : le déposer remplace le précédent,
+ * et le retirer coupe le téléchargement pour tout le monde.
+ */
+export class GetLabVpnProfileUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(): Promise<LabVpnProfile> {
+    return this.admin.getVpnProfile();
+  }
+}
+
+export class UploadLabVpnProfileUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(file: File): Promise<LabVpnProfile> {
+    return this.admin.uploadVpnProfile(file);
+  }
+}
+
+export class RemoveLabVpnProfileUseCase {
+  constructor(private readonly admin: AdminRepository) {}
+
+  execute(): Promise<void> {
+    return this.admin.removeVpnProfile();
   }
 }

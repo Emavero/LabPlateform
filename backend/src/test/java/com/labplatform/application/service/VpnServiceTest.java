@@ -1,6 +1,7 @@
 package com.labplatform.application.service;
 
 import com.labplatform.application.fakes.Fakes;
+import com.labplatform.application.port.out.LabVpnProfilePort;
 import com.labplatform.application.fakes.InMemoryJournal;
 import com.labplatform.application.port.in.vpn.VpnAccess;
 import com.labplatform.application.port.in.vpn.VpnProfileFile;
@@ -11,6 +12,7 @@ import com.labplatform.domain.shared.ServiceUnavailableException;
 import com.labplatform.domain.user.Actor;
 import com.labplatform.domain.user.Role;
 import com.labplatform.domain.vpn.VpnEndpoint;
+import com.labplatform.domain.vpn.LabVpnProfile;
 import com.labplatform.domain.vpn.VpnProfile;
 import com.labplatform.domain.vpn.VpnProtocol;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,19 +43,23 @@ class VpnServiceTest {
 
     private FakeAuthority authority;
     private InMemoryProfiles profiles;
+    private static final Instant NOW = Instant.parse("2026-10-10T09:00:00Z");
+
     private VpnService service;
+    private InMemoryDeposited deposited;
     private int tokenCounter;
 
     @BeforeEach
     void setUp() {
         authority = new FakeAuthority();
         profiles = new InMemoryProfiles();
+        deposited = new InMemoryDeposited();
         tokenCounter = 0;
         service = service(new VpnSettings(true, List.of(UDP), "10.10.10.0/24"));
     }
 
     private VpnService service(VpnSettings settings) {
-        return new VpnService(profiles, authority,
+        return new VpnService(profiles, deposited, authority,
                 Fakes.secretGenerator(() -> "Tok_en-" + (++tokenCounter) + "abcdefghijkl"), journal,
                 Fakes.NO_TRANSACTION, Clock.fixed(Instant.parse("2026-09-25T10:00:00Z"), ZoneOffset.UTC), settings);
     }
@@ -200,6 +207,85 @@ class VpnServiceTest {
         public VpnProfile save(VpnProfile profile) {
             byUser.put(profile.getUserId(), profile);
             return profile;
+        }
+    }
+
+    // ------------------------------------------- Profil déposé par l'administration
+
+    @Test
+    void enModeDeposeLeMemeFichierEstServiATous() {
+        VpnService uploaded = service(new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.UPLOADED));
+        deposited.save(LabVpnProfile.of("lab-equipe.ovpn",
+                "client\ndev tun\nremote vpn.exemple.test 1194\nroute 10.10.10.0 255.255.255.0\n", NOW));
+
+        VpnProfileFile pourAlice = uploaded.download(ALICE, VpnProtocol.UDP);
+        VpnProfileFile pourBob = uploaded.download(BOB, VpnProtocol.UDP);
+
+        assertEquals("lab-equipe.ovpn", pourAlice.fileName());
+        // Le même fichier, mot pour mot : c'est tout l'intérêt, et toute la limite.
+        assertEquals(pourAlice.content(), pourBob.content());
+        // Rien n'est émis : aucune autorité de certification n'est sollicitée.
+        assertTrue(authority.issued.isEmpty());
+    }
+
+    @Test
+    void enModeDeposeLeProtocoleDemandeNeChangeRien() {
+        // Le fichier porte son serveur et son transport : il n'y a pas de
+        // variante TCP à produire, et en réclamer une ne doit pas échouer.
+        VpnService uploaded = service(new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.UPLOADED));
+        deposited.save(LabVpnProfile.of("lab.ovpn", "client\nremote vpn.exemple.test 443\n", NOW));
+
+        assertEquals(uploaded.download(ALICE, VpnProtocol.UDP).content(),
+                uploaded.download(ALICE, VpnProtocol.TCP).content());
+    }
+
+    @Test
+    void enModeDeposeSansFichierLeTelechargementLeDitClairement() {
+        VpnService uploaded = service(new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.UPLOADED));
+
+        assertEquals("Aucun profil VPN n'a encore été déposé par l'administration",
+                assertThrows(ServiceUnavailableException.class,
+                        () -> uploaded.download(ALICE, VpnProtocol.UDP)).getMessage());
+    }
+
+    @Test
+    void enModeDeposeLAccesAnnonceLaDateDuDepot() {
+        VpnService uploaded = service(new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.UPLOADED));
+
+        assertEquals(Optional.empty(), uploaded.getAccess(ALICE).issuedAt());
+
+        deposited.save(LabVpnProfile.of("lab.ovpn", "client\nremote vpn.exemple.test 1194\n", NOW));
+
+        assertEquals(Optional.of(NOW), uploaded.getAccess(ALICE).issuedAt());
+        assertTrue(uploaded.getAccess(ALICE).enabled());
+    }
+
+    @Test
+    void unModeDeposeNExigePasDePointDEntree() {
+        // En mode généré, un VPN activé sans hôte est une erreur de
+        // configuration. En mode déposé, le fichier porte le sien.
+        assertDoesNotThrow(() -> new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.UPLOADED));
+        assertThrows(IllegalArgumentException.class,
+                () -> new VpnSettings(true, List.of(), "10.10.10.0/24", VpnSource.GENERATED));
+    }
+
+    /** Le profil déposé par l'administration, gardé en mémoire. */
+    private static final class InMemoryDeposited implements LabVpnProfilePort {
+        private LabVpnProfile profile;
+
+        @Override
+        public void save(LabVpnProfile toSave) {
+            this.profile = toSave;
+        }
+
+        @Override
+        public Optional<LabVpnProfile> find() {
+            return Optional.ofNullable(profile);
+        }
+
+        @Override
+        public void delete() {
+            this.profile = null;
         }
     }
 }

@@ -433,8 +433,13 @@ nécessaire entre le sous-réseau GCP et le réseau annoncé par le profil VPN �
 voir [`docs/GCP.md`](docs/GCP.md).
 
 > L'adresse affichée est interne au lab : elle n'est joignable qu'avec le
-> profil `.ovpn` monté. Ce profil route désormais le réseau du lab, il n'y a
-> rien à ajouter à la main.
+> profil `.ovpn` monté. Ce profil route le réseau du lab, il n'y a rien à
+> ajouter à la main.
+
+Le `.ovpn` vient au choix de la plateforme, qui émet un certificat par
+apprenant, ou de l'administrateur, qui dépose un fichier produit par son propre
+serveur depuis **Administration → Profil VPN**. Les deux modes, leurs réglages
+et ce que chacun ne permet pas : [`docs/VPN.md`](docs/VPN.md).
 
 ## Architecture du backend : hexagonale
 

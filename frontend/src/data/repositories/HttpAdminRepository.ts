@@ -1,4 +1,5 @@
 import type { AxiosInstance } from 'axios';
+import type { LabVpnProfile } from '@/domain/models/Vpn';
 import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox, UploadedMedia } from '@/domain/models/Admin';
 import type { Course } from '@/domain/models/Course';
 import type { AdminRepository } from '@/domain/repositories/AdminRepository';
@@ -61,6 +62,24 @@ export class HttpAdminRepository implements AdminRepository {
     return toCourse(data);
   }
 
+  async getVpnProfile(): Promise<LabVpnProfile> {
+    const { data } = await this.http.get<LabVpnProfileDto>('/admin/vpn/profile');
+    return toLabVpnProfile(data);
+  }
+
+  async uploadVpnProfile(file: File): Promise<LabVpnProfile> {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await this.http.post<LabVpnProfileDto>('/admin/vpn/profile', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return toLabVpnProfile(data);
+  }
+
+  async removeVpnProfile(): Promise<void> {
+    await this.http.delete('/admin/vpn/profile');
+  }
+
   /** Multipart : le navigateur pose lui-même la frontière du corps. */
   async uploadMedia(file: File): Promise<UploadedMedia> {
     const form = new FormData();
@@ -71,6 +90,18 @@ export class HttpAdminRepository implements AdminRepository {
     });
     return { ...data };
   }
+}
+
+interface LabVpnProfileDto {
+  present: boolean;
+  fileName: string | null;
+  sizeBytes: number;
+  uploadedAt: string | null;
+  routesLabNetwork: boolean;
+}
+
+function toLabVpnProfile(dto: LabVpnProfileDto): LabVpnProfile {
+  return { ...dto, uploadedAt: dto.uploadedAt ? new Date(dto.uploadedAt) : null };
 }
 
 function toPublishedBox(dto: PublishedBoxDto): PublishedBox {

@@ -1,7 +1,12 @@
+import type { LabVpnProfile } from '../models/Vpn';
 import type { AdminOverview, BoxDraft, CourseDraft, PublishedBox, UploadedMedia } from '../models/Admin';
 import type { Course } from '../models/Course';
 
 export interface AdminRepository {
+  /** Profil VPN mis à disposition des apprenants. */
+  getVpnProfile(): Promise<LabVpnProfile>;
+  uploadVpnProfile(file: File): Promise<LabVpnProfile>;
+  removeVpnProfile(): Promise<void>;
   overview(): Promise<AdminOverview>;
   listBoxes(): Promise<PublishedBox[]>;
   createBox(draft: BoxDraft): Promise<PublishedBox>;

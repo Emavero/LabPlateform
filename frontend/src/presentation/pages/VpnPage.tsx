@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { defaultProtocol, type VpnAccess, type VpnProtocol } from '@/domain/models/Vpn';
+import { defaultProtocol, isUploadedSource, type VpnAccess, type VpnProtocol } from '@/domain/models/Vpn';
 import { Alert, Button, CopyField, Icon, Panel, Spinner } from '../design-system';
 import { CONNECTION_GUIDES, detectClientOs, type ClientOs } from '../features/vpn/connectionGuides';
 import { saveTextFile } from '../features/vpn/saveFile';
@@ -63,6 +63,12 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
   const [regenerated, setRegenerated] = useState(false);
   const endpoint = access.endpoints.find((e) => e.protocol === protocol);
   const fileName = `cyberMans-lab-${protocol ?? 'udp'}.ovpn`;
+  /*
+   * Profil déposé par l'administration : un seul fichier, le même pour tous.
+   * Il n'y a alors ni protocole à choisir — le fichier porte le sien — ni
+   * régénération possible, puisque personne n'émet rien.
+   */
+  const uploaded = isUploadedSource(access);
 
   const download = useAction(
     useCallback(async (chosen: VpnProtocol) => {
@@ -74,9 +80,12 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
   const regenerate = useAction(useCallback(() => vpn.regenerate.execute(), [vpn.regenerate]));
 
   const onDownload = async () => {
-    if (!protocol) return;
+    // En source déposée il n'y a qu'un fichier : le protocole est ignoré par
+    // le serveur, et en exiger un ici empêcherait tout téléchargement.
+    const chosen = protocol ?? 'udp';
+    if (!uploaded && !protocol) return;
     setRegenerated(false);
-    if (await download.run(protocol)) onDownloaded();
+    if (await download.run(chosen)) onDownloaded();
   };
 
   const onRegenerate = async () => {
@@ -107,13 +116,15 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
           </div>
         </div>
 
-        <ProtocolPicker access={access} value={protocol} onChange={setProtocol} />
+        {!uploaded && <ProtocolPicker access={access} value={protocol} onChange={setProtocol} />}
 
         <dl className="vpn-facts">
-          <div>
-            <dt>{t('vpn.server')}</dt>
-            <dd>{endpoint ? `${endpoint.host}:${endpoint.port}` : '—'}</dd>
-          </div>
+          {!uploaded && (
+            <div>
+              <dt>{t('vpn.server')}</dt>
+              <dd>{endpoint ? `${endpoint.host}:${endpoint.port}` : '—'}</dd>
+            </div>
+          )}
           <div>
             <dt>{t('vpn.labNetwork')}</dt>
             <dd>{access.labNetwork}</dd>
@@ -133,12 +144,15 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
           loading={download.pending}
           loadingLabel={t('vpn.preparing')}
           onClick={onDownload}
-          disabled={!protocol}
+          disabled={!uploaded && !protocol}
         >
-          {t('vpn.download', { protocol: protocol ? t(`vpn.protocol.${protocol}`) : '' })}
+          {uploaded
+            ? t('vpn.downloadShared')
+            : t('vpn.download', { protocol: protocol ? t(`vpn.protocol.${protocol}`) : '' })}
         </Button>
 
-        <div className="vpn-regenerate">
+        {/* Rien à régénérer sur un fichier qu'on n'a pas émis. */}
+        {!uploaded && <div className="vpn-regenerate">
           {confirming ? (
             <Alert
               tone="error"
@@ -162,10 +176,10 @@ function VpnAccessView({ access, onChange, onDownloaded }: VpnAccessViewProps) {
             </button>
           )}
           {regenerate.error && <Alert tone="error">{regenerate.error.message}</Alert>}
-        </div>
+        </div>}
       </Panel>
 
-      <ConnectionGuidePanel fileName={fileName} />
+      <ConnectionGuidePanel fileName={uploaded ? t('vpn.sharedFileName') : fileName} />
     </div>
   );
 }

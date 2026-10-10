@@ -33,6 +33,7 @@ export const fr = {
   'nav.reports': 'Centre de rapports',
   'nav.administration': 'Administration',
   'nav.adminCourses': 'Gérer les cours',
+  'nav.adminVpn': 'Profil VPN',
   'nav.adminMachines': 'Gérer les machines',
   'nav.profile': 'Profil',
   'nav.subscription': 'Abonnement',
@@ -136,6 +137,29 @@ export const fr = {
   'journal.filterGroup': 'Filtrer par famille',
 
   // ── Tableau de bord d’administration ──────────────────────────────────────
+  'adminVpn.title': 'Profil VPN du lab',
+  'adminVpn.lead':
+    'Le fichier .ovpn que les apprenants téléchargent pour joindre les machines qu’ils démarrent.',
+  'adminVpn.current': 'Profil en place',
+  'adminVpn.currentHint': 'Un seul profil pour toute la plateforme : le déposer remplace le précédent.',
+  'adminVpn.none': 'Aucun profil déposé : les apprenants ne peuvent rien télécharger pour l’instant.',
+  'adminVpn.fileName': 'Fichier',
+  'adminVpn.size': 'Taille',
+  'adminVpn.uploadedAt': 'Déposé le',
+  'adminVpn.upload': 'Déposer un profil',
+  'adminVpn.replace': 'Remplacer le profil',
+  'adminVpn.uploading': 'Dépôt en cours…',
+  'adminVpn.remove': 'Retirer',
+  'adminVpn.saved': 'Profil déposé : les apprenants peuvent le télécharger dès maintenant.',
+  'adminVpn.noRouteTitle': 'Ce profil ne route pas le réseau du lab',
+  'adminVpn.noRouteText':
+    'Le tunnel montera, mais l’adresse interne affichée par le bouton « Démarrer » ne répondra pas — une panne qui ressemble à une machine en panne. Ajoutez une ligne « route » vers le réseau des machines, ou vérifiez que votre serveur OpenVPN la pousse lui-même.',
+  'adminVpn.howTitle': 'Comment obtenir ce fichier',
+  'adminVpn.how1': 'Depuis votre serveur OpenVPN, exportez un profil client (.ovpn) avec ses certificats intégrés.',
+  'adminVpn.how2': 'Vérifiez qu’il route le réseau des machines du lab, sans quoi les cibles resteront injoignables.',
+  'adminVpn.how3': 'Déposez-le ici : il devient aussitôt téléchargeable depuis la page « Accès VPN ».',
+  'adminVpn.shared':
+    'Le même fichier sert à tout le monde : on ne peut pas couper l’accès d’une seule personne, seulement remplacer le profil pour l’ensemble. Pour un accès révocable individuellement, utilisez le mode « generated », où la plateforme émet un certificat par apprenant.',
   'admin.eyebrow': 'Administration',
   'admin.title': 'Tableau de bord',
   'admin.lead': 'Ce que les comptes font de la plateforme, sur {days} jours, et ce qu’il y a à en tirer.',
@@ -491,6 +515,8 @@ export const fr = {
   'vpn.regenerated': 'Nouveau profil généré',
   'vpn.regeneratedText':
     'L’ancien fichier ne fonctionne plus. Téléchargez le nouveau et remplacez-le dans votre client VPN.',
+  'vpn.downloadShared': 'Télécharger le profil du lab',
+  'vpn.sharedFileName': 'le profil du lab',
   'vpn.preparing': 'Préparation…',
   'vpn.download': 'Télécharger le profil {protocol}',
   'vpn.regenerateTitle': 'Régénérer le profil ?',

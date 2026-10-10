@@ -18,6 +18,7 @@ import com.labplatform.application.port.out.DomainEventPublisherPort;
 import com.labplatform.application.port.out.CloudInstancePort;
 import com.labplatform.application.port.out.HypervisorPort;
 import com.labplatform.application.port.out.JournalPort;
+import com.labplatform.application.port.out.LabVpnProfilePort;
 import com.labplatform.application.port.out.PasswordHasherPort;
 import com.labplatform.application.port.out.PasswordResetNotifierPort;
 import com.labplatform.application.port.out.PaymentGatewayPort;
@@ -49,10 +50,12 @@ import com.labplatform.application.service.ScoreboardService;
 import com.labplatform.application.service.SupportService;
 import com.labplatform.application.service.AuthenticationService;
 import com.labplatform.application.service.LabService;
+import com.labplatform.application.service.LabVpnProfileService;
 import com.labplatform.application.service.TargetMachineService;
 import com.labplatform.application.service.PasswordResetService;
 import com.labplatform.application.service.VpnService;
 import com.labplatform.application.service.VpnSettings;
+import com.labplatform.application.service.VpnSource;
 import com.labplatform.adapter.out.process.ProcessCommandRunner;
 import com.labplatform.adapter.out.vpn.EasyRsaCertificateAuthority;
 import com.labplatform.adapter.out.vpn.EasyRsaSettings;
@@ -253,9 +256,10 @@ public class UseCaseConfig {
     }
 
     @Bean
-    public VpnService vpnService(VpnProfileRepositoryPort profiles, VpnCertificateAuthorityPort authority,
-                                 SecretGeneratorPort secrets, JournalPort journal, TransactionPort transactions,
-                                 Clock clock, AppProperties properties) {
+    public VpnService vpnService(VpnProfileRepositoryPort profiles, LabVpnProfilePort deposited,
+                                 VpnCertificateAuthorityPort authority, SecretGeneratorPort secrets,
+                                 JournalPort journal, TransactionPort transactions, Clock clock,
+                                 AppProperties properties) {
         AppProperties.Vpn vpn = properties.getVpn();
         List<VpnEndpoint> endpoints = new ArrayList<>();
         if (!vpn.getUdpHost().isBlank()) {
@@ -264,7 +268,18 @@ public class UseCaseConfig {
         if (!vpn.getTcpHost().isBlank()) {
             endpoints.add(new VpnEndpoint(VpnProtocol.TCP, vpn.getTcpHost().trim(), vpn.getTcpPort()));
         }
-        return new VpnService(profiles, authority, secrets, journal, transactions, clock,
-                new VpnSettings(vpn.isEnabled(), endpoints, vpn.getLabNetwork()));
+        return new VpnService(profiles, deposited, authority, secrets, journal, transactions, clock,
+                new VpnSettings(vpn.isEnabled(), endpoints, vpn.getLabNetwork(), sourceOf(vpn)));
+    }
+
+    @Bean
+    public LabVpnProfileService labVpnProfileService(LabVpnProfilePort profiles, JournalPort journal, Clock clock,
+                                                     AppProperties properties) {
+        return new LabVpnProfileService(profiles, journal, clock, properties.getVpn().getLabNetwork());
+    }
+
+    /** Une valeur inconnue retombe sur la génération : le comportement d'avant. */
+    private static VpnSource sourceOf(AppProperties.Vpn vpn) {
+        return "uploaded".equalsIgnoreCase(vpn.getSource()) ? VpnSource.UPLOADED : VpnSource.GENERATED;
     }
 }

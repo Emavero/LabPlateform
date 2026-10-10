@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { defaultProtocol, type VpnAccess } from './Vpn';
+import { defaultProtocol, isUploadedSource, type VpnAccess } from './Vpn';
 
-const base: VpnAccess = { enabled: true, issuedAt: null, endpoints: [], labNetwork: '10.10.10.0/24' };
+const base: VpnAccess = {
+  enabled: true,
+  issuedAt: null,
+  endpoints: [],
+  labNetwork: '10.10.10.0/24',
+  source: 'generated',
+};
 
 describe('defaultProtocol', () => {
   it('privilégie UDP quand il est proposé', () => {
@@ -21,5 +27,20 @@ describe('defaultProtocol', () => {
 
   it('ne propose rien sans point d’entrée', () => {
     expect(defaultProtocol(base)).toBeNull();
+  });
+});
+
+describe('source du profil', () => {
+  it('reconnaît un profil déposé par l’administration', () => {
+    expect(isUploadedSource(base)).toBe(false);
+    expect(isUploadedSource({ ...base, source: 'uploaded' })).toBe(true);
+  });
+
+  it('un profil déposé n’a pas de point d’entrée à choisir', () => {
+    // Le fichier porte son serveur et son transport : rien à sélectionner.
+    const uploaded: VpnAccess = { ...base, source: 'uploaded' };
+
+    expect(uploaded.endpoints).toHaveLength(0);
+    expect(defaultProtocol(uploaded)).toBeNull();
   });
 });

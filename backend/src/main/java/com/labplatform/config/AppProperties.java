@@ -755,11 +755,24 @@ public class AppProperties {
     /** Accès VPN des utilisateurs (profils .ovpn personnels). */
     public static class Vpn {
         private boolean enabled = false;
+        /**
+         * « generated » : la plateforme émet un certificat par apprenant.
+         * « uploaded » : l'administrateur dépose un profil, partagé par tous.
+         */
+        private String source = "generated";
         private String udpHost = "";
         private int udpPort = 1194;
         private String tcpHost = "";
         private int tcpPort = 1194;
         private String labNetwork = "10.10.10.0/24";
+
+        public String getSource() {
+            return source;
+        }
+
+        public void setSource(String source) {
+            this.source = source;
+        }
         private String easyrsaBinary = "/usr/share/easy-rsa/easyrsa";
         private String directory = "/var/lib/labplatform/vpn";
         private String caName = "cyberMans-Lab-CA";

@@ -3767,3 +3767,67 @@ button.back-link {
     transform: rotate(90deg);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Profil VPN déposé par l'administration
+   --------------------------------------------------------------------------- */
+.deposited {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+
+.deposited dt {
+  margin-bottom: 0.2rem;
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.deposited dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.deposited__name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+/* Les trois étapes se numérotent : c'est une marche à suivre, pas une liste. */
+.adminVpn__steps {
+  counter-reset: step;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.adminVpn__steps li {
+  counter-increment: step;
+  padding-left: 1.7rem;
+  position: relative;
+}
+
+.adminVpn__steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--violet);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}

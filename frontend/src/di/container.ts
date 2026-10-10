@@ -60,6 +60,9 @@ import {
   ListBoxesUseCase as ListAdminBoxesUseCase,
   SaveBoxUseCase,
   SaveCourseUseCase,
+  GetLabVpnProfileUseCase,
+  RemoveLabVpnProfileUseCase,
+  UploadLabVpnProfileUseCase,
   UploadMediaUseCase,
 } from '@/domain/usecases/admin';
 import {
@@ -158,6 +161,10 @@ export interface Dependencies {
     readonly deleteBox: DeleteBoxUseCase;
     readonly uploadMedia: UploadMediaUseCase;
     readonly getCourse: GetCourseForEditingUseCase;
+    /** Profil VPN remis aux apprenants : déposé, remplacé ou retiré. */
+    readonly getVpnProfile: GetLabVpnProfileUseCase;
+    readonly uploadVpnProfile: UploadLabVpnProfileUseCase;
+    readonly removeVpnProfile: RemoveLabVpnProfileUseCase;
     /** Indicateurs de la plateforme : audience, usage, revenus, recommandations. */
     readonly analytics: GetAnalyticsUseCase;
   };
@@ -293,6 +300,9 @@ export function createContainer(): Dependencies {
       saveBox: new SaveBoxUseCase(adminRepository),
       deleteBox: new DeleteBoxUseCase(adminRepository),
       uploadMedia: new UploadMediaUseCase(adminRepository),
+      getVpnProfile: new GetLabVpnProfileUseCase(adminRepository),
+      uploadVpnProfile: new UploadLabVpnProfileUseCase(adminRepository),
+      removeVpnProfile: new RemoveLabVpnProfileUseCase(adminRepository),
       getCourse: new GetCourseForEditingUseCase(adminRepository),
       analytics: new GetAnalyticsUseCase(analyticsRepository),
     },

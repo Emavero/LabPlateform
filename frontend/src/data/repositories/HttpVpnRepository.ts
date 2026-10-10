@@ -1,8 +1,9 @@
 import type { AxiosInstance } from 'axios';
-import type { VpnAccess, VpnProfileDownload, VpnProtocol } from '@/domain/models/Vpn';
+import type { VpnAccess, VpnProfileDownload, VpnProtocol, VpnSource } from '@/domain/models/Vpn';
 import type { VpnRepository } from '@/domain/repositories/VpnRepository';
 
 interface VpnAccessDto {
+  source: VpnSource;
   enabled: boolean;
   issuedAt: string | null;
   endpoints: { protocol: string; host: string; port: number }[];
@@ -17,6 +18,7 @@ function toVpnAccess(dto: VpnAccessDto): VpnAccess {
       .filter((e) => e.protocol === 'udp' || e.protocol === 'tcp')
       .map((e) => ({ protocol: e.protocol as VpnProtocol, host: e.host, port: e.port })),
     labNetwork: dto.labNetwork,
+    source: dto.source,
   };
 }
 
