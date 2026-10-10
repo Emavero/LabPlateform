@@ -48,7 +48,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_AUTH: ${MAIL_AUTH:-false}
       MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
-      APP_HYPERVISOR_MODE: simulated
+      APP_HYPERVISOR_MODE: ${APP_HYPERVISOR_MODE:-simulated}
       # Comptes promus administrateurs (séparés par des virgules).
       APP_ADMIN_EMAILS: ${APP_ADMIN_EMAILS:-}
       APP_MEDIA_DIRECTORY: /var/lib/labplatform/media
@@ -79,6 +79,34 @@ services:
       APP_VPN_TCP_HOST: ${APP_VPN_TCP_HOST:-}
       APP_VPN_TCP_PORT: ${APP_VPN_TCP_PORT:-1194}
       APP_VPN_LAB_NETWORK: ${APP_VPN_LAB_NETWORK:-10.10.10.0/24}
+      # « generated » : un certificat par apprenant. « uploaded » : un profil
+      # déposé par l'administration, le même pour tous (docs/VPN.md).
+      APP_VPN_SOURCE: ${APP_VPN_SOURCE:-generated}
+      # Cible partagée pilotée par /api/machine. « simulated » par défaut :
+      # aucun projet GCP n'est nécessaire. Le montage Compute Engine complet
+      # est dans docker-compose.gcp.yml, qui monte aussi la clé du compte de
+      # service — sans elle, « gcp » ne peut pas s'authentifier.
+      APP_MACHINE_PROVIDER: ${APP_MACHINE_PROVIDER:-simulated}
+      # Adresse montrée à l'apprenant, quand elle diffère de celle que
+      # l'hébergeur rapporte (docs/GCP.md). Vide : celle de l'hébergeur.
+      APP_MACHINE_ADDRESS: ${APP_MACHINE_ADDRESS:-}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
+      GCP_ZONE: ${GCP_ZONE:-europe-west1-b}
+      GCP_INSTANCE_NAME: ${GCP_INSTANCE_NAME:-target-01}
+      GCP_OPERATION_TIMEOUT: ${GCP_OPERATION_TIMEOUT:-60s}
+      GCP_TARGET_NAME: ${GCP_TARGET_NAME:-target-{slug}}
+      APP_GCP_TARGET_MODE: ${APP_GCP_TARGET_MODE:-shared}
+      APP_GCP_TARGET_IMAGE: ${APP_GCP_TARGET_IMAGE:-}
+      APP_GCP_TARGET_MACHINE_TYPE: ${APP_GCP_TARGET_MACHINE_TYPE:-e2-small}
+      APP_GCP_TARGET_DISK_SIZE: ${APP_GCP_TARGET_DISK_SIZE:-20}
+      APP_GCP_TARGET_DISK_TYPE: ${APP_GCP_TARGET_DISK_TYPE:-pd-standard}
+      APP_GCP_TARGET_SUBNETWORK: ${APP_GCP_TARGET_SUBNETWORK:-}
+      APP_GCP_TARGET_TAGS: ${APP_GCP_TARGET_TAGS:-}
+      # Taille maximale d'une vidéo de cours. Relever aussi client_max_body_size
+      # dans nginx.conf, sinon le frontend refuse avant le backend.
+      APP_MEDIA_MAX_FILE_SIZE: ${APP_MEDIA_MAX_FILE_SIZE:-256MB}
+      APP_BOXES_LEADERBOARD_SIZE: ${APP_BOXES_LEADERBOARD_SIZE:-20}
+      APP_BOXES_INSTANCE_LIFETIME: ${APP_BOXES_INSTANCE_LIFETIME:-2h}
     volumes:
       # Autorité de certification VPN : à sauvegarder, sa perte invalide tous les profils.
       - vpn-data:/var/lib/labplatform/vpn

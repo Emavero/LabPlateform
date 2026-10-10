@@ -26,3 +26,7 @@ docs/lab/*.log
 docs/lab/*.toc
 docs/lab/*.out
 docs/lab/*.synctex.gz
+
+# Clé du compte de service GCP, montée par docker-compose.gcp.yml. Un secret
+# de même nature qu'un mot de passe : il ne traverse jamais l'historique.
+secrets/

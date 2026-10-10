@@ -1,0 +1,31 @@
+# Pilotage d'une vraie instance Compute Engine.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gcp.yml up -d
+#
+# Deux choses manquent au fichier principal pour parler à GCP, et aucune ne
+# peut y figurer sans gêner les installations qui n'utilisent pas GCP : la clé
+# du compte de service, qui est un fichier de l'hôte, et le chemin auquel le
+# conteneur la trouvera. Un montage vers un fichier absent ferait créer un
+# dossier à Docker, et l'authentification échouerait sur un message obscur —
+# d'où ce fichier séparé, à la façon de docker-compose.mail.yml.
+#
+# Avant de lancer : déposez la clé du compte de service (docs/GCP.md) et
+# indiquez son chemin dans GCP_KEY_FILE, par exemple
+#
+#   GCP_KEY_FILE=./secrets/lab-htb-free-2026-4143eca4d807.json
+#
+# Sous Windows, un chemin relatif au fichier compose évite les ennuis de
+# traduction C:/… vers le conteneur : copiez la clé dans le dépôt plutôt que
+# de la laisser dans Téléchargements. Le dossier secrets/ est ignoré par Git.
+name: labplatform
+
+services:
+  backend:
+    environment:
+      APP_MACHINE_PROVIDER: ${APP_MACHINE_PROVIDER:-gcp}
+      # Chemin *dans le conteneur*, jamais celui de l'hôte : le backend ne voit
+      # pas C:/Users/… Le montage ci-dessous l'amène toujours ici.
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-key.json
+    volumes:
+      # En lecture seule : la plateforme n'a aucune raison d'écrire une clé.
+      - ${GCP_KEY_FILE:?GCP_KEY_FILE doit indiquer le chemin de la clé du compte de service}:/run/secrets/gcp-key.json:ro
