@@ -269,6 +269,10 @@ export const fr = {
   'machines.progressHint': 'Le rang se calcule sur la part du catalogue que vous possédez.',
   'machines.vpnTitle': 'Les machines vivent derrière le VPN',
   'machines.vpnText': 'Montez le VPN ({network}) pour joindre les adresses affichées sur chaque machine.',
+  'machines.vpnMissingTitle': 'Vous n’avez pas encore de profil VPN',
+  'machines.vpnMissingText':
+    'La cible ne répond qu’à travers le tunnel : sans profil, l’adresse affichée après le démarrage ne mènera nulle part. Récupérez le vôtre, connectez-vous, puis revenez démarrer la machine.',
+  'machines.vpnGet': 'Obtenir mon profil',
   'machines.filterGroup': 'Filtrer le catalogue',
   'machines.filter.ALL': 'Toutes',
   'machines.filter.TODO': 'À faire',

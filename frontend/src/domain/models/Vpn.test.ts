@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultProtocol, isUploadedSource, type VpnAccess } from './Vpn';
+import { defaultProtocol, isUploadedSource, type VpnAccess, needsProfileBeforeStarting } from './Vpn';
 
 const base: VpnAccess = {
   enabled: true,
@@ -42,5 +42,29 @@ describe('source du profil', () => {
 
     expect(uploaded.endpoints).toHaveLength(0);
     expect(defaultProtocol(uploaded)).toBeNull();
+  });
+});
+
+describe('avertissement avant de démarrer une machine', () => {
+  it('avertit l’apprenant qui n’a jamais pris son profil', () => {
+    expect(needsProfileBeforeStarting({ ...base, issuedAt: null })).toBe(true);
+  });
+
+  it('se taît dès que le profil a été émis', () => {
+    expect(needsProfileBeforeStarting({ ...base, issuedAt: new Date('2026-10-10T09:00:00Z') })).toBe(false);
+  });
+
+  it('ne dit rien avec un profil déposé par l’administration', () => {
+    // La date est celle du dépôt, pas celle de cet apprenant : avertir
+    // accuserait à tort quelqu’un qui est déjà connecté.
+    expect(needsProfileBeforeStarting({ ...base, source: 'uploaded', issuedAt: null })).toBe(false);
+    expect(needsProfileBeforeStarting({ ...base, source: 'uploaded', issuedAt: new Date() })).toBe(false);
+  });
+
+  it('ne dit rien quand le VPN n’est pas configuré', () => {
+    // Un autre écran l’annonce déjà : deux messages pour une même absence.
+    expect(needsProfileBeforeStarting({ ...base, enabled: false, issuedAt: null })).toBe(false);
+    expect(needsProfileBeforeStarting(null)).toBe(false);
+    expect(needsProfileBeforeStarting(undefined)).toBe(false);
   });
 });

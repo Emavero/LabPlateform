@@ -32,6 +32,7 @@
   --danger: #ff5c7a;
   --danger-soft: rgba(255, 92, 122, 0.12);
   --warning: #ffb547;
+  --warning-soft: rgba(255, 181, 71, 0.12);
 
   /* Typographie */
   --font-display: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
@@ -113,6 +114,7 @@
   --danger: #d21d43;
   --danger-soft: rgba(210, 29, 67, 0.1);
   --warning: #a8620a;
+  --warning-soft: rgba(168, 98, 10, 0.1);
 
   --raise: rgba(23, 26, 40, 0.035);
   --raise-soft: rgba(23, 26, 40, 0.022);

@@ -181,6 +181,23 @@ app:
     # Nom d'instance d'une cible du catalogue qui n'en déclare pas : {slug} est
     # remplacé par l'identifiant de la machine (« obsidian » → « target-obsidian »).
     target-name: ${GCP_TARGET_NAME:target-{slug}}
+    # « shared » : une instance préexistante par machine, partagée entre les
+    # apprenants ; celui qui l'arrête l'arrête pour tous. « per-user » : une
+    # instance par apprenant, créée au démarrage et détruite à l'arrêt — le
+    # modèle de HackTheBox. En « per-user », target-name doit contenir {user},
+    # et chaque apprenant actif est une machine facturée (docs/GCP.md).
+    target-mode: ${APP_GCP_TARGET_MODE:shared}
+    # Image disque de la cible, chemin complet attendu par Compute Engine.
+    # {slug} est remplacé par l'identifiant de la machine, comme pour l'image
+    # Docker d'une cible. Obligatoire en mode « per-user ».
+    target-image: ${APP_GCP_TARGET_IMAGE:}
+    target-machine-type: ${APP_GCP_TARGET_MACHINE_TYPE:e2-small}
+    target-disk-size: ${APP_GCP_TARGET_DISK_SIZE:20}
+    target-disk-type: ${APP_GCP_TARGET_DISK_TYPE:pd-standard}
+    # Vide : le sous-réseau que le projet désigne par défaut dans la région.
+    target-subnetwork: ${APP_GCP_TARGET_SUBNETWORK:}
+    # Étiquettes réseau par lesquelles le pare-feu désigne les cibles.
+    target-tags: ${APP_GCP_TARGET_TAGS:}
     operation-timeout: ${GCP_OPERATION_TIMEOUT:60s}
 
   # Cible partagée pilotée par /api/machine : « simulated » (défaut, aucune

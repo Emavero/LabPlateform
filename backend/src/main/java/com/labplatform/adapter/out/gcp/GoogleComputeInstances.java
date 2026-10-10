@@ -1,8 +1,11 @@
 package com.labplatform.adapter.out.gcp;
 
+import com.google.cloud.compute.v1.AttachedDisk;
+import com.google.cloud.compute.v1.AttachedDiskInitializeParams;
 import com.google.cloud.compute.v1.Instance;
 import com.google.cloud.compute.v1.InstancesClient;
 import com.google.cloud.compute.v1.NetworkInterface;
+import com.google.cloud.compute.v1.Tags;
 import com.labplatform.domain.lab.MachineState;
 import com.labplatform.domain.lab.VmStatus;
 import com.labplatform.domain.shared.InvalidInputException;
@@ -10,6 +13,7 @@ import com.labplatform.domain.shared.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -42,16 +46,7 @@ public class GoogleComputeInstances implements ComputeInstances, AutoCloseable {
 
     @Override
     public MachineState describe(String instanceName) {
-        Instance instance = fetch(instanceName);
-        String raw = instance.getStatus();
-        if (!GcpStatusMapping.isKnown(raw)) {
-            log.warn("État Compute Engine inconnu pour {} : « {} », traité comme un état de passage",
-                    instanceName, raw);
-        }
-        VmStatus status = GcpStatusMapping.of(raw);
-        return status.isRunning()
-                ? MachineState.running(internalIpOf(instance, instanceName))
-                : MachineState.of(status);
+        return stateOf(fetch(instanceName), instanceName);
     }
 
     @Override
@@ -66,6 +61,98 @@ public class GoogleComputeInstances implements ComputeInstances, AutoCloseable {
         await(instanceName, "extinction", () -> client.stopAsync(settings.projectId(), settings.zone(), instanceName)
                 .get(settings.operationTimeout().toMillis(), TimeUnit.MILLISECONDS));
         return describe(instanceName);
+    }
+
+    @Override
+    public Optional<MachineState> find(String instanceName) {
+        try {
+            return Optional.of(stateOf(client.get(settings.projectId(), settings.zone(), instanceName), instanceName));
+        } catch (com.google.api.gax.rpc.NotFoundException absent) {
+            // L'instance n'existe pas encore : c'est la réponse attendue avant
+            // de créer la cible d'un apprenant, pas une panne à signaler.
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            log.error("Lecture de l'instance {} (projet {}, zone {}) impossible",
+                    instanceName, settings.projectId(), settings.zone(), e);
+            throw new InvalidInputException("L'hébergeur n'a pas répondu au sujet de « " + instanceName + " »");
+        }
+    }
+
+    @Override
+    public MachineState create(String instanceName, TargetBlueprint blueprint) {
+        Instance instance = describeFor(instanceName, blueprint);
+        await(instanceName, "création", () -> client.insertAsync(settings.projectId(), settings.zone(), instance)
+                .get(settings.operationTimeout().toMillis(), TimeUnit.MILLISECONDS));
+        return describe(instanceName);
+    }
+
+    @Override
+    public void delete(String instanceName) {
+        if (find(instanceName).isEmpty()) {
+            // Déjà détruite : l'ordre a abouti, même s'il a abouti avant nous.
+            return;
+        }
+        await(instanceName, "destruction", () ->
+                client.deleteAsync(settings.projectId(), settings.zone(), instanceName)
+                        .get(settings.operationTimeout().toMillis(), TimeUnit.MILLISECONDS));
+    }
+
+    /**
+     * Description envoyée à Compute Engine pour créer la cible.
+     * <p>
+     * Aucune {@code AccessConfig} n'est posée sur la carte réseau, et c'est
+     * volontaire : sans elle l'instance n'a pas d'adresse externe, donc elle
+     * n'est joignable que depuis le réseau du lab, par le VPN. Une cible
+     * volontairement vulnérable n'a rien à faire sur Internet.
+     */
+    private Instance describeFor(String instanceName, TargetBlueprint blueprint) {
+        AttachedDisk boot = AttachedDisk.newBuilder()
+                .setBoot(true)
+                .setAutoDelete(true)
+                .setInitializeParams(AttachedDiskInitializeParams.newBuilder()
+                        .setSourceImage(blueprint.sourceImage())
+                        .setDiskSizeGb(blueprint.diskSizeGb())
+                        .setDiskType(zonalResource("diskTypes", blueprint.diskType()))
+                        .build())
+                .build();
+
+        NetworkInterface.Builder nic = NetworkInterface.newBuilder();
+        if (!blueprint.subnetwork().isBlank()) {
+            nic.setSubnetwork(blueprint.subnetwork());
+        }
+
+        Instance.Builder builder = Instance.newBuilder()
+                .setName(instanceName)
+                .setMachineType(zonalResource("machineTypes", blueprint.machineType()))
+                .addDisks(boot)
+                .addNetworkInterfaces(nic.build())
+                // Repère les instances créées par la plateforme : un ménage
+                // manuel ou automatique doit pouvoir les distinguer des autres.
+                .putLabels("labplatform-box-target", "true");
+
+        if (!blueprint.networkTags().isEmpty()) {
+            builder.setTags(Tags.newBuilder().addAllItems(blueprint.networkTags()).build());
+        }
+        return builder.build();
+    }
+
+    /** Chemin d'une ressource de zone, tel que Compute Engine l'attend. */
+    private String zonalResource(String kind, String name) {
+        return name.startsWith("projects/") || name.startsWith("zones/")
+                ? name
+                : "zones/" + settings.zone() + "/" + kind + "/" + name;
+    }
+
+    private MachineState stateOf(Instance instance, String instanceName) {
+        String raw = instance.getStatus();
+        if (!GcpStatusMapping.isKnown(raw)) {
+            log.warn("État Compute Engine inconnu pour {} : « {} », traité comme un état de passage",
+                    instanceName, raw);
+        }
+        VmStatus status = GcpStatusMapping.of(raw);
+        return status.isRunning()
+                ? MachineState.running(internalIpOf(instance, instanceName))
+                : MachineState.of(status);
     }
 
     @Override

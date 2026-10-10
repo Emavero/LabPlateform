@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { Icon } from './Icon';
 
-type Tone = 'error' | 'success' | 'info';
+type Tone = 'error' | 'warning' | 'success' | 'info';
 
-const ICONS = { error: 'alert', success: 'check', info: 'info' } as const;
+const ICONS = { error: 'alert', warning: 'alert', success: 'check', info: 'info' } as const;
 
 interface AlertProps {
   tone?: Tone;

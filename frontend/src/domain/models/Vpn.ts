@@ -35,6 +35,25 @@ export function isUploadedSource(access: VpnAccess): boolean {
   return access.source === 'uploaded';
 }
 
+/**
+ * Faut-il avertir l'apprenant avant qu'il démarre une machine ?
+ *
+ * Une cible ne répond qu'à travers le tunnel : démarrer sans profil donne une
+ * adresse injoignable, et l'apprenant conclut à une machine en panne. On
+ * avertit sans bloquer — Hack The Box laisse aussi démarrer une machine avant
+ * d'être connecté.
+ *
+ * Vrai seulement quand l'absence est *sue*. Avec un profil par apprenant, une
+ * date d'émission absente veut dire « jamais téléchargé ». Avec le profil
+ * unique déposé par l'administration, la date est celle du dépôt et ne dit rien
+ * de cet apprenant-là : prétendre le contraire accuserait à tort quelqu'un qui
+ * est déjà connecté.
+ */
+export function needsProfileBeforeStarting(access: VpnAccess | null | undefined): boolean {
+  if (!access?.enabled) return false;
+  return access.source === 'generated' && access.issuedAt === null;
+}
+
 export interface VpnProfileDownload {
   readonly fileName: string;
   readonly content: string;

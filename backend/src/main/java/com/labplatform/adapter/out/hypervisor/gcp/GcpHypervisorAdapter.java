@@ -32,10 +32,23 @@ import java.util.List;
  * autant de machines qu'il y a d'inscrits. Brancher un vrai provisionnement
  * pour elles demandera un adaptateur de plus, pas une retouche de celui-ci.
  * <p>
- * Une instance est partagée entre les joueurs : l'identifiant de l'utilisateur
- * ne sert donc qu'à la journalisation, pas à désigner une machine. C'est une
- * limite assumée du modèle « une instance par cible », et elle est documentée
- * dans docs/GCP.md.
+ * Deux modèles, selon app.gcp.target-mode :
+ * <ul>
+ *   <li><strong>shared</strong> : une instance préexistante par machine du
+ *       catalogue, partagée entre les apprenants. L'identifiant de
+ *       l'utilisateur ne sert alors qu'à la journalisation. Simple, et gratuit
+ *       si l'instance tient dans la couche offerte, mais celui qui arrête la
+ *       cible l'arrête pour tout le monde.</li>
+ *   <li><strong>per-user</strong> : une instance par apprenant et par machine,
+ *       créée au démarrage et <em>détruite</em> à l'arrêt. C'est le modèle de
+ *       HackTheBox. La détruire plutôt que l'éteindre évite de payer le disque
+ *       d'une cible que personne n'attaque plus — mais chaque apprenant actif
+ *       est une machine facturée. Coût détaillé dans docs/GCP.md.</li>
+ * </ul>
+ * <p>
+ * La couche application ne distingue pas les deux : elle borne déjà chaque
+ * apprenant à une cible à la fois et fait expirer les instances oubliées. Tout
+ * le changement tient dans cet adaptateur.
  */
 @Component
 @ConditionalOnProperty(prefix = "app.hypervisor", name = "mode", havingValue = "gcp")
@@ -70,6 +83,58 @@ public class GcpHypervisorAdapter implements HypervisorPort {
 
     @Override
     public String powerOnTarget(Box box, Long userId) {
+        return settings.perUserTargets() ? createForLearner(box, userId) : startShared(box, userId);
+    }
+
+    @Override
+    public void powerOffTarget(Box box, Long userId) {
+        if (settings.perUserTargets()) {
+            destroyForLearner(box, userId);
+        } else {
+            stopShared(box, userId);
+        }
+    }
+
+    /**
+     * Crée la cible de cet apprenant, à lui seul.
+     * <p>
+     * Une instance retrouvée en marche est rendue telle quelle : c'est la même
+     * demande servie deux fois — un rafraîchissement, un double clic — et la
+     * détruire pour la recréer ferait perdre à l'apprenant le travail en cours.
+     */
+    private String createForLearner(Box box, Long userId) {
+        String instance = settings.targetInstanceName(box.getSlug(), userId);
+        MachineState existing = instances.find(instance).orElse(null);
+        if (existing != null && existing.status().isTransitional()) {
+            throw new ConflictException("La machine change d'état, attendez la fin de l'opération en cours");
+        }
+
+        MachineState ready;
+        if (existing == null) {
+            ready = instances.create(instance, settings.blueprintFor(box.getSlug()));
+            log.info("Cible {} créée pour l'utilisateur {} sur l'instance {} : {}",
+                    box.getSlug(), userId, instance, ready.status());
+        } else if (existing.status().isRunning()) {
+            ready = existing;
+        } else {
+            // Elle existe mais elle est éteinte : un arrêt précédent n'a pas pu
+            // la détruire. L'allumer coûte moins qu'une recréation.
+            ready = instances.start(instance);
+            log.info("Cible {} rallumée pour l'utilisateur {} sur l'instance {} : {}",
+                    box.getSlug(), userId, instance, ready.status());
+        }
+        return ready.address().orElseThrow(() -> new ConflictException(
+                "La machine démarre, son adresse sera disponible dans quelques instants"));
+    }
+
+    /** Détruit la cible de cet apprenant : plus de disque, donc plus de facture. */
+    private void destroyForLearner(Box box, Long userId) {
+        String instance = settings.targetInstanceName(box.getSlug(), userId);
+        instances.delete(instance);
+        log.info("Cible {} détruite pour l'utilisateur {} (instance {})", box.getSlug(), userId, instance);
+    }
+
+    private String startShared(Box box, Long userId) {
         String instance = settings.targetInstanceName(box.getSlug());
         MachineState state = instances.describe(instance);
         if (state.status().isTransitional()) {
@@ -85,8 +150,7 @@ public class GcpHypervisorAdapter implements HypervisorPort {
                 "La machine démarre, son adresse sera disponible dans quelques instants"));
     }
 
-    @Override
-    public void powerOffTarget(Box box, Long userId) {
+    private void stopShared(Box box, Long userId) {
         String instance = settings.targetInstanceName(box.getSlug());
         MachineState state = instances.describe(instance);
         if (state.status().isStopped() || state.status().isTransitional()) {

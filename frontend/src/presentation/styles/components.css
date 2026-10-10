@@ -465,6 +465,18 @@
   color: var(--running);
 }
 
+/* Ni erreur ni simple information : ce qui n'empêche pas d'avancer mais coûtera
+   cher plus loin. Même structure que les trois tons voisins. */
+.alert--warning {
+  border-color: rgba(255, 181, 71, 0.4);
+  background: var(--warning-soft);
+}
+
+.alert--warning .alert__icon,
+.alert--warning .alert__title {
+  color: var(--warning);
+}
+
 .alert--info {
   border-color: rgba(76, 141, 255, 0.4);
   background: rgba(76, 141, 255, 0.1);

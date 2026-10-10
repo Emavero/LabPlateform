@@ -205,6 +205,14 @@ distincts, et c'est bien ainsi qu'ils sont séparés dans cyberMans --- page
         attaquent la même DVWA : ils se marchent sur les pieds, et celui qui
         clique sur « Arrêter » éteint la machine de tout le monde. Acceptable
         pour une démonstration ou un lab d'équipe, pas pour une promotion.
+
+        La plateforme sait désormais faire autrement : avec
+        \texttt{APP\_GCP\_TARGET\_MODE=per-user}, elle \emph{crée} une
+        instance par apprenant au démarrage et la \emph{détruit} à l'arrêt,
+        comme HackTheBox. Ce lab-ci ne l'emploie pas, et pour une seule
+        raison : chaque apprenant actif devient une machine facturée, ce qui
+        sort de la couche gratuite dès le second. Le compromis est détaillé
+        dans \texttt{docs/GCP.md}.
   \item[\textbf{Le profil est collectif}] Chez HackTheBox le pack est
         personnel. Ici un seul fichier circule : on ne peut pas révoquer un
         apprenant sans redéposer un profil et le redistribuer à tous

@@ -3,6 +3,7 @@ package com.labplatform.config;
 import com.google.cloud.compute.v1.InstancesClient;
 import com.labplatform.adapter.out.gcp.ComputeInstances;
 import com.labplatform.adapter.out.gcp.GcpSettings;
+import com.labplatform.adapter.out.gcp.TargetBlueprint;
 import com.labplatform.adapter.out.gcp.GoogleComputeInstances;
 import com.labplatform.adapter.out.machine.CloudInstanceAdapter;
 import com.labplatform.adapter.out.machine.SimulatedComputeInstances;
@@ -34,8 +35,15 @@ public class GcpConfig {
     @ConditionalOnGcp
     public GcpSettings gcpSettings(AppProperties properties) {
         AppProperties.Gcp gcp = properties.getGcp();
+        // Le gabarit de création n'est construit qu'en mode « per-user » : en
+        // mode partagé rien n'est créé, et exiger une image source serait
+        // réclamer une configuration que personne n'utiliserait.
+        TargetBlueprint blueprint = gcp.isPerUserTargets()
+                ? new TargetBlueprint(gcp.getTargetMachineType(), gcp.getTargetImage(), gcp.getTargetDiskSize(),
+                        gcp.getTargetDiskType(), gcp.getTargetSubnetwork(), gcp.getTargetTags())
+                : null;
         return new GcpSettings(gcp.getProjectId(), gcp.getZone(), gcp.getInstanceName(), gcp.getTargetName(),
-                gcp.getOperationTimeout());
+                gcp.getOperationTimeout(), gcp.isPerUserTargets(), blueprint);
     }
 
     /**
@@ -74,7 +82,8 @@ public class GcpConfig {
     public CloudInstancePort simulatedCloudInstance(AppProperties properties, Clock clock) {
         AppProperties.Hypervisor hypervisor = properties.getHypervisor();
         ComputeInstances instances = new SimulatedComputeInstances(clock, hypervisor.getSimulatedBootDelay(),
-                hypervisor.getSimulatedShutdownDelay(), properties.getMachine().getSimulatedAddress());
+                hypervisor.getSimulatedShutdownDelay(), properties.getMachine().getSimulatedAddress(),
+                properties.getGcp().getInstanceName());
         return new CloudInstanceAdapter(instances, properties.getGcp().getInstanceName(),
                 properties.getMachine().getAddress());
     }

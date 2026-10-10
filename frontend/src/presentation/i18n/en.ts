@@ -260,6 +260,10 @@ export const en: Record<keyof typeof fr, string> = {
   'machines.progressHint': 'Your rank comes from the share of the catalogue you own.',
   'machines.vpnTitle': 'Machines live behind the VPN',
   'machines.vpnText': 'Bring up the VPN ({network}) to reach the addresses shown on each machine.',
+  'machines.vpnMissingTitle': 'You have no VPN profile yet',
+  'machines.vpnMissingText':
+    'A target only answers through the tunnel: without a profile, the address shown after starting leads nowhere. Fetch yours, connect, then come back and start the machine.',
+  'machines.vpnGet': 'Get my profile',
   'machines.filterGroup': 'Filter the catalogue',
   'machines.filter.ALL': 'All',
   'machines.filter.TODO': 'To do',

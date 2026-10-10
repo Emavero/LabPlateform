@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { BoxFilter } from '@/domain/models/Box';
+import { needsProfileBeforeStarting } from '@/domain/models/Vpn';
 import { Alert, Button, Icon, Panel, Spinner } from '../design-system';
 import { BoxCard } from '../features/box/BoxCard';
 import { ProgressPanel } from '../features/box/ProgressPanel';
@@ -28,6 +29,7 @@ export function MachinesPage() {
   const lab = useLab();
   const { progress } = useProgress();
   const vpn = useVpnAccess();
+  const profileMissing = needsProfileBeforeStarting(vpn.access);
 
   return (
     <div className="page">
@@ -62,15 +64,17 @@ export function MachinesPage() {
 
       {vpn.access?.enabled && (
         <Alert
-          tone="info"
-          title={t('machines.vpnTitle')}
+          tone={profileMissing ? 'warning' : 'info'}
+          title={t(profileMissing ? 'machines.vpnMissingTitle' : 'machines.vpnTitle')}
           action={
             <Link className="btn btn--ghost btn--sm" to="/vpn">
-              {t('nav.vpn')}
+              {t(profileMissing ? 'machines.vpnGet' : 'nav.vpn')}
             </Link>
           }
         >
-          {t('machines.vpnText', { network: vpn.access.labNetwork })}
+          {t(profileMissing ? 'machines.vpnMissingText' : 'machines.vpnText', {
+            network: vpn.access.labNetwork,
+          })}
         </Alert>
       )}
 

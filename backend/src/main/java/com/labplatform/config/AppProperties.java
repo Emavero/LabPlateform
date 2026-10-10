@@ -509,9 +509,38 @@ public class AppProperties {
         private String projectId = "";
         private String zone = "europe-west1-b";
         private String instanceName = "";
-        /** Gabarit du nom d'instance d'une cible du catalogue ; {slug} est remplacé. */
+        /**
+         * Gabarit du nom d'instance d'une cible du catalogue. {slug} est
+         * remplacé par l'identifiant de la machine, {user} par celui de
+         * l'apprenant. En mode « per-user », {user} est obligatoire.
+         */
         private String targetName = "{slug}";
         private Duration operationTimeout = Duration.ofSeconds(60);
+        /**
+         * « shared » : une instance préexistante par machine, partagée entre
+         * les apprenants. « per-user » : une instance par apprenant, créée au
+         * démarrage et détruite à l'arrêt — le modèle de HackTheBox, où chaque
+         * apprenant actif est une machine facturée.
+         */
+        private String targetMode = "shared";
+        /**
+         * Image disque de la cible, chemin complet attendu par Compute Engine ;
+         * {slug} est remplacé par l'identifiant de la machine. Même procédé que
+         * l'image Docker d'une cible.
+         */
+        private String targetImage = "";
+        private String targetMachineType = "e2-small";
+        private int targetDiskSize = 20;
+        private String targetDiskType = "pd-standard";
+        /** Sous-réseau de la cible ; vide pour celui du projet dans la région. */
+        private String targetSubnetwork = "";
+        /** Étiquettes réseau, par lesquelles le pare-feu désigne les cibles. */
+        private List<String> targetTags = new ArrayList<>();
+
+        /** Vrai quand chaque apprenant obtient sa propre instance. */
+        public boolean isPerUserTargets() {
+            return "per-user".equalsIgnoreCase(targetMode.trim());
+        }
 
         public String getProjectId() {
             return projectId;
@@ -551,6 +580,62 @@ public class AppProperties {
 
         public void setOperationTimeout(Duration operationTimeout) {
             this.operationTimeout = operationTimeout;
+        }
+
+        public String getTargetMode() {
+            return targetMode;
+        }
+
+        public void setTargetMode(String targetMode) {
+            this.targetMode = targetMode;
+        }
+
+        public String getTargetImage() {
+            return targetImage;
+        }
+
+        public void setTargetImage(String targetImage) {
+            this.targetImage = targetImage;
+        }
+
+        public String getTargetMachineType() {
+            return targetMachineType;
+        }
+
+        public void setTargetMachineType(String targetMachineType) {
+            this.targetMachineType = targetMachineType;
+        }
+
+        public int getTargetDiskSize() {
+            return targetDiskSize;
+        }
+
+        public void setTargetDiskSize(int targetDiskSize) {
+            this.targetDiskSize = targetDiskSize;
+        }
+
+        public String getTargetDiskType() {
+            return targetDiskType;
+        }
+
+        public void setTargetDiskType(String targetDiskType) {
+            this.targetDiskType = targetDiskType;
+        }
+
+        public String getTargetSubnetwork() {
+            return targetSubnetwork;
+        }
+
+        public void setTargetSubnetwork(String targetSubnetwork) {
+            this.targetSubnetwork = targetSubnetwork;
+        }
+
+        public List<String> getTargetTags() {
+            return targetTags;
+        }
+
+        public void setTargetTags(List<String> targetTags) {
+            this.targetTags = targetTags;
         }
     }
 

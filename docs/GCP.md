@@ -86,14 +86,69 @@ C'est le même procédé que pour l'image Docker d'une cible — quelle instance
 héberge quelle machine est un détail de déploiement, pas une donnée du
 catalogue.
 
-Deux limites à connaître :
+Deux modèles, selon `APP_GCP_TARGET_MODE`.
 
-- **Une instance est partagée.** Si deux joueurs démarrent la même cible, ils
+### `shared` (défaut) : une instance par machine
+
+L'instance préexiste, vous la créez une fois, la plateforme ne fait que
+l'allumer et l'éteindre.
+
+- **Elle est partagée.** Si deux joueurs démarrent la même cible, ils
   travaillent sur la même machine, et le second à l'arrêter l'éteint pour les
-  deux. C'est acceptable pour un lab d'équipe, pas pour une plateforme ouverte.
-- **Les machines d'attaque restent simulées.** Elles sont personnelles — une par
-  joueur, créée à la demande — alors qu'une instance Compute Engine préexiste.
-  Les provisionner pour de bon demandera un adaptateur de plus.
+  deux. Acceptable pour un lab d'équipe ou une démonstration, pas pour une
+  promotion.
+- **Elle peut être gratuite**, si l'instance tient dans la couche offerte.
+
+### `per-user` : une instance par apprenant
+
+C'est le modèle de Hack The Box. La plateforme **crée** l'instance quand
+l'apprenant clique sur « Démarrer » et la **détruit** quand il l'arrête. Chacun
+a sa cible : ce que l'un casse ne dérange personne, et personne n'éteint la
+machine d'un autre.
+
+```bash
+APP_GCP_TARGET_MODE=per-user
+# {user} est obligatoire : sans lui, tous les apprenants viseraient le même nom.
+# La plateforme refuse de démarrer si vous l'oubliez.
+GCP_TARGET_NAME=target-{slug}-{user}
+# Image de la cible, préparée par vous. {slug} est remplacé par l'identifiant
+# de la machine : « sentinel » cherche l'image box-sentinel.
+APP_GCP_TARGET_IMAGE=projects/mon-projet/global/images/box-{slug}
+APP_GCP_TARGET_MACHINE_TYPE=e2-small
+APP_GCP_TARGET_DISK_SIZE=20
+APP_GCP_TARGET_TAGS=lab-target
+```
+
+> **Le coût.** Chaque apprenant actif est une machine facturée. Cela **sort de
+> la couche gratuite** dès le deuxième apprenant. Trois garde-fous existent,
+> mais ce sont des garde-fous, pas une gratuité :
+> - un apprenant ne peut avoir **qu'une cible à la fois** (la couche
+>   application le refuse) ;
+> - une cible oubliée **expire** au bout de `APP_BOXES_INSTANCE_LIFETIME`
+>   (2 h par défaut) et est détruite ;
+> - l'arrêt **détruit** l'instance au lieu de l'éteindre, donc son disque
+>   cesse d'être facturé. Une instance seulement éteinte continue de coûter.
+>
+> Il n'y a **pas** de plafond global du nombre d'instances : trente apprenants
+> connectés en même temps, c'est trente machines. Surveillez votre budget GCP,
+> et posez une alerte de facturation avant d'ouvrir à une promotion.
+
+La cible créée **n'a pas d'adresse externe**, et ce n'est pas un réglage :
+l'adaptateur ne pose aucune `AccessConfig` sur sa carte réseau, et il n'y a pas
+de variable pour en ajouter. Une machine volontairement vulnérable n'a rien à
+faire sur Internet ; on ne la joint qu'en entrant dans le réseau du lab par le
+VPN. Prévoyez donc une règle de pare-feu qui autorise la passerelle VPN à
+atteindre les cibles, désignées par `APP_GCP_TARGET_TAGS`.
+
+### Dans les deux modèles
+
+**Les machines d'attaque restent simulées.** Elles sont personnelles — une par
+joueur, créée à la demande — alors qu'une instance Compute Engine préexiste.
+Les provisionner pour de bon demandera un adaptateur de plus.
+
+Le compte de service a besoin de `roles/compute.instanceAdmin.v1` dans les deux
+cas : en `per-user`, ce rôle couvre aussi la création et la suppression
+d'instances.
 
 ## 5. Le VPN : sans lui, l'adresse ne mène nulle part
 

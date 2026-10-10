@@ -1,6 +1,7 @@
 package com.labplatform.adapter.out.machine;
 
 import com.labplatform.adapter.out.gcp.ComputeInstances;
+import com.labplatform.adapter.out.gcp.TargetBlueprint;
 import com.labplatform.domain.lab.MachineState;
 import com.labplatform.domain.lab.VmStatus;
 import com.labplatform.domain.shared.ConflictException;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,6 +57,26 @@ class CloudInstanceAdapterTest {
             orders.add("stop " + instanceName);
             state = MachineState.of(VmStatus.STOPPING);
             return state;
+        }
+
+        @Override
+        public Optional<MachineState> find(String instanceName) {
+            return Optional.of(state);
+        }
+
+        /*
+         * La cible unique est provisionnée par l'exploitant : l'adaptateur ne
+         * doit jamais la créer ni la détruire. Un appel ici serait une
+         * régression, pas un cas à absorber discrètement.
+         */
+        @Override
+        public MachineState create(String instanceName, TargetBlueprint blueprint) {
+            throw new UnsupportedOperationException("La cible unique ne se crée pas depuis la plateforme");
+        }
+
+        @Override
+        public void delete(String instanceName) {
+            throw new UnsupportedOperationException("La cible unique ne se détruit pas depuis la plateforme");
         }
     }
 
