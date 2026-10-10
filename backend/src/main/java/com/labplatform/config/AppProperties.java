@@ -557,6 +557,13 @@ public class AppProperties {
     /** Cible partagée pilotée par /api/machine : « simulated » ou « gcp ». */
     public static class Machine {
         private String provider = "simulated";
+        /**
+         * Adresse montrée à l'apprenant, en remplacement de celle que
+         * l'hébergeur rapporte. À renseigner quand la machine se joint par une
+         * adresse de tunnel et non par celle de sa carte réseau — typiquement
+         * 10.8.0.1 lorsque la passerelle VPN et la cible sont la même machine.
+         */
+        private String address = "";
         /** Adresse interne annoncée par la cible simulée. */
         private String simulatedAddress = "10.10.10.10";
 
@@ -566,6 +573,14 @@ public class AppProperties {
 
         public void setProvider(String provider) {
             this.provider = provider;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
         }
 
         public String getSimulatedAddress() {

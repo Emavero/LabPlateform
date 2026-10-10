@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,7 +30,7 @@ class CloudInstanceAdapterTest {
     private static final Instant NOW = Instant.parse("2026-10-03T09:00:00Z");
 
     /** Instance dont on fixe l'état, et qui note les ordres reçus. */
-    private static final class FakeInstances implements ComputeInstances {
+    private static class FakeInstances implements ComputeInstances {
         private MachineState state;
         private final List<String> orders = new ArrayList<>();
 
@@ -114,6 +115,54 @@ class CloudInstanceAdapterTest {
     }
 
     // ------------------------------------------------------- Cible simulée
+
+    // --------------------------------- Adresse annoncée à la place de celle du VPC
+
+    @Test
+    void theOperatorCanAdvertiseTheTunnelAddressInsteadOfTheProviderOne() {
+        // Compute Engine rend l'adresse de la carte réseau dans le VPC. Quand la
+        // passerelle VPN et la cible sont la même machine, l'apprenant joint
+        // 10.8.0.1 et rien d'autre : montrer 10.128.0.2 donnerait une adresse
+        // qui ne répond pas, et un bouton qui semble pourtant marcher.
+        FakeInstances instances = new FakeInstances(MachineState.running("10.128.0.2"));
+
+        CloudInstanceAdapter adapter = new CloudInstanceAdapter(instances, NAME, "10.8.0.1");
+
+        assertEquals("10.8.0.1", adapter.state().internalIp());
+    }
+
+    @Test
+    void withoutAnAdvertisedAddressTheProviderOneIsKept() {
+        FakeInstances instances = new FakeInstances(MachineState.running("10.128.0.2"));
+
+        assertEquals("10.128.0.2", new CloudInstanceAdapter(instances, NAME).state().internalIp());
+        assertEquals("10.128.0.2", new CloudInstanceAdapter(instances, NAME, "   ").state().internalIp());
+    }
+
+    @Test
+    void anAdvertisedAddressNeverInventsOneForAMachineThatIsNotRunning() {
+        // Un état de passage n'a pas d'adresse : en poser une ferait croire
+        // qu'on peut déjà s'y connecter.
+        FakeInstances instances = new FakeInstances(MachineState.of(VmStatus.STAGING));
+
+        MachineState state = new CloudInstanceAdapter(instances, NAME, "10.8.0.1").state();
+
+        assertEquals(VmStatus.STAGING, state.status());
+        assertNull(state.internalIp());
+    }
+
+    @Test
+    void theAdvertisedAddressAlsoAppliesRightAfterAnOrder() {
+        FakeInstances instances = new FakeInstances(MachineState.of(VmStatus.TERMINATED)) {
+            @Override
+            public MachineState start(String instanceName) {
+                super.start(instanceName);
+                return MachineState.running("10.128.0.2");
+            }
+        };
+
+        assertEquals("10.8.0.1", new CloudInstanceAdapter(instances, NAME, "10.8.0.1").start().internalIp());
+    }
 
     @Test
     void theSimulatedTargetReallyGoesThroughItsTransitions() {

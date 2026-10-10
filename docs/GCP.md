@@ -65,6 +65,7 @@ Deux variables facultatives :
 |---|---|---|
 | `GCP_OPERATION_TIMEOUT` | `60s` | Au-delà, un démarrage rend la main avec un message plutôt que de bloquer |
 | `GCP_TARGET_NAME` | `target-{slug}` | Nom d'instance d'une machine du catalogue ; `{slug}` est remplacé par son identifiant |
+| `APP_MACHINE_ADDRESS` | *(vide)* | Adresse montrée à l'apprenant, en remplacement de celle que Compute Engine rapporte (§5) |
 
 Rien n'est codé en dur, et aucun de ces paramètres n'atteint le navigateur : le
 client ne reçoit qu'un état et une adresse interne.
@@ -123,6 +124,30 @@ Il faut aussi que la passerelle OpenVPN puisse atteindre le réseau GCP : par un
 tunnel site à site, par un VPN Cloud, ou en plaçant la passerelle elle-même dans
 le VPC. Router une plage dans un profil client ne crée pas la route réseau qui
 manque en amont.
+
+### Quand la passerelle et la cible sont la même machine
+
+Le montage le plus simple — et le seul qui tienne dans une VM gratuite — place
+le serveur OpenVPN **sur la cible elle-même**. L'apprenant ne joint alors pas
+l'adresse du VPC : il joint l'extrémité du tunnel, `10.8.0.1`. Compute Engine,
+lui, continue de rapporter l'adresse de la carte réseau (`10.128.0.2`).
+
+Sans réglage, le bouton afficherait `10.128.0.2`, que le tunnel ne route pas :
+rien ne répondrait, et la machine passerait pour en panne alors qu'elle tourne.
+D'où :
+
+```bash
+APP_MACHINE_ADDRESS=10.8.0.1
+APP_VPN_LAB_NETWORK=10.8.0.0/24
+```
+
+L'adresse n'est substituée que pour une machine **en marche** : un état de
+passage n'en porte pas, et en inventer une ferait croire qu'on peut déjà s'y
+connecter. Laissée vide, la variable ne change rien et l'adresse de l'hébergeur
+est conservée.
+
+Marche à suivre complète de ce montage, de la création du projet au clic de
+l'apprenant : `docs/lab/lab-gcp-htb.tex`.
 
 ## 6. Vérifier
 

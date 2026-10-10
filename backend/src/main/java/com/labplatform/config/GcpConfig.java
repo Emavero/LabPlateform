@@ -56,8 +56,9 @@ public class GcpConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "app.machine", name = "provider", havingValue = "gcp")
-    public CloudInstancePort gcpCloudInstance(ComputeInstances instances, GcpSettings settings) {
-        return new CloudInstanceAdapter(instances, settings.instanceName());
+    public CloudInstancePort gcpCloudInstance(ComputeInstances instances, GcpSettings settings,
+                                              AppProperties properties) {
+        return new CloudInstanceAdapter(instances, settings.instanceName(), properties.getMachine().getAddress());
     }
 
     /**
@@ -74,6 +75,7 @@ public class GcpConfig {
         AppProperties.Hypervisor hypervisor = properties.getHypervisor();
         ComputeInstances instances = new SimulatedComputeInstances(clock, hypervisor.getSimulatedBootDelay(),
                 hypervisor.getSimulatedShutdownDelay(), properties.getMachine().getSimulatedAddress());
-        return new CloudInstanceAdapter(instances, properties.getGcp().getInstanceName());
+        return new CloudInstanceAdapter(instances, properties.getGcp().getInstanceName(),
+                properties.getMachine().getAddress());
     }
 }

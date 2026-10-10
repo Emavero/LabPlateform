@@ -187,6 +187,12 @@ app:
   # dépendance) ou « gcp ».
   machine:
     provider: ${APP_MACHINE_PROVIDER:simulated}
+    # Adresse montrée à l'apprenant, en remplacement de celle que l'hébergeur
+    # rapporte. Compute Engine rend l'adresse de la carte réseau dans le VPC
+    # (10.128.0.2) ; si la passerelle VPN et la cible sont la même machine,
+    # c'est 10.8.0.1 que le tunnel route, et elle seule qui répond. Vide : on
+    # garde celle de l'hébergeur.
+    address: ${APP_MACHINE_ADDRESS:}
     simulated-address: ${APP_MACHINE_SIMULATED_ADDRESS:10.10.10.10}
 
   hypervisor:
