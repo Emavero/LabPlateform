@@ -135,40 +135,95 @@ fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
 \subsection{Le modèle HackTheBox, et ce qu'on en reprend}
 \label{sec:htb}
 
-Le mécanisme décrit par la documentation d'accès aux labs de HackTheBox
-(\emph{Introduction to Lab Access}, \texttt{help.hackthebox.com/en/articles/}
-\texttt{5185687-introduction-to-lab-access}) tient en trois gestes : on
-télécharge un fichier \texttt{.ovpn} depuis la page d'accès, on monte le
-tunnel, et seulement alors la machine cible répond --- à une adresse privée,
-jamais exposée sur Internet. La machine elle-même se démarre et s'arrête
-depuis la page du challenge, et son adresse n'est affichée qu'une fois
-l'instance en marche.
+La documentation d'accès aux labs de HackTheBox (\emph{Introduction to Lab
+Access}, \texttt{help.hackthebox.com/en/articles/}
+\texttt{5185687-introduction-to-lab-access}) commence par écarter une
+confusion qui vaut d'être reprise telle quelle devant une promotion : son VPN
+n'est pas un VPN de confidentialité. Un VPN personnel chiffre le trafic et le
+fait ressortir ailleurs, pour masquer une activité ou une localisation. Celui
+de HackTheBox est de l'autre famille, celle des VPN d'entreprise : il sert à
+\textbf{entrer} dans un réseau interne depuis Internet, comme un salarié à
+distance atteint les ressources de son employeur.
 
-Le lab ci-dessous reprend ces trois gestes, chacun à l'endroit correspondant
-de cyberMans :
+De là découle la phrase qui résume tout le mécanisme : le profil
+« \emph{vous placera dans le même sous-réseau IP que les machines
+vulnérables, vous permettant de les contacter (et de les attaquer)} ». Rien
+d'autre n'ouvre la porte : pas de redirection de port, pas d'adresse publique
+sur la cible. Le tunnel \emph{est} l'accès.
 
-\begin{itemize}
-    \item \textbf{La page d'accès} devient la page VPN de la plateforme. Chez
-          HackTheBox le \texttt{.ovpn} est engendré par utilisateur ; ici
-          l'administrateur en dépose un seul (§\ref{sec:depot}), le même pour tous.
-    \item \textbf{Le choix du serveur VPN} disparaît : il n'y a qu'une
-          passerelle, celle de la VM, donc un seul profil.
-    \item \textbf{Le bouton de démarrage} devient \texttt{POST /api/machine/start},
-          et l'extinction \texttt{POST /api/machine/stop}. L'état est relu par
-          \texttt{GET /api/machine/status}, qui rend aussi l'adresse de la
-          cible quand elle tourne (§\ref{sec:env}).
-\end{itemize}
-
-Deux écarts assumés, qui tiennent au choix d'une seule VM gratuite :
+Ce que l'article décrit ensuite, ce sont les réglages du téléchargement :
 
 \begin{itemize}
-    \item \textbf{La cible est partagée.} Chez HackTheBox chaque joueur reçoit
-          son instance ; ici tous les apprenants attaquent la même DVWA, et
-          celui qui l'éteint l'éteint pour tout le monde.
-    \item \textbf{La passerelle et la cible sont la même machine} (§\ref{sec:ip-pourquoi}). Chez
-          HackTheBox elles sont distinctes ; ici l'adresse de la cible est
-          celle du serveur VPN lui-même, \texttt{10.8.0.1}.
+    \item un bouton \textbf{Connecter à HTB}, présent sur toutes les vues du
+          tableau de bord, à côté de l'avatar ;
+    \item le \textbf{type de contenu} visé (Machines, Starting Point,
+          Fortresses, Pro Labs, Seasonal, Release Arena) ;
+    \item le \textbf{niveau} d'accès (gratuit ou VIP+) et la \textbf{région}
+          (Europe, États-Unis, Australie, Singapour) ;
+    \item le \textbf{serveur} précis, choisi à la main --- et non attribué au
+          hasard, pour que des coéquipiers puissent se retrouver sur le même ;
+    \item le \textbf{protocole}, TCP ou UDP ;
+    \item le bouton de \textbf{téléchargement} du pack \texttt{.ovpn} ;
+    \item la \textbf{régénération}, obtenue en basculant d'un serveur à
+          l'autre quand le fichier est mal formé.
 \end{itemize}
+
+\attention{L'article ne parle \textbf{pas} du démarrage des machines : il ne
+traite que de l'accès au réseau. Le bouton qui allume une cible vit sur la
+page de la machine, ailleurs dans l'interface. Ce sont deux mécanismes
+distincts, et c'est bien ainsi qu'ils sont séparés dans cyberMans --- page
+\textbf{Accès VPN} d'un côté, page \textbf{Machines} de l'autre.}
+
+\subsubsection*{Où chaque geste se retrouve dans cyberMans}
+
+\begin{description}[leftmargin=0cm, style=nextline]
+  \item[\textbf{Le téléchargement du profil}] C'est la page \textbf{Accès
+        VPN}. En mode \texttt{generated}, la plateforme reprend presque à
+        l'identique les menus de HackTheBox : choix du protocole --- avec les
+        mêmes indications, « plus rapide » pour UDP, « si votre réseau bloque
+        l'UDP » pour TCP --- et régénération du profil en un clic. Le présent
+        lab utilise l'autre mode, \texttt{uploaded} (§\ref{sec:depot}) :
+        l'administrateur dépose un seul fichier, le même pour tous, et ces deux
+        réglages disparaissent de l'écran puisqu'il n'y a plus rien à choisir
+        ni à réémettre.
+  \item[\textbf{Le choix du serveur et de la région}] Sans objet : il n'y a
+        qu'une passerelle, celle de la VM.
+  \item[\textbf{Le démarrage de la cible}] Page \textbf{Machines} :
+        \texttt{POST /api/machine/start}, \texttt{POST /api/machine/stop}, et
+        \texttt{GET /api/machine/status} qui rend l'état et, quand la machine
+        tourne, son adresse (§\ref{sec:env}).
+\end{description}
+
+\subsubsection*{Trois écarts, et ce qu'ils coûtent}
+
+\begin{description}[leftmargin=0cm, style=nextline]
+  \item[\textbf{La cible est partagée}] C'est l'écart le plus lourd, et il
+        vaut la peine de noter que HackTheBox l'a lui-même jugé intenable :
+        depuis le 15 janvier 2026, les comptes gratuits et VIP reçoivent une
+        \emph{instance dédiée} par machine, précisément pour que « personne
+        n'attaque la même machine que vous ». Ici, tous les apprenants
+        attaquent la même DVWA : ils se marchent sur les pieds, et celui qui
+        clique sur « Arrêter » éteint la machine de tout le monde. Acceptable
+        pour une démonstration ou un lab d'équipe, pas pour une promotion.
+  \item[\textbf{Le profil est collectif}] Chez HackTheBox le pack est
+        personnel. Ici un seul fichier circule : on ne peut pas révoquer un
+        apprenant sans redéposer un profil et le redistribuer à tous
+        (\texttt{docs/VPN.md}). Le mode \texttt{generated} rend cette
+        révocation individuelle, au prix d'une infrastructure de certificats.
+  \item[\textbf{La passerelle et la cible sont la même machine}]
+        (§\ref{sec:ip-pourquoi}) Chez HackTheBox elles sont distinctes ; ici
+        l'adresse de la cible est celle du serveur VPN lui-même,
+        \texttt{10.8.0.1}. C'est ce qui rend
+        \texttt{APP\_MACHINE\_ADDRESS} nécessaire (§\ref{sec:env}).
+\end{description}
+
+\attention{Le profil déposé ici est en \textbf{UDP 1194} seulement. HackTheBox
+propose TCP pour les réseaux qui perdent des paquets ou qui filtrent l'UDP ---
+cas courant sur un Wi-Fi d'entreprise ou d'école. Un apprenant dans ce cas ne
+montera pas le tunnel, et aucun message de la plateforme ne le lui dira. Si la
+promotion est sur un réseau filtré, relancez le script d'installation
+(§\ref{sec:openvpn-install}) en choisissant TCP, et déposez ce second profil à
+la place.}
 
 \section{Architecture}
 \label{sec:archi}
@@ -493,6 +548,32 @@ ping 10.8.0.1
 
 \screenshotplaceholder{cmd.exe : \texttt{ping 10.8.0.1} réussi}
 
+\attention{Le tunnel doit \textbf{rester ouvert} pendant toute la session.
+Fermer OpenVPN GUI --- ou, sous Linux, la fenêtre où tourne \texttt{openvpn} ---
+tue le processus et coupe l'accès au lab sur-le-champ. L'icône dans la zone de
+notification doit rester verte.}
+
+\attention{\textbf{Un seul VPN à la fois.} Si l'apprenant a déjà un VPN
+personnel actif (celui de son école, un service de confidentialité), les deux
+jeux de routes entrent en conflit et le tunnel du lab monte sans rien joindre.
+C'est le même piège que signale HackTheBox entre son VPN et son Pwnbox. Il faut
+couper l'autre avant de se connecter.}
+
+\subsection{Depuis Linux (Kali, Parrot)}
+\label{sec:linux-client}
+
+Le profil est le même ; seul le lancement change. Dans un terminal :
+
+\begin{lstlisting}[style=terminal]
+sudo openvpn lab-htb.ovpn
+\end{lstlisting}
+
+Attendre la ligne \texttt{Initialization Sequence Completed}, puis
+\textbf{laisser ce terminal ouvert} et en ouvrir un second pour travailler.
+C'est la marche à suivre que décrit la documentation de HackTheBox, et
+\texttt{sudo} y est indispensable pour la même raison qu'« administrateur »
+sous Windows : sans lui, la route vers \texttt{10.8.0.0/24} n'est pas posée.
+
 \section{Attaque de DVWA}
 \label{sec:attaque}
 
@@ -722,9 +803,18 @@ Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
         la plateforme pilote la VM.
   \item[\textmd{La plateforme affiche \texttt{10.128.0.2}}]
         \texttt{APP\_MACHINE\_ADDRESS} n'est pas renseigné (§\ref{sec:env}).
-  \item[\textmd{La plateforme répond 401 ou « CORS »}]
-        \texttt{APP\_CORS\_ALLOWED\_ORIGINS} ne correspond pas à l'URL ngrok en
-        cours (§\ref{sec:ngrok}).
+  \item[\textmd{Déconnecté à chaque ouverture de l'URL ngrok}]
+        L'URL a changé depuis la dernière session : le cookie était posé pour
+        l'ancien nom d'hôte et n'est plus envoyé. Il faut se reconnecter, et
+        remettre \texttt{APP\_PUBLIC\_URL} à jour (§\ref{sec:ngrok}). Un
+        domaine statique supprime le problème.
+  \item[\textmd{Pas de \texttt{Initialization Sequence Completed}, et le réseau filtre}]
+        Le profil est en UDP 1194. Beaucoup de réseaux d'école ou d'entreprise
+        ne laissent passer que TCP 443. Regénérer un profil TCP
+        (§\ref{sec:openvpn-install}) et le redéposer (§\ref{sec:depot}).
+  \item[\textmd{Tunnel « connecté », mais plus rien ne répond --- même Internet}]
+        Deux VPN actifs en même temps. Couper l'autre
+        (§\ref{sec:windows}).
   \item[\textmd{« Machine introuvable chez l'hébergeur »}]
         Nom, zone ou projet erroné, ou le compte de service n'a pas le rôle
         \texttt{compute.instanceAdmin.v1} (§\ref{sec:sa}).
@@ -747,7 +837,8 @@ Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
     \item \texttt{.ovpn} déposé dans la plateforme, téléchargeable par les apprenants
     \item Bouton « Démarrer / Arrêter » qui pilote réellement la VM
     \item Adresse \texttt{10.8.0.1} affichée par la plateforme une fois la machine en marche
-    \item Plateforme exposée par ngrok, \texttt{APP\_PUBLIC\_URL} et CORS accordés
+    \item Plateforme exposée par ngrok, \texttt{APP\_PUBLIC\_URL} et
+          \texttt{APP\_COOKIE\_SECURE} ajustés
 \end{itemize}
 
 \end{document}
