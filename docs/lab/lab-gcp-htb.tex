@@ -3,6 +3,12 @@
 \usepackage[french]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+% Sans fonte vectorielle en T1, pdfLaTeX fabrique des bitmaps (Type 3) : le PDF
+% est flou au zoom et son texte mal copiable. Latin Modern corrige cela et se
+% trouve dans toute distribution récente (MiKTeX, TeX Live) ; là où le paquet
+% manque, cm-super joue le même rôle, et son absence ne doit pas empêcher la
+% compilation — d'où le test plutôt qu'un \usepackage sec.
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{geometry}
@@ -13,6 +19,20 @@
 \usepackage{eurosym}
 \usepackage{tikz}
 \usetikzlibrary{positioning, fit, backgrounds}
+
+% Ce document est plein de chemins, de commandes et de noms de variables en
+% \texttt. Sans ces deux paquets, LaTeX refuse de les couper et les laisse
+% déborder dans la marge — jusqu'à cinq centimètres sur l'URL de HackTheBox.
+% « htt » autorise la césure dans la fonte à chasse fixe ; xurl permet de
+% couper une URL n'importe où plutôt qu'aux seuls traits d'union.
+\usepackage[htt]{hyphenat}
+\usepackage{xurl}
+\urlstyle{tt}
+% Un \texttt contenant un chemin, une adresse ou un identifiant pointé n'offre
+% aucun point de coupure : LaTeX le laisse alors déborder dans la marge. \code
+% s'affiche comme \texttt mais se coupe où il faut. Son argument est pris tel
+% quel : on y écrit _ et # sans les échapper.
+\DeclareUrlCommand\code{\urlstyle{tt}}
 
 \geometry{margin=2.5cm}
 
@@ -106,12 +126,12 @@ fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
           le lab casse au premier cycle.
     \item \textbf{Adresse annoncée aux apprenants} (§\ref{sec:env}). Compute Engine
           rapporte l'adresse de la carte réseau dans le VPC
-          (\texttt{10.128.0.2}). Le tunnel, lui, ne route que
-          \texttt{10.8.0.0/24} : c'est \texttt{10.8.0.1} qu'il faut montrer.
+          (\code{10.128.0.2}). Le tunnel, lui, ne route que
+          \code{10.8.0.0/24} : c'est \texttt{10.8.0.1} qu'il faut montrer.
           Sans ce réglage, la plateforme afficherait une adresse qui ne répond
           pas.
     \item \textbf{Réseau du lab déclaré à la plateforme} (§\ref{sec:env}). Il vaut
-          \texttt{10.8.0.0/24}, pas la valeur par défaut \texttt{10.10.10.0/24}.
+          \code{10.8.0.0/24}, pas la valeur par défaut \texttt{10.10.10.0/24}.
     \item \textbf{Compte de service GCP} (§\ref{sec:sa}), absent de la première
           version : sans lui, la plateforme ne peut rien démarrer.
     \item \textbf{Image DVWA} (§\ref{sec:docker}). \texttt{vulnerables/web-dvwa} n'est plus
@@ -136,8 +156,7 @@ fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
 \label{sec:htb}
 
 La documentation d'accès aux labs de HackTheBox (\emph{Introduction to Lab
-Access}, \texttt{help.hackthebox.com/en/articles/}
-\texttt{5185687-introduction-to-lab-access}) commence par écarter une
+Access}, \url{https://help.hackthebox.com/en/articles/5185687-introduction-to-lab-access}) commence par écarter une
 confusion qui vaut d'être reprise telle quelle devant une promotion : son VPN
 n'est pas un VPN de confidentialité. Un VPN personnel chiffre le trafic et le
 fait ressortir ailleurs, pour masquer une activité ou une localisation. Celui
@@ -284,7 +303,7 @@ l'intérieur du tunnel}.
 Quand on tape \texttt{http://10.8.0.1} dans le navigateur Windows :
 
 \begin{enumerate}
-    \item Le PC fabrique \texttt{[10.8.0.2 $\rightarrow$ 10.8.0.1:80]} ; sa table de routage envoie \texttt{10.8.0.0/24} vers l'interface VPN.
+    \item Le PC fabrique \texttt{[10.8.0.2 $\rightarrow$ 10.8.0.1:80]} ; sa table de routage envoie \code{10.8.0.0/24} vers l'interface VPN.
     \item OpenVPN \textbf{chiffre} et emballe dans un UDP ordinaire \texttt{[IP\_PC $\rightarrow$ IP\_publique:1194]}.
     \item La VM \textbf{déchiffre} et retrouve le paquet sur \texttt{tun0}.
     \item \texttt{10.8.0.1} est \textbf{sa propre adresse} : livraison directe au conteneur. \textbf{Aucun routage, aucun NAT.}
@@ -454,7 +473,7 @@ sudo ./openvpn-install.sh
 \end{itemize}
 
 \attention{À cause du NAT 1:1 de GCP, le script détecte l'IP \textbf{interne}
-(\texttt{10.128.0.2}). Saisissez l'IP publique \textbf{à la main}, sinon le
+(\code{10.128.0.2}). Saisissez l'IP publique \textbf{à la main}, sinon le
 \texttt{.ovpn} pointera vers une adresse injoignable depuis Internet.}
 
 \screenshotplaceholder{Terminal VM : questionnaire du script OpenVPN}
@@ -542,7 +561,7 @@ Elle doit porter l'\textbf{IP statique}, jamais \texttt{10.128.0.x}.
 
 \begin{itemize}
     \item OpenVPN GUI $\rightarrow$ \textbf{Import file\ldots} $\rightarrow$ \texttt{lab-htb.ovpn}
-    \item \textbf{Lancer OpenVPN GUI en administrateur} : sans cela la route vers \texttt{10.8.0.0/24} n'est pas ajoutée et le \texttt{ping} échoue malgré un tunnel « connecté ».
+    \item \textbf{Lancer OpenVPN GUI en administrateur} : sans cela la route vers \code{10.8.0.0/24} n'est pas ajoutée et le \texttt{ping} échoue malgré un tunnel « connecté ».
     \item Clic droit $\rightarrow$ \textbf{Connect}. Attendre \texttt{Initialization Sequence Completed}.
 \end{itemize}
 
@@ -580,7 +599,7 @@ Attendre la ligne \texttt{Initialization Sequence Completed}, puis
 \textbf{laisser ce terminal ouvert} et en ouvrir un second pour travailler.
 C'est la marche à suivre que décrit la documentation de HackTheBox, et
 \texttt{sudo} y est indispensable pour la même raison qu'« administrateur »
-sous Windows : sans lui, la route vers \texttt{10.8.0.0/24} n'est pas posée.
+sous Windows : sans lui, la route vers \code{10.8.0.0/24} n'est pas posée.
 
 \section{Attaque de DVWA}
 \label{sec:attaque}
@@ -618,9 +637,9 @@ gcloud projects add-iam-policy-binding lab-htb-free-2026 --member="serviceAccoun
 gcloud iam service-accounts keys create cle-lab.json --iam-account=cybermans-lab@lab-htb-free-2026.iam.gserviceaccount.com
 \end{lstlisting}
 
-\texttt{roles/compute.instanceAdmin.v1} suffit : il couvre
-\texttt{instances.start}, \texttt{instances.stop} et \texttt{instances.get}. Ne
-donnez pas \texttt{roles/editor}, qui ouvrirait le projet entier à un service
+\code{roles/compute.instanceAdmin.v1} suffit : il couvre
+\code{instances.start}, \code{instances.stop} et \code{instances.get}. Ne
+donnez pas \code{roles/editor}, qui ouvrirait le projet entier à un service
 dont le seul travail est d'actionner un interrupteur.
 
 \attention{\texttt{cle-lab.json} est un secret de même nature qu'un mot de
@@ -668,9 +687,9 @@ panne silencieuse :
   \item[\texttt{APP\_VPN\_ENABLED}] \texttt{true} : sans cela la page
         \textbf{Accès VPN} reste fermée et personne ne télécharge le profil.
   \item[\texttt{APP\_MACHINE\_ADDRESS}] Compute Engine rapporte l'adresse de la
-        carte réseau dans le VPC (\texttt{10.128.0.2}). Or le tunnel ne route
-        que \texttt{10.8.0.0/24} : sans ce réglage, la plateforme afficherait
-        \texttt{10.128.0.2}, qui ne répondrait pas. L'apprenant conclurait à une
+        carte réseau dans le VPC (\code{10.128.0.2}). Or le tunnel ne route
+        que \code{10.8.0.0/24} : sans ce réglage, la plateforme afficherait
+        \code{10.128.0.2}, qui ne répondrait pas. L'apprenant conclurait à une
         machine en panne.
   \item[\texttt{APP\_VPN\_SOURCE}] \texttt{uploaded} : le profil vient de votre
         serveur, pas de la plateforme. Avec \texttt{generated} (le défaut), elle
@@ -679,7 +698,7 @@ panne silencieuse :
         la page \textbf{Accès VPN}. C'est aussi lui que la plateforme cherche
         dans le \texttt{.ovpn} déposé : si le profil ne le route pas, l'écran
         d'administration le signale. La valeur par défaut est
-        \texttt{10.10.10.0/24} ; votre tunnel est en \texttt{10.8.0.0/24}.
+        \texttt{10.10.10.0/24} ; votre tunnel est en \code{10.8.0.0/24}.
 \end{description}
 
 \subsection{Exposition par ngrok}
@@ -803,13 +822,13 @@ Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
         OpenVPN GUI n'a pas été lancé en administrateur. Sinon, dans la VM :
         \texttt{sudo systemctl status openvpn-server@server}.
   \item[\textmd{\texttt{http://10.8.0.1} ne répond pas}]
-        \texttt{sudo docker ps}, puis \texttt{sudo docker logs dvwa}. Vérifier
-        aussi \texttt{sudo iptables -L DOCKER-USER -n} : une règle trop large
+        \texttt{sudo docker ps}, puis \code{sudo docker logs dvwa}. Vérifier
+        aussi \code{sudo iptables -L DOCKER-USER -n} : une règle trop large
         bloquerait \texttt{tun0}.
   \item[\textmd{Le \texttt{.ovpn} ne marche plus après un redémarrage}]
         L'IP n'est pas statique (§\ref{sec:ip}). C'est la panne la plus fréquente dès que
         la plateforme pilote la VM.
-  \item[\textmd{La plateforme affiche \texttt{10.128.0.2}}]
+  \item[\textmd{La plateforme affiche \code{10.128.0.2}}]
         \texttt{APP\_MACHINE\_ADDRESS} n'est pas renseigné (§\ref{sec:env}).
   \item[\textmd{Déconnecté à chaque ouverture de l'URL ngrok}]
         L'URL a changé depuis la dernière session : le cookie était posé pour
@@ -825,7 +844,7 @@ Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
         (§\ref{sec:windows}).
   \item[\textmd{« Machine introuvable chez l'hébergeur »}]
         Nom, zone ou projet erroné, ou le compte de service n'a pas le rôle
-        \texttt{compute.instanceAdmin.v1} (§\ref{sec:sa}).
+        \code{compute.instanceAdmin.v1} (§\ref{sec:sa}).
   \item[\textmd{DVWA rame ou plante}] Swap absent : \texttt{free -h} (§\ref{sec:swap}).
 \end{description}
 
@@ -841,7 +860,7 @@ Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
     \item DVWA (\texttt{ghcr.io/digininja/dvwa}) en marche, port 80 restreint à \texttt{tun0}
     \item Tunnel monté, \texttt{ping 10.8.0.1} qui répond
     \item DVWA joignable à \texttt{http://10.8.0.1}, et \textbf{invisible} depuis Internet
-    \item Compte de service GCP avec \texttt{compute.instanceAdmin.v1}
+    \item Compte de service GCP avec \code{compute.instanceAdmin.v1}
     \item \texttt{.ovpn} déposé dans la plateforme, téléchargeable par les apprenants
     \item Bouton « Démarrer / Arrêter » qui pilote réellement la VM
     \item Adresse \texttt{10.8.0.1} affichée par la plateforme une fois la machine en marche
