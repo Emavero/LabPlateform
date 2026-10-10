@@ -15,3 +15,14 @@ target/
 
 # Autorité de certification VPN et vidéos téléversées en développement local
 backend/data/
+
+# Sorties de compilation LaTeX du lab. Le .tex est la source ; le PDF se
+# régénère avec « pdflatex lab-gcp-htb.tex » lancé deux fois (le sommaire et
+# les renvois ont besoin du second passage). Un binaire de 450 Ko réécrit à
+# chaque retouche n'a pas sa place dans l'historique, pas plus que target/.
+docs/lab/*.pdf
+docs/lab/*.aux
+docs/lab/*.log
+docs/lab/*.toc
+docs/lab/*.out
+docs/lab/*.synctex.gz
