@@ -1,0 +1,753 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{eurosym}
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, backgrounds}
+
+\geometry{margin=2.5cm}
+
+\lstdefinestyle{terminal}{
+    backgroundcolor=\color{black},
+    basicstyle=\ttfamily\small\color{white},
+    frame=single,
+    rulecolor=\color{gray},
+    breaklines=true,
+    columns=fullflexible
+}
+
+\lstdefinestyle{wincmd}{
+    backgroundcolor=\color{black!85!blue},
+    basicstyle=\ttfamily\small\color{white},
+    frame=single,
+    rulecolor=\color{gray},
+    breaklines=true,
+    columns=fullflexible
+}
+
+\lstset{style=terminal}
+
+\newcommand{\screenshot}[2]{%
+  \begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=0.85\textwidth]{#1}}
+    \caption{#2}
+  \end{figure}
+}
+
+\newcommand{\screenshotplaceholder}[1]{%
+  \begin{figure}[H]
+    \centering
+    \fbox{\begin{minipage}[c][5cm][c]{0.85\textwidth}
+      \centering
+      \color{gray}\itshape
+      [Emplacement pour capture d'écran :\\ #1]
+    \end{minipage}}
+    \caption{#1}
+  \end{figure}
+}
+
+% Encadré d'avertissement
+\newcommand{\attention}[1]{%
+  \begin{figure}[H]
+  \noindent\fcolorbox{red!60!black}{red!6}{%
+    \begin{minipage}{0.96\textwidth}
+      \vspace{2pt}\textbf{\color{red!60!black}Attention —} #1\vspace{2pt}
+    \end{minipage}}
+  \end{figure}
+}
+
+\title{Lab « HackTheBox-like » sur GCP \\ avec une seule VM gratuite \\
+       \large Passerelle VPN et machine cible fusionnées \\
+       \large Pilotage depuis la plateforme cyberMans}
+\author{Emmanuel Clement PREIRA}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Contexte}
+\label{sec:contexte}
+
+\begin{itemize}
+    \item Plateforme : \textbf{Google Cloud Platform} (couche gratuite)
+    \item Instance unique : \textbf{e2-micro} en \texttt{us-central1}
+    \item Rôle 1 : \textbf{passerelle VPN} (serveur OpenVPN sur UDP 1194)
+    \item Rôle 2 : \textbf{machine cible vulnérable} (DVWA dans Docker sur le port 80)
+    \item Poste client : \textbf{Windows} avec \texttt{cmd.exe}
+    \item \textbf{Pilotage} : la VM se démarre et s'éteint depuis cyberMans, exposée par ngrok
+    \item Objectif : reproduire le mécanisme de HackTheBox --- un \texttt{.ovpn} qui fait entrer dans un réseau privé, et une cible joignable \textbf{uniquement} par le tunnel
+    \item Résultat attendu : DVWA accessible à \texttt{http://10.8.0.1} une fois le tunnel monté
+\end{itemize}
+
+\subsection{Ce qui change par rapport à la première version}
+\label{sec:changements}
+
+Ce document corrige quatre points qui empêchaient le lab de fonctionner une
+fois piloté depuis la plateforme, et deux qui relevaient de la sécurité.
+
+\begin{enumerate}
+    \item \textbf{IP externe statique} (§\ref{sec:ip-pourquoi}). Sans réservation, chaque arrêt
+          puis redémarrage change l'IP publique et \emph{invalide le
+          \texttt{.ovpn} déjà distribué}. Or éteindre et rallumer est
+          précisément ce que fait le bouton de la plateforme : sans IP fixe,
+          le lab casse au premier cycle.
+    \item \textbf{Adresse annoncée aux apprenants} (§\ref{sec:env}). Compute Engine
+          rapporte l'adresse de la carte réseau dans le VPC
+          (\texttt{10.128.0.2}). Le tunnel, lui, ne route que
+          \texttt{10.8.0.0/24} : c'est \texttt{10.8.0.1} qu'il faut montrer.
+          Sans ce réglage, la plateforme afficherait une adresse qui ne répond
+          pas.
+    \item \textbf{Réseau du lab déclaré à la plateforme} (§\ref{sec:env}). Il vaut
+          \texttt{10.8.0.0/24}, pas la valeur par défaut \texttt{10.10.10.0/24}.
+    \item \textbf{Compte de service GCP} (§\ref{sec:sa}), absent de la première
+          version : sans lui, la plateforme ne peut rien démarrer.
+    \item \textbf{Image DVWA} (§\ref{sec:docker}). \texttt{vulnerables/web-dvwa} n'est plus
+          maintenue depuis des années ; l'image officielle actuelle est
+          \texttt{ghcr.io/digininja/dvwa}.
+    \item \textbf{Exposition du port 80} (§\ref{sec:barriere}). \texttt{-p 80:80} fait écouter
+          DVWA sur \emph{toutes} les interfaces, IP publique comprise. Seul le
+          pare-feu GCP l'en empêche : une seule barrière devant une application
+          volontairement vulnérable. On en ajoute une seconde, locale.
+\end{enumerate}
+
+\subsection{Convention de lecture}
+\label{sec:convention}
+
+\begin{itemize}
+    \item Les blocs à fond noir sont des commandes \textbf{Linux}, dans la VM.
+    \item Les blocs à fond bleu sombre sont des commandes \texttt{cmd.exe}, \textbf{sous Windows}.
+    \item Les identifiants (ID de facturation, IP publique) sont à remplacer par les vôtres.
+\end{itemize}
+
+\subsection{Le modèle HackTheBox, et ce qu'on en reprend}
+\label{sec:htb}
+
+Le mécanisme décrit par la documentation d'accès aux labs de HackTheBox
+(\emph{Introduction to Lab Access}, \texttt{help.hackthebox.com/en/articles/}
+\texttt{5185687-introduction-to-lab-access}) tient en trois gestes : on
+télécharge un fichier \texttt{.ovpn} depuis la page d'accès, on monte le
+tunnel, et seulement alors la machine cible répond --- à une adresse privée,
+jamais exposée sur Internet. La machine elle-même se démarre et s'arrête
+depuis la page du challenge, et son adresse n'est affichée qu'une fois
+l'instance en marche.
+
+Le lab ci-dessous reprend ces trois gestes, chacun à l'endroit correspondant
+de cyberMans :
+
+\begin{itemize}
+    \item \textbf{La page d'accès} devient la page VPN de la plateforme. Chez
+          HackTheBox le \texttt{.ovpn} est engendré par utilisateur ; ici
+          l'administrateur en dépose un seul (§\ref{sec:depot}), le même pour tous.
+    \item \textbf{Le choix du serveur VPN} disparaît : il n'y a qu'une
+          passerelle, celle de la VM, donc un seul profil.
+    \item \textbf{Le bouton de démarrage} devient \texttt{POST /api/machine/start},
+          et l'extinction \texttt{POST /api/machine/stop}. L'état est relu par
+          \texttt{GET /api/machine/status}, qui rend aussi l'adresse de la
+          cible quand elle tourne (§\ref{sec:env}).
+\end{itemize}
+
+Deux écarts assumés, qui tiennent au choix d'une seule VM gratuite :
+
+\begin{itemize}
+    \item \textbf{La cible est partagée.} Chez HackTheBox chaque joueur reçoit
+          son instance ; ici tous les apprenants attaquent la même DVWA, et
+          celui qui l'éteint l'éteint pour tout le monde.
+    \item \textbf{La passerelle et la cible sont la même machine} (§\ref{sec:ip-pourquoi}). Chez
+          HackTheBox elles sont distinctes ; ici l'adresse de la cible est
+          celle du serveur VPN lui-même, \texttt{10.8.0.1}.
+\end{itemize}
+
+\section{Architecture}
+\label{sec:archi}
+
+\subsection{Le principe : une seule VM, deux rôles}
+\label{sec:principe}
+
+L'unique VM joue \textbf{deux rôles en même temps} :
+
+\begin{enumerate}
+    \item \textbf{Porte d'entrée VPN} --- serveur OpenVPN. Son interface de
+          tunnel (\texttt{tun0}) porte l'adresse \texttt{10.8.0.1}.
+    \item \textbf{Cible vulnérable} --- DVWA dans Docker, port 80 de cette
+          \emph{même} machine.
+\end{enumerate}
+
+On attaque donc directement \texttt{10.8.0.1} : l'adresse de la VM \emph{vue de
+l'intérieur du tunnel}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    box/.style={rounded corners=3pt, draw, thick, align=center,
+                minimum width=3.4cm, minimum height=1.1cm},
+    pc/.style={box, fill=gray!15},
+    vpn/.style={box, fill=teal!15},
+    target/.style={box, fill=orange!18},
+    vm/.style={rounded corners=8pt, draw, thick, dashed, inner sep=14pt}
+]
+\node[pc] (pc) {\textbf{PC Windows}\\\texttt{tun0 = 10.8.0.2}};
+\node[vpn, right=5cm of pc, yshift=10mm] (ovpn)
+    {\textbf{Serveur OpenVPN}\\\texttt{tun0 = 10.8.0.1}};
+\node[target, below=10mm of ovpn] (dvwa)
+    {\textbf{DVWA} (Docker :80)\\cible vulnérable};
+\begin{scope}[on background layer]
+\node[vm, fit=(ovpn)(dvwa),
+      label={[align=center]above:\textbf{VM e2-micro}\\\footnotesize IP publique \emph{statique}}] (vm) {};
+\end{scope}
+\draw[->, thick] (pc) -- node[above, align=center]
+    {\footnotesize tunnel chiffré\\\footnotesize UDP 1194} (vm.west);
+\end{tikzpicture}
+\caption{Passerelle VPN et cible fusionnées. On attaque \texttt{10.8.0.1} à
+         travers le tunnel ; le port 80 n'est jamais exposé à Internet.}
+\end{figure}
+
+\subsection{Le trajet d'un paquet}
+\label{sec:trajet}
+
+Quand on tape \texttt{http://10.8.0.1} dans le navigateur Windows :
+
+\begin{enumerate}
+    \item Le PC fabrique \texttt{[10.8.0.2 $\rightarrow$ 10.8.0.1:80]} ; sa table de routage envoie \texttt{10.8.0.0/24} vers l'interface VPN.
+    \item OpenVPN \textbf{chiffre} et emballe dans un UDP ordinaire \texttt{[IP\_PC $\rightarrow$ IP\_publique:1194]}.
+    \item La VM \textbf{déchiffre} et retrouve le paquet sur \texttt{tun0}.
+    \item \texttt{10.8.0.1} est \textbf{sa propre adresse} : livraison directe au conteneur. \textbf{Aucun routage, aucun NAT.}
+    \item DVWA répond par le même tunnel.
+\end{enumerate}
+
+Votre analyse de la première version était juste : \textbf{pas de
+\texttt{MASQUERADE}, pas de \texttt{--can-ip-forward}}, et
+\texttt{net.ipv4.ip\_forward=1} est \textbf{inoffensif mais inutile} ici. Le
+forwarding ne sert qu'à router vers d'\emph{autres} hôtes ; la cible \emph{est}
+la passerelle.
+
+\subsection{Pourquoi la cible reste cachée}
+\label{sec:cachee}
+
+Le pare-feu GCP n'ouvre que \textbf{UDP 1194} et \textbf{TCP 22}. Le port 80
+n'est jamais ouvert publiquement : un scan de l'IP publique ne révèle que le
+VPN et SSH.
+
+\attention{Cette propriété ne tient qu'à la règle de pare-feu. DVWA écoute en
+réalité sur \texttt{0.0.0.0:80}, donc une règle ajoutée par mégarde, un projet
+mal configuré ou une VM déplacée dans un autre réseau exposerait à Internet une
+application \emph{conçue} pour être vulnérable. La section~\ref{sec:barriere} ajoute une seconde
+barrière, locale à la VM, qui ne dépend d'aucun réglage GCP.}
+
+\subsection{Le compromis}
+\label{sec:compromis}
+
+Une seule machine, donc \textbf{pas de pivoting} ni de mouvement latéral. Pour
+du pentest web (DVWA, Juice Shop) c'est parfait ; pour le déplacement en réseau
+interne il faudra deux VM.
+
+\section{Installation de gcloud CLI sur Windows}
+\label{sec:gcloud}
+
+\begin{lstlisting}[style=wincmd]
+powershell -Command "(New-Object Net.WebClient).DownloadFile('https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe', '%TEMP%\GoogleCloudSDKInstaller.exe')"
+%TEMP%\GoogleCloudSDKInstaller.exe
+\end{lstlisting}
+
+Options : \textbf{Single User}, cocher \textbf{Core Libraries}, décocher
+« Bundled Python » si Python est déjà installé.
+
+Vérification dans un \textbf{nouveau} \texttt{cmd.exe} :
+
+\begin{lstlisting}[style=wincmd]
+gcloud --version
+\end{lstlisting}
+
+\screenshotplaceholder{cmd.exe : sortie de \texttt{gcloud --version}}
+
+\section{Création du projet GCP}
+\label{sec:projet}
+
+\begin{lstlisting}[style=wincmd]
+gcloud projects create lab-htb-free-2026 --name="Lab HTB Free"
+gcloud config set project lab-htb-free-2026
+gcloud config set compute/zone us-central1-a
+gcloud config set compute/region us-central1
+gcloud config list
+\end{lstlisting}
+
+Liaison au compte de facturation (le préfixe \texttt{beta} n'est plus nécessaire) :
+
+\begin{lstlisting}[style=wincmd]
+gcloud billing accounts list
+gcloud billing projects link lab-htb-free-2026 --billing-account=012345-6789AB-CDEF01
+\end{lstlisting}
+
+Activation de l'API Compute (30 s à 2 min) :
+
+\begin{lstlisting}[style=wincmd]
+gcloud services enable compute.googleapis.com
+\end{lstlisting}
+
+\screenshotplaceholder{cmd.exe : projet actif et facturation liée}
+
+\section{Adresse IP statique}
+\label{sec:ip}
+
+\subsection{Pourquoi c'est obligatoire ici}
+\label{sec:ip-pourquoi}
+
+Une IP \emph{éphémère} est libérée à chaque arrêt de la VM et change au
+redémarrage. Le \texttt{.ovpn} contient la ligne \texttt{remote <IP> 1194} :
+une IP qui change \textbf{invalide tous les profils déjà distribués}.
+
+Comme le bouton de la plateforme éteint et rallume la VM, le lab casserait dès
+le premier cycle. Il faut donc une \textbf{IP statique réservée}.
+
+\subsection{Réservation}
+\label{sec:ip-reservation}
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute addresses create lab-htb-ip --region=us-central1
+gcloud compute addresses describe lab-htb-ip --region=us-central1 --format="get(address)"
+\end{lstlisting}
+
+Notez l'adresse : c'est elle qui ira dans le \texttt{.ovpn} et nulle part ailleurs.
+
+\attention{Une IP statique est facturée qu'elle soit utilisée ou non (environ
+3~\$/mois, et davantage quand elle est réservée sans être attachée). C'est le
+prix à payer pour un \texttt{.ovpn} qui survit aux redémarrages. Si vous
+renoncez à piloter la VM depuis la plateforme, une IP éphémère suffit --- mais
+il faudra rediffuser le profil après chaque démarrage.}
+
+\section{Création de la VM}
+\label{sec:vm}
+
+Trois critères pour rester dans la couche gratuite : zone
+\texttt{us-central1} / \texttt{us-west1} / \texttt{us-east1}, type
+\texttt{e2-micro}, disque 30~Go standard.
+
+\textbf{Une seule ligne} (le \texttt{\^} de continuation est capricieux sous \texttt{cmd.exe}) :
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute instances create lab-htb-single --zone=us-central1-a --machine-type=e2-micro --image-family=debian-12 --image-project=debian-cloud --boot-disk-size=30GB --boot-disk-type=pd-standard --tags=vpn-server --address=lab-htb-ip
+\end{lstlisting}
+
+Le \texttt{--address=lab-htb-ip} attache l'IP réservée : c'est la seule
+différence avec la première version, et elle est décisive.
+
+\screenshotplaceholder{cmd.exe : création de la VM avec son IP statique}
+
+\section{Pare-feu}
+\label{sec:pare-feu}
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute firewall-rules create allow-openvpn --allow=udp:1194 --source-ranges=0.0.0.0/0 --target-tags=vpn-server
+\end{lstlisting}
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute firewall-rules create allow-ssh --allow=tcp:22 --source-ranges=0.0.0.0/0
+\end{lstlisting}
+
+Le port 80 n'est volontairement \emph{pas} ouvert.
+
+\screenshotplaceholder{Console GCP : les deux règles de pare-feu}
+
+\section{OpenVPN}
+\label{sec:openvpn}
+
+\subsection{Connexion}
+\label{sec:ssh}
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute ssh lab-htb-single --zone=us-central1-a
+\end{lstlisting}
+
+\subsection{Installation}
+\label{sec:openvpn-install}
+
+\begin{lstlisting}
+curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+chmod +x openvpn-install.sh
+sudo ./openvpn-install.sh
+\end{lstlisting}
+
+\subsection{Réponses}
+\label{sec:openvpn-reponses}
+
+\begin{itemize}
+    \item \textbf{IP address} : l'\textbf{IP statique} de la section~\ref{sec:ip-reservation} --- impératif
+    \item \textbf{IPv6} : \texttt{n} \quad\textbullet\quad \textbf{Port} : \texttt{1194} \quad\textbullet\quad \textbf{Protocol} : \texttt{UDP}
+    \item \textbf{DNS} : au choix (ex. \texttt{1.1.1.1})
+    \item \textbf{Client name} : \texttt{lab-htb}
+\end{itemize}
+
+\attention{À cause du NAT 1:1 de GCP, le script détecte l'IP \textbf{interne}
+(\texttt{10.128.0.2}). Saisissez l'IP publique \textbf{à la main}, sinon le
+\texttt{.ovpn} pointera vers une adresse injoignable depuis Internet.}
+
+\screenshotplaceholder{Terminal VM : questionnaire du script OpenVPN}
+
+\section{DVWA sur la même VM}
+\label{sec:dvwa}
+
+\subsection{Swap}
+\label{sec:swap}
+
+\texttt{e2-micro} n'a qu'1~Go de RAM.
+
+\begin{lstlisting}
+sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h
+\end{lstlisting}
+
+Le repli en \texttt{dd} couvre les systèmes de fichiers où \texttt{fallocate} échoue.
+
+\subsection{Docker et DVWA}
+\label{sec:docker}
+
+\begin{lstlisting}
+sudo apt update && sudo apt install -y docker.io
+sudo systemctl enable --now docker
+sudo docker run -d --name dvwa --restart=always -p 80:80 ghcr.io/digininja/dvwa:latest
+sudo docker ps
+\end{lstlisting}
+
+\attention{L'image \texttt{vulnerables/web-dvwa} de la première version n'est
+plus maintenue depuis des années et traîne des vulnérabilités de base qui ne
+font pas partie de l'exercice. \texttt{ghcr.io/digininja/dvwa} est l'image
+officielle du projet, toujours suivie.}
+
+\subsection{Seconde barrière devant le port 80}
+\label{sec:barriere}
+
+\texttt{-p 80:80} publie sur \emph{toutes} les interfaces. On restreint
+localement le port 80 au seul tunnel :
+
+\begin{lstlisting}
+sudo apt install -y iptables-persistent
+sudo iptables -I DOCKER-USER -i tun0 -p tcp --dport 80 -j ACCEPT
+sudo iptables -A DOCKER-USER -p tcp --dport 80 -j DROP
+sudo netfilter-persistent save
+\end{lstlisting}
+
+La chaîne \texttt{DOCKER-USER} est consultée \emph{avant} les règles que Docker
+génère : c'est le seul endroit où une règle survit à un redémarrage du
+conteneur. Désormais, même si la règle de pare-feu GCP venait à sauter, le port
+80 ne répondrait qu'aux paquets arrivant par \texttt{tun0}.
+
+\screenshotplaceholder{Terminal VM : \texttt{docker ps} et \texttt{free -h}}
+
+\section{Récupération du \texttt{.ovpn}}
+\label{sec:ovpn}
+
+Le script écrit le profil dans \texttt{/root/} :
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute ssh lab-htb-single --zone=us-central1-a --command="sudo cp /root/lab-htb.ovpn /tmp/ && sudo chmod 644 /tmp/lab-htb.ovpn"
+\end{lstlisting}
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute scp lab-htb-single:/tmp/lab-htb.ovpn ./lab-htb.ovpn --zone=us-central1-a
+\end{lstlisting}
+
+\subsection{Vérification du contenu}
+\label{sec:ovpn-verif}
+
+Ouvrez le fichier dans un éditeur et contrôlez la ligne \texttt{remote} :
+
+\begin{lstlisting}[style=wincmd]
+findstr remote lab-htb.ovpn
+\end{lstlisting}
+
+Elle doit porter l'\textbf{IP statique}, jamais \texttt{10.128.0.x}.
+
+\section{Connexion depuis Windows}
+\label{sec:windows}
+
+\begin{itemize}
+    \item OpenVPN GUI $\rightarrow$ \textbf{Import file\ldots} $\rightarrow$ \texttt{lab-htb.ovpn}
+    \item \textbf{Lancer OpenVPN GUI en administrateur} : sans cela la route vers \texttt{10.8.0.0/24} n'est pas ajoutée et le \texttt{ping} échoue malgré un tunnel « connecté ».
+    \item Clic droit $\rightarrow$ \textbf{Connect}. Attendre \texttt{Initialization Sequence Completed}.
+\end{itemize}
+
+Vérification dans un second \texttt{cmd.exe} :
+
+\begin{lstlisting}[style=wincmd]
+ipconfig | findstr /i "tun"
+route print | findstr "10.8.0"
+ping 10.8.0.1
+\end{lstlisting}
+
+\screenshotplaceholder{cmd.exe : \texttt{ping 10.8.0.1} réussi}
+
+\section{Attaque de DVWA}
+\label{sec:attaque}
+
+\begin{lstlisting}[style=wincmd]
+start http://10.8.0.1
+\end{lstlisting}
+
+Identifiants : \texttt{admin} / \texttt{password}. Cliquer sur \textbf{Create /
+Reset Database} au premier lancement.
+
+\screenshotplaceholder{Navigateur : DVWA sur \texttt{http://10.8.0.1}}
+
+\section{Branchement sur la plateforme cyberMans}
+\label{sec:plateforme}
+
+C'est la partie absente de la première version. L'objectif : que le bouton
+« Démarrer / Arrêter » de la plateforme pilote cette VM, et que les apprenants
+y téléchargent le \texttt{.ovpn}.
+
+\subsection{Compte de service GCP}
+\label{sec:sa}
+
+La plateforme agit au nom d'un compte de service. Dans \texttt{cmd.exe} :
+
+\begin{lstlisting}[style=wincmd]
+gcloud iam service-accounts create cybermans-lab --display-name="cyberMans - pilotage du lab"
+\end{lstlisting}
+
+\begin{lstlisting}[style=wincmd]
+gcloud projects add-iam-policy-binding lab-htb-free-2026 --member="serviceAccount:cybermans-lab@lab-htb-free-2026.iam.gserviceaccount.com" --role="roles/compute.instanceAdmin.v1"
+\end{lstlisting}
+
+\begin{lstlisting}[style=wincmd]
+gcloud iam service-accounts keys create cle-lab.json --iam-account=cybermans-lab@lab-htb-free-2026.iam.gserviceaccount.com
+\end{lstlisting}
+
+\texttt{roles/compute.instanceAdmin.v1} suffit : il couvre
+\texttt{instances.start}, \texttt{instances.stop} et \texttt{instances.get}. Ne
+donnez pas \texttt{roles/editor}, qui ouvrirait le projet entier à un service
+dont le seul travail est d'actionner un interrupteur.
+
+\attention{\texttt{cle-lab.json} est un secret de même nature qu'un mot de
+passe d'administration. Il reste sur le serveur qui héberge la plateforme,
+n'entre jamais dans un dépôt Git, et n'est jamais servi au navigateur.}
+
+\subsection{Dépôt du \texttt{.ovpn} dans la plateforme}
+\label{sec:depot}
+
+Connectez-vous à cyberMans en administrateur, puis
+\textbf{Administration $\rightarrow$ Profil VPN}, et déposez
+\texttt{lab-htb.ovpn}. Les apprenants le téléchargeront depuis
+« Accès VPN ».
+
+\begin{itemize}
+    \item La plateforme vérifie que le fichier est bien un profil \emph{client}
+          (directives \texttt{client} et \texttt{remote}).
+    \item Elle peut afficher « \emph{Ce profil ne route pas le réseau du lab} ».
+          \textbf{C'est normal ici} : OpenVPN installe tout seul la route vers
+          le sous-réseau du tunnel, sans qu'une ligne \texttt{route} figure dans
+          le profil. L'avertissement ne bloque rien --- vérifiez simplement que
+          \texttt{ping 10.8.0.1} répond, c'est la seule preuve qui compte.
+\end{itemize}
+
+\subsection{Variables d'environnement de la plateforme}
+\label{sec:env}
+
+\begin{lstlisting}[style=wincmd]
+APP_MACHINE_PROVIDER=gcp
+GCP_PROJECT_ID=lab-htb-free-2026
+GCP_ZONE=us-central1-a
+GCP_INSTANCE_NAME=lab-htb-single
+GOOGLE_APPLICATION_CREDENTIALS=/chemin/vers/cle-lab.json
+
+APP_MACHINE_ADDRESS=10.8.0.1
+APP_VPN_ENABLED=true
+APP_VPN_SOURCE=uploaded
+APP_VPN_LAB_NETWORK=10.8.0.0/24
+\end{lstlisting}
+
+Les quatre dernières lignes sont celles qu'on oublie, et chacune produit une
+panne silencieuse :
+
+\begin{description}[leftmargin=2.2cm, style=nextline]
+  \item[\texttt{APP\_VPN\_ENABLED}] \texttt{true} : sans cela la page
+        \textbf{Accès VPN} reste fermée et personne ne télécharge le profil.
+  \item[\texttt{APP\_MACHINE\_ADDRESS}] Compute Engine rapporte l'adresse de la
+        carte réseau dans le VPC (\texttt{10.128.0.2}). Or le tunnel ne route
+        que \texttt{10.8.0.0/24} : sans ce réglage, la plateforme afficherait
+        \texttt{10.128.0.2}, qui ne répondrait pas. L'apprenant conclurait à une
+        machine en panne.
+  \item[\texttt{APP\_VPN\_SOURCE}] \texttt{uploaded} : le profil vient de votre
+        serveur, pas de la plateforme. Avec \texttt{generated} (le défaut), elle
+        tenterait d'émettre ses propres certificats.
+  \item[\texttt{APP\_VPN\_LAB\_NETWORK}] Le réseau annoncé aux apprenants sur
+        la page \textbf{Accès VPN}. C'est aussi lui que la plateforme cherche
+        dans le \texttt{.ovpn} déposé : si le profil ne le route pas, l'écran
+        d'administration le signale. La valeur par défaut est
+        \texttt{10.10.10.0/24} ; votre tunnel est en \texttt{10.8.0.0/24}.
+\end{description}
+
+\subsection{Exposition par ngrok}
+\label{sec:ngrok}
+
+La plateforme se lance par \texttt{docker compose up -d} ; Nginx sert
+l'application sur le port \texttt{3000} et relaie lui-même \texttt{/api} vers
+le backend. Navigateur et API partagent donc la \emph{même} origine : il n'y a
+rien à déclarer côté CORS, et c'est cette même origine qui permet au cookie de
+session (\texttt{SameSite=Strict}) d'être envoyé.
+
+\begin{lstlisting}[style=wincmd]
+ngrok http 3000
+\end{lstlisting}
+
+ngrok rend une URL du type \texttt{https://xxxx.ngrok-free.app}. Deux variables
+de la plateforme doivent en tenir compte :
+
+\begin{lstlisting}[style=wincmd]
+APP_PUBLIC_URL=https://xxxx.ngrok-free.app
+APP_COOKIE_SECURE=true
+\end{lstlisting}
+
+\begin{description}[leftmargin=2.6cm, style=nextline]
+  \item[\texttt{APP\_PUBLIC\_URL}] L'adresse écrite dans les liens que la
+        plateforme émet --- celui de réinitialisation de mot de passe en
+        particulier. Restée sur \texttt{http://localhost:3000}, elle produit des
+        liens qui ne mènent nulle part depuis un autre poste.
+  \item[\texttt{APP\_COOKIE\_SECURE}] \texttt{true} marque le cookie de session
+        \texttt{Secure}, ce que l'on doit faire dès que le trafic passe en
+        HTTPS : ngrok termine le TLS. Les deux valeurs « fonctionnent » dans un
+        navigateur ; seule \texttt{true} empêche le cookie de repartir un jour
+        en clair.
+\end{description}
+
+\attention{Avec un compte ngrok gratuit, cette URL \textbf{change à chaque
+redémarrage} du tunnel. Il faut alors remettre \texttt{APP\_PUBLIC\_URL} à jour
+et relancer la plateforme. Un domaine statique (offert sur le palier gratuit,
+un seul par compte) évite ce va-et-vient.}
+
+La première visite affiche la page d'avertissement de ngrok (« You are about to
+visit\ldots ») : c'est le palier gratuit, pas une erreur. On clique sur
+\textbf{Visit Site} et elle ne revient plus pour la session.
+
+\attention{Le tunnel ngrok expose la plateforme, \textbf{pas} le lab. La cible
+reste joignable uniquement par le \texttt{.ovpn} : l'URL ngrok sert à cliquer
+sur « Démarrer », jamais à atteindre DVWA.}
+
+\subsection{Ce que l'apprenant fait, dans l'ordre}
+\label{sec:apprenant}
+
+\begin{enumerate}
+    \item Il ouvre l'URL ngrok et se connecte.
+    \item \textbf{Accès VPN} $\rightarrow$ il télécharge \texttt{lab-htb.ovpn}, l'importe dans OpenVPN GUI (\textbf{en administrateur}) et se connecte.
+    \item \textbf{Machines} $\rightarrow$ il clique sur \textbf{Démarrer la machine}. Le badge passe par \texttt{Démarrage en cours}, le bouton reste inactif, l'état se rafraîchit tout seul.
+    \item Une fois \texttt{En marche}, l'adresse \texttt{10.8.0.1} s'affiche.
+    \item Il ouvre \texttt{http://10.8.0.1} et travaille sur DVWA.
+    \item En partant, il clique sur \textbf{Arrêter la machine}.
+\end{enumerate}
+
+\attention{La cible est \textbf{partagée} : tous les apprenants pilotent la même
+VM, et le second à cliquer sur « Arrêter » éteint la machine du premier. Pour un
+lab d'équipe ou une démonstration, c'est sans conséquence. Pour une promotion
+entière, il faudra une VM par apprenant --- ce que ce montage à une seule
+machine ne permet pas.}
+
+\section{Ordre de démarrage après un arrêt}
+\label{sec:ordre}
+
+La plateforme rallume la VM, mais elle n'attend pas que les services soient
+prêts. Comptez \textbf{30 à 60 secondes} entre l'état \texttt{En marche} et le
+moment où DVWA répond : Docker doit relancer le conteneur, et OpenVPN
+redémarrer.
+
+Les deux services reviennent seuls : \texttt{--restart=always} pour le
+conteneur, \texttt{systemd} pour OpenVPN. Vérification après un cycle :
+
+\begin{lstlisting}
+sudo systemctl status openvpn-server@server
+sudo docker ps
+sudo iptables -L DOCKER-USER -n
+\end{lstlisting}
+
+La troisième commande confirme que la règle de la section~\ref{sec:barriere} a bien survécu --- c'est
+le rôle de \texttt{iptables-persistent}.
+
+\section{Facturation}
+\label{sec:facturation}
+
+\begin{itemize}
+    \item \textbf{VM \texttt{e2-micro}} : gratuite dans les zones éligibles, une par compte et par mois.
+    \item \textbf{IP externe IPv4} : facturée depuis février 2024, qu'elle soit
+          statique ou éphémère, dès lors qu'elle existe. Comptez environ
+          3~\$/mois. Une IP statique \emph{réservée mais non attachée} coûte
+          davantage : si vous supprimez la VM, libérez aussi l'adresse.
+    \item \textbf{Disque} : 30~Go standard, dans la couche gratuite.
+\end{itemize}
+
+Libération de l'IP lors d'une destruction complète :
+
+\begin{lstlisting}[style=wincmd]
+gcloud compute instances delete lab-htb-single --zone=us-central1-a --quiet
+gcloud compute addresses delete lab-htb-ip --region=us-central1 --quiet
+gcloud compute firewall-rules delete allow-openvpn allow-ssh --quiet
+\end{lstlisting}
+
+Alerte de budget : \texttt{console.cloud.google.com/billing} $\rightarrow$
+Budgets et alertes $\rightarrow$ 5~\$, seuils 50 / 90 / 100~\%.
+
+\section{Dépannage}
+\label{sec:depannage}
+
+\begin{description}[leftmargin=0.6cm, style=nextline]
+  \item[\textmd{\texttt{The required property [project] is not currently set}}]
+        \texttt{gcloud config set project lab-htb-free-2026}.
+  \item[\textmd{\texttt{--zone n'est pas reconnu en tant que commande}}]
+        La commande multi-lignes a été coupée par \texttt{cmd.exe}. Tout sur une ligne.
+  \item[\textmd{Pas de \texttt{Initialization Sequence Completed}}]
+        Le \texttt{.ovpn} pointe vers l'IP interne. Corriger la ligne \texttt{remote}.
+  \item[\textmd{Connecté, mais \texttt{ping 10.8.0.1} échoue}]
+        OpenVPN GUI n'a pas été lancé en administrateur. Sinon, dans la VM :
+        \texttt{sudo systemctl status openvpn-server@server}.
+  \item[\textmd{\texttt{http://10.8.0.1} ne répond pas}]
+        \texttt{sudo docker ps}, puis \texttt{sudo docker logs dvwa}. Vérifier
+        aussi \texttt{sudo iptables -L DOCKER-USER -n} : une règle trop large
+        bloquerait \texttt{tun0}.
+  \item[\textmd{Le \texttt{.ovpn} ne marche plus après un redémarrage}]
+        L'IP n'est pas statique (§\ref{sec:ip}). C'est la panne la plus fréquente dès que
+        la plateforme pilote la VM.
+  \item[\textmd{La plateforme affiche \texttt{10.128.0.2}}]
+        \texttt{APP\_MACHINE\_ADDRESS} n'est pas renseigné (§\ref{sec:env}).
+  \item[\textmd{La plateforme répond 401 ou « CORS »}]
+        \texttt{APP\_CORS\_ALLOWED\_ORIGINS} ne correspond pas à l'URL ngrok en
+        cours (§\ref{sec:ngrok}).
+  \item[\textmd{« Machine introuvable chez l'hébergeur »}]
+        Nom, zone ou projet erroné, ou le compte de service n'a pas le rôle
+        \texttt{compute.instanceAdmin.v1} (§\ref{sec:sa}).
+  \item[\textmd{DVWA rame ou plante}] Swap absent : \texttt{free -h} (§\ref{sec:swap}).
+\end{description}
+
+\section{Résultat attendu}
+
+\begin{itemize}[label=$\checkmark$]
+    \item Projet GCP créé, facturation liée, API Compute activée
+    \item \textbf{IP externe statique réservée} et attachée à la VM
+    \item VM \texttt{e2-micro} dans une zone de la couche gratuite
+    \item Pare-feu : UDP 1194 et TCP 22 seulement
+    \item OpenVPN configuré avec l'IP \textbf{publique statique}
+    \item Swap de 2~Go actif
+    \item DVWA (\texttt{ghcr.io/digininja/dvwa}) en marche, port 80 restreint à \texttt{tun0}
+    \item Tunnel monté, \texttt{ping 10.8.0.1} qui répond
+    \item DVWA joignable à \texttt{http://10.8.0.1}, et \textbf{invisible} depuis Internet
+    \item Compte de service GCP avec \texttt{compute.instanceAdmin.v1}
+    \item \texttt{.ovpn} déposé dans la plateforme, téléchargeable par les apprenants
+    \item Bouton « Démarrer / Arrêter » qui pilote réellement la VM
+    \item Adresse \texttt{10.8.0.1} affichée par la plateforme une fois la machine en marche
+    \item Plateforme exposée par ngrok, \texttt{APP\_PUBLIC\_URL} et CORS accordés
+\end{itemize}
+
+\end{document}
